@@ -3,43 +3,40 @@ var User = require('models/user.model.js');
 
 exports.submitRide = function(req, res) {
     if(!req.decoded.userId) {
-        res.status(400).send({ message: "A ride should have a userId" });
+        res.status(400).send({ message: "userId not decoded" });
+        next();
     }
 
-    //validate request body parameters
     if(!req.body.from_location) {
-        res.status(400).send({ message: "A ride should have a from location" });
+        res.status(400).send({ message: "Missing Ride's From Location" });
+        next();
     }
 
     if(!req.body.to_location) {
-        res.status(400).send({ message: "A ride should have a to location" });
+        res.status(400).send({ message: "Missing Ride's To Location" });
+        next();
     }
 
     if(!req.body.travel_date) {
-        res.status(400).send({ message: "A ride should have a travel date" });
+        res.status(400).send({ message: "Missing Ride's Travel Date" });
+        next();
     }
 
     if(!req.body.travel_time) {
-        res.status(400).send({ message: "A ride should have travel times" });
+        res.status(400).send({ message: "Missing Ride's Travel Times" });
+        next();
     }
 
-    var ride = new Ride({ 
-        user_id: req.decoded.userId,
-        user_publicId: req.decoded.userPublicId,
-        user_firstName: req.decoded.userFirstName,
-        user_lastName: req.decoded.userLastName,
-        from_location: req.body.from_location,
-        to_location: req.body.to_location,
-        travel_date: req.body.travel_date,
-        travel_time: req.body.travel_time,
-        comment: req.body.comment || "",
-    });
+    var ride = new Ride(req.body); 
+    ride.user_id = req.decoded.userId;
+    ride.user_publicId = req.decoded.userPublicId;
+    ride.user_firstName = req.decoded.userFirstName;
+    ride.user_lastName = req.decoded.userLastName;
+    ride.comment = req.body.comment || "";
 
     ride.save(function(err, ride) {
-        console.log(ride);
         if(err) {
-            console.log(err);
-            res.status(500).send({ message: "Some error occured during ride creation. Please try again." });
+            res.status(500).send(err);
         } else {
             User.findOne({ '_id': req.decoded.userId }, function(err, user) {
                 if(err || !user) {
@@ -51,7 +48,7 @@ exports.submitRide = function(req, res) {
                     if(err) {
                         return next(err);
                     } else {
-                        res.send({ message: "Ride Created Successfully." });
+                        res.send({ message: "Ride Details Saved Successfully" });
                     }
                 });
             });
@@ -60,47 +57,41 @@ exports.submitRide = function(req, res) {
 };
 
 exports.getRidesByUser = function(req, res) {
-    if(!req.params.userPublicId) {
-        res.status(400).send({ message: "A publicId of user should be present" });
-    }
-
     User.findOne({
         'userPublicId' : req.params.userPublicId,
         'verified' : true   
     }, function(err, user) {
         if(err || !user) {
-            res.status(500).send({ message: "Incorrect publicId of user. Please try again" });
+            res.status(500).send({ message: "Incorrect publicId of user" });
         }
-        Ride.find({ 'user_id': user._id }, function(err, rides) {
-            if(err) {
-                res.status(500).send({ message: "Failed to find rides. Please try again" });
-            }
-            else {
-                res.send(rides.map(ride => {
-                    return {
-                        "ridePublicId" : ride.ridePublicId,
-                        "rideFrom": ride.from_location,
-                        "rideTo": ride.to_location,
-                        "rideDate": ride.travel_date,
-                        "rideTime": ride.travel_time,
-                        "rideComment" : ride.comment
-                    }
-                }));
-            }
-        });
+        else {
+            Ride.find({ 'user_id': user._id }, function(err, rides) {
+                if(err) {
+                    res.status(500).send({ message: "Incorrect userId" });
+                }
+                else {
+                    res.send(rides.map(ride => {
+                        return {
+                            "ridePublicId" : ride.ridePublicId,
+                            "rideFrom": ride.from_location,
+                            "rideTo": ride.to_location,
+                            "rideDate": ride.travel_date,
+                            "rideTime": ride.travel_time,
+                            "rideComment" : ride.comment
+                        }
+                    }));
+                }
+            });
+        }
     });
 };
 
 exports.getRideInfo = function(req, res) {
-    if(!req.params.ridePublicId) {
-        res.status(400).send({ message: "A publicId of ride should be present" });
-    }
-
     Ride.findOne({
         'ridePublicId' : req.params.ridePublicId
     }, function(err, ride) {
         if(err || !ride) {
-            res.status(500).send({ message: "Incorrect publicId of ride. Please try again" });
+            res.status(500).send({ message: "Incorrect publicId of ride" });
         }
         else {
             res.send({

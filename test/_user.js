@@ -475,10 +475,10 @@ describe('Users', () => {
         });
 
         it('it should GET user profile with correct publicId', (done) => {
-            // find the only verified user's details
+            // find the only user's details
             let publicId, firstName, lastName, school;
             User.findOne({
-                    'verified': true
+                    "email": "jdoe@email.com"
                 }, (err, user) => {
                     publicId = user.userPublicId;
                     firstName = user.firstName;

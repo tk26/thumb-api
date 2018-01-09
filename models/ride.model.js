@@ -6,10 +6,21 @@ var RideSchema = mongoose.Schema({
     user_publicId: String,
     user_firstName: String,
     user_lastName: String,
-    from_location: String,
-    to_location: String,
-    travel_date: String,
-    travel_time: [ {type: String} ],
+    from_location: {
+        type: String,
+        required: true
+    },
+    to_location: {
+        type: String,
+        required: true
+    },
+    travel_date: {
+        type: String,
+        required: true
+    },
+    travel_time: [{
+        type: String, required: true
+    }],
     comment: String
 }, {
     timestamps: true

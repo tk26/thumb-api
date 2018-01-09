@@ -3,16 +3,30 @@ var autoIncrement = require('mongoose-auto-increment');
 const bcrypt = require('bcrypt');
 
 var UserSchema = mongoose.Schema({
-    firstName: String,
-    lastName: String,
+    firstName: {
+        type: String,
+        required: true
+    },
+    lastName: {
+        type: String,
+        required: true
+    },
     email: {
         type: String,
+        required: true,
         unique: true 
     },
-    school: String,
-    password : String,
+    school: {
+        type: String,
+        required: true
+    },
+    password : {
+        type: String,
+        required: true
+    },
     verified: Boolean,
     verificationId : String,
+    password_reset_token : String,
     rides: Array,
     drives: Array
 }, {

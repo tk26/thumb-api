@@ -64,7 +64,7 @@ describe('Potential Users', () => {
                 });
         });
 
-         it('it should not POST a potential user without school', (done) => {
+        it('it should not POST a potential user without school', (done) => {
             chai.request(server)
                 .post('/user/potential/create')
                 .send({

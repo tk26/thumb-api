@@ -19,7 +19,8 @@ var RideSchema = mongoose.Schema({
         required: true
     },
     travel_time: [{
-        type: String, required: true
+        type: String, 
+        required: true
     }],
     comment: String
 }, {

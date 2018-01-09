@@ -6,5 +6,5 @@ module.exports = function(app) {
 
     app.get('/drive/user/:userPublicId', drive.getDrivesByUser);
     
-    app.get('/drive/:drivePublicId', drive.getDriveInfo);
+    app.get('/drive/info/:drivePublicId', drive.getDriveInfo);
 }

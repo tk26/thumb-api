@@ -16,6 +16,8 @@ var DriveSchema = mongoose.Schema({
     timestamps: true
 });
 
+autoIncrement.initialize(mongoose.connection);
+
 DriveSchema.plugin(autoIncrement.plugin, { model: 'drive', field: 'drivePublicId', startAt: 1 });
 
 module.exports = mongoose.model('drive', DriveSchema);

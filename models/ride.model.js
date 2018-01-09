@@ -15,6 +15,8 @@ var RideSchema = mongoose.Schema({
     timestamps: true
 });
 
+autoIncrement.initialize(mongoose.connection);
+
 RideSchema.plugin(autoIncrement.plugin, { model: 'ride', field: 'ridePublicId', startAt: 1 });
 
 module.exports = mongoose.model('ride', RideSchema);

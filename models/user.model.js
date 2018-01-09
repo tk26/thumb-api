@@ -29,6 +29,8 @@ UserSchema.methods.validatePassword = function(password) {
   return bcrypt.compareSync(password, this.password);
 };
 
+autoIncrement.initialize(mongoose.connection);
+
 UserSchema.plugin(autoIncrement.plugin, { model: 'user', field: 'userPublicId', startAt: 1 });
 
 module.exports = mongoose.model('user', UserSchema);

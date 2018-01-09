@@ -20,6 +20,31 @@ const crypto = require('crypto');
 var verificationId = crypto.randomBytes(20).toString('hex');
 
 exports.submitUser = function(req, res) {
+    if(!req.body.firstName){
+        res.status(400).send({ message: "Missing User's First Name"});
+        next();
+    }
+
+    if(!req.body.lastName){
+        res.status(400).send({ message: "Missing User's Last Name"});
+        next();
+    }
+
+    if(!req.body.email){
+        res.status(400).send({ message: "Missing User's Email"});
+        next();
+    }
+
+    if(!req.body.school){
+        res.status(400).send({ message: "Missing User's School"});
+        next();
+    }
+
+    if(!req.body.password){
+        res.status(400).send({ message: "Missing User's Password"});
+        next();
+    }
+
     var sendVerificationEmail = () => {
         const mailOptions = {
             from: config.MAIL_USER,
@@ -38,23 +63,19 @@ exports.submitUser = function(req, res) {
         });
     };
 
-    var user = new User({ 
-        firstName: req.body.firstName, 
-        lastName: req.body.lastName, 
-        email: req.body.email,
-        school: req.body.school,
-        verified: false,
-        verificationId: verificationId
-    });
-
+    var user = new User(req.body);
+    user.verified = false;
+    user.verificationId = verificationId;
     user.password = user.generateHash(req.body.password);
 
-    user.save(function(err, data) {
+    user.save((err, data) => {
         if(err) {
-            res.status(500).send({ message: "Some error occured during user creation. Please try again." });
+            res.status(500).send(err);
         } else {
-            sendVerificationEmail();
-            res.send({ message: "Account Created Successfully." });
+            if (process.env.NODE_ENV !== 'test') {
+                sendVerificationEmail();
+            }
+            res.send({ message: "User Details Saved Successfully" });
         }
     });
 };
@@ -80,16 +101,24 @@ exports.verifyUser = function(req, res, next) {
 };
 
 exports.authenticateUser = function(req, res) {
+    if(!req.body.email){
+        res.status(400).send({ message: "Missing User's Email"});
+    }
+
+    if(!req.body.password){
+        res.status(400).send({ message: "Missing User's Password"});
+    }
+
     User.findOne({
         'email' : req.body.email,
         'verified': true
     }, function(err, user) {
         if(err || !user) {
-            res.status(500).send({ message: "Incorrect or unverified email. Please try again." });
+            res.status(400).send({ message: "Incorrect or unverified email" });
         }
     }).then( (user) => {
         if(!user.validatePassword(req.body.password)) {
-            res.status(500).send({ message: "Incorrect password. Please try again." });
+            res.status(400).send({ message: "Incorrect password" });
         }
         else {
             const payload = { 
@@ -107,6 +136,10 @@ exports.authenticateUser = function(req, res) {
 };
 
 exports.submitForgotPasswordUser = function(req, res) {
+    if(!req.body.email){
+        res.status(400).send({ message: "Missing User's Email"});
+    }
+
     const sendPasswordResetEmail = (_token) => {
         const mailOptions = {
             from: config.MAIL_USER,
@@ -130,32 +163,44 @@ exports.submitForgotPasswordUser = function(req, res) {
         'verified': true //only verified users can reset password
     }, function(err, user) {
         if(err || !user) {
-            res.status(500).send({ message: "Incorrect or unverified email. Please try again." });
+            res.status(400).send({ message: "Incorrect or unverified email" });
         }
     }).then( (user) => {
         const payload = { userId: user._id };
         const _token = jwt.sign(payload, config.RESET_SECRET, {
             expiresIn: 300
         });
-        sendPasswordResetEmail(_token);
-        res.json({ message: "Password Reset Email Sent" });
+        
+        if (process.env.NODE_ENV !== 'test') {
+            sendPasswordResetEmail(_token);
+        }
+        
+        user.password_reset_token = _token;
+
+        User.update({ '_id': user._id }, user, function(err, result) {
+            if(err) {
+                return next(err);
+            } else {
+                res.json({ message: "Password Reset Email Sent" });
+            }
+        });
     });
 };
 
 exports.submitResetPasswordUser = function(req, res) {
     if(!req.decoded.userId) {
-        res.status(400).send({ message: "A userId not decoded" });
+        res.status(400).send({ message: "userId not decoded" });
     }
 
     if(!req.body.password) {
-        res.status(400).send({ message: "Password should be present" });
+        res.status(400).send({ message: "Missing User's Password" });
     }
     
     User.findOne({
         '_id' : req.decoded.userId
     }, function(err, user) {
         if(err || !user) {
-            res.status(500).send({ message: "Incorrect userId. Please try again." });
+            res.status(400).send({ message: "Incorrect userId" });
         }
     }).then( (user) => {
         user.password = user.generateHash(req.body.password);
@@ -163,23 +208,19 @@ exports.submitResetPasswordUser = function(req, res) {
             if(err) {
                 return next(err);
             } else {
-                res.json({ message: "Password has been successfully reset" });
+                res.json({ message: "Password reset successfully" });
             }
         });
     });
 };
 
 exports.getUserInfo = function(req, res) {
-    if(!req.params.publicId) {
-        res.status(400).send({ message: "A publicId of user should be present" });
-    }
-
     User.findOne({
         'userPublicId' : req.params.publicId,
         'verified' : true   
     }, function(err, user) {
         if(err || !user) {
-            res.status(500).send({ message: "Incorrect publicId of user. Please try again" });
+            res.status(500).send({ message: "Incorrect publicId of user" });
         }
         else {
             res.send({
@@ -193,7 +234,7 @@ exports.getUserInfo = function(req, res) {
 
 exports.editUser = function(req, res) {
     if(!req.decoded.userId) {
-        res.status(400).send({ message: "A userId not decoded" });
+        res.status(400).send({ message: "userId not decoded" });
     }
 
     User.findOne({
@@ -201,7 +242,7 @@ exports.editUser = function(req, res) {
         'verified' : true
     }, function(err, user) {
         if(err || !user) {
-            res.status(500).send({ message: "Incorrect userId. Please try again." });
+            res.status(400).send({ message: "Incorrect userId" });
         }
     }).then( (user) => {
         user.firstName = req.body.firstName || user.firstName;
@@ -211,7 +252,7 @@ exports.editUser = function(req, res) {
             if(err) {
                 return next(err);
             } else {
-                res.json({ message: "User details have been successfully updated" });
+                res.json({ message: "User details updated successfully" });
             }
         });
     });

@@ -19,7 +19,7 @@ module.exports = function(type) {
             
                 if (err) {
                     //return res.json({ success: false, message: 'Failed to authenticate token' });
-                    return res.status(403).send({ success: false, message: 'Invalid token provided.' });    
+                    return res.status(403).send({ success: false, message: 'Invalid token provided' });    
                 } else {
                     // if everything is good, save to request for use in other routes
                     req.decoded = decoded;    
@@ -32,7 +32,7 @@ module.exports = function(type) {
             // return an error
             return res.status(403).send({ 
                 success: false, 
-                message: 'No token provided.' 
+                message: 'No token provided' 
             });
         }
     }

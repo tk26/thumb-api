@@ -165,7 +165,6 @@ describe('Users', () => {
                 .get('/user/verify/' + verificationId)
                 .send({})
                 .end((err, res) => {
-                    chai.expect(res).to.redirectTo("http://localhost:3000/");
                     User.findOne({
                         'email': "jdoe@email.com"
                     }, (err, user) => {

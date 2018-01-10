@@ -5,3 +5,5 @@ node_modules
 .DS_Store
 .nyc_output
 config.js
+npm-debug.log
+/*.env

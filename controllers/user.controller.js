@@ -1,10 +1,12 @@
 var User = require('models/user.model.js');
 var jwt = require('jsonwebtoken');
 var config = require('config.js');
-var nodemailer = require('nodemailer');
-var smtpTransport = require("nodemailer-smtp-transport");
+var sgMail = require('@sendgrid/mail');
+sgMail.setApiKey(config.SENDGRID_API_KEY);
+//var nodemailer = require('nodemailer');
+//var smtpTransport = require("nodemailer-smtp-transport");
 
-var transporter = require('extensions/mail.js')
+//var transporter = require('extensions/mail.js')
 
 // var transporter = nodemailer.createTransport(smtpTransport, {
 //     host: 'smtp.gmail.com',
@@ -47,7 +49,7 @@ exports.submitUser = function(req, res) {
 
     var sendVerificationEmail = () => {
         const mailOptions = {
-            from: config.MAIL_USER,
+            from: 'accounts@thumbtravel.co',
             to: req.body.email,
             subject: 'Verify your Thumb Account',
             // TODO draft a better email
@@ -55,12 +57,7 @@ exports.submitUser = function(req, res) {
             'to verify your Thumb Account </p>'
         };
 
-        transporter.sendMail(mailOptions, function (err, info) {
-            if(err)
-                console.log(err)
-            else
-                console.log(info);
-        });
+        sgMail.send(mailOptions);
     };
 
     var user = new User(req.body);
@@ -140,20 +137,15 @@ exports.submitForgotPasswordUser = function(req, res) {
 
     const sendPasswordResetEmail = (_token) => {
         const mailOptions = {
-            from: config.MAIL_USER,
+            from: 'accounts@thumbtravel.co',
             to: req.body.email,
             subject: 'Reset your Thumb Password',
             // TODO draft a better email
             html: '<p>Please click <a href="'+ config.BASE_URL_WEBAPP +'/#/reset/'+ _token +'">HERE</a> ' +
-            'to verify your Thumb Account </p>'
+            'to reset your account password </p>'
         };
 
-        transporter.sendMail(mailOptions, function (err, info) {
-            if(err)
-                console.log(err)
-            else
-                console.log(info);
-        });
+        sgMail.send(mailOptions);
     };
 
     User.findOne({

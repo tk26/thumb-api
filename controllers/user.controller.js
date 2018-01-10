@@ -15,6 +15,10 @@ var transporter = require('extensions/mail.js')
 //         pass: 'Polarpop10'
 //     }
 // });
+const base_url = {
+    'dev': 'http://localhost:2611',
+    'prod': 'https://vast-everglades-88283.herokuapp.com'
+}
 
 const crypto = require('crypto');
 var verificationId = crypto.randomBytes(20).toString('hex');
@@ -51,7 +55,7 @@ exports.submitUser = function(req, res) {
             to: req.body.email,
             subject: 'Verify your Thumb Account',
             // TODO draft a better email
-            html: '<p>Please click <a href="http://localhost:2611/user/verify/'+ verificationId +'">HERE</a> ' + 
+            html: '<p>Please click <a href='+ base_url[process.env.NODE_ENV] +'/user/verify/'+ verificationId +'>HERE</a> ' + 
             'to verify your Thumb Account </p>'
         };
 

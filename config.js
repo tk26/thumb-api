@@ -14,6 +14,7 @@ function config(){
                 'MAIL_SERVICE': MAIL_SERVICE,
                 'MAIL_USER': 'thethumbtravel@gmail.com',
                 'MAIL_PASSWORD': 'thumbqwerty',
+                'SENDGRID_API_KEY': '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' ,
                 'DATABASE': 'mongodb://localhost/thumb'
             };
 
@@ -28,6 +29,7 @@ function config(){
                 'MAIL_SERVICE': MAIL_SERVICE,
                 'MAIL_USER': 'thethumbtravel@gmail.com',
                 'MAIL_PASSWORD': 'thumbqwerty',
+                'SENDGRID_API_KEY': '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' ,
                 'DATABASE': 'mongodb://localhost/thumb_test'
             };
 

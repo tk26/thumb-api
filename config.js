@@ -5,6 +5,8 @@ function config(){
     switch(process.env.NODE_ENV){
         case 'dev':
             return {
+                'BASE_URL_API': 'http://localhost:2611',
+                'BASE_URL_WEBAPP': 'http://localhost:3000',
                 'AUTH_SECRET': 'xX7pnOOAGvctC1TUVFgd',
                 'RESET_SECRET': 'j7skAEnGdMElUgYfHV9l',
                 'APP': APP_NAME,
@@ -17,6 +19,8 @@ function config(){
 
         case 'test':
             return {
+                'BASE_URL_API': 'http://localhost:2611',
+                'BASE_URL_WEBAPP': 'http://localhost:3000',
                 'AUTH_SECRET': '9XGaWPDp26SW8UjsQbOV',
                 'RESET_SECRET': 'e25v32rmSd5Jk6CDvh0s',
                 'APP': APP_NAME,
@@ -32,6 +36,8 @@ function config(){
             var DB_PASSWORD = process.env.DB_PASSWORD;
 
             return {
+                'BASE_URL_API': 'https://vast-everglades-88283.herokuapp.com',
+                'BASE_URL_WEBAPP': 'https://thumb-webapp.herokuapp.com',
                 'AUTH_SECRET': process.env.AUTH_SECRET,
                 'RESET_SECRET': process.env.RESET_SECRET,
                 'APP': APP_NAME,

@@ -15,15 +15,6 @@ var transporter = require('extensions/mail.js')
 //         pass: 'Polarpop10'
 //     }
 // });
-const baseUrlAPI = {
-    'dev': 'http://localhost:2611',
-    'prod': 'https://vast-everglades-88283.herokuapp.com'
-}
-
-const baseUrlWebapp = {
-    'dev': 'http://localhost:3000',
-    'prod': 'https://thumb-webapp.herokuapp.com'
-}
 
 const crypto = require('crypto');
 var verificationId = crypto.randomBytes(20).toString('hex');
@@ -60,7 +51,7 @@ exports.submitUser = function(req, res) {
             to: req.body.email,
             subject: 'Verify your Thumb Account',
             // TODO draft a better email
-            html: '<p>Please click <a href='+ baseUrlAPI[process.env.NODE_ENV] +'/user/verify/'+ verificationId +'>HERE</a> ' + 
+            html: '<p>Please click <a href='+ config.BASE_URL_API +'/user/verify/'+ verificationId +'>HERE</a> ' + 
             'to verify your Thumb Account </p>'
         };
 
@@ -101,8 +92,7 @@ exports.verifyUser = function(req, res, next) {
             if(err) {
                 return next(err);
             } else {
-                // Redirect to Webapp Home
-                res.redirect(baseUrlWebapp[process.env.NODE_ENV]);
+                res.redirect(config.BASE_URL_WEBAPP);
             }
         });
     });
@@ -154,7 +144,7 @@ exports.submitForgotPasswordUser = function(req, res) {
             to: req.body.email,
             subject: 'Reset your Thumb Password',
             // TODO draft a better email
-            html: '<p>Please click <a href="'+ baseUrlWebapp[process.env.NODE_ENV] +'/#/reset/'+ _token +'">HERE</a> ' + 
+            html: '<p>Please click <a href="'+ config.BASE_URL_WEBAPP +'/#/reset/'+ _token +'">HERE</a> ' + 
             'to verify your Thumb Account </p>'
         };
 

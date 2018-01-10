@@ -28,21 +28,17 @@ function config(){
             };
 
         case 'prod':
-            // TODO change DB_USER, DB_PASSWORD, 
-            // AUTH_SECRET, RESET_SECRET, 
-            // MAIL_USER, MAIL_PASSWORD to be taken from process.env
-            var DB_USER = 'thumb_user';
-            var DB_PASSWORD = 'HJeeqNQnvSncZXzfnHKn';
+            var DB_USER = process.env.DB_USER;
+            var DB_PASSWORD = process.env.DB_PASSWORD;
 
             return {
-                'AUTH_SECRET': 'nJ2SPP2H7U2uTrrykzzs',
-                'RESET_SECRET': 'sTXcC660tV8PgGxNG8FC',
+                'AUTH_SECRET': process.env.AUTH_SECRET,
+                'RESET_SECRET': process.env.RESET_SECRET,
                 'APP': APP_NAME,
-                //'PORT': 80,
                 'PORT' : process.env.PORT,
-                'MAIL_SERVICE': MAIL_SERVICE,
-                'MAIL_USER': 'thethumbtravel@gmail.com',
-                'MAIL_PASSWORD': 'thumbqwerty',
+                'MAIL_SERVICE': process.env.MAIL_SERVICE,
+                'MAIL_USER': process.env.MAIL_USER,
+                'MAIL_PASSWORD': process.env.MAIL_PASSWORD,
                 'DATABASE': 'mongodb://'+DB_USER+':'+DB_PASSWORD+'@ds151207.mlab.com:51207/thumb'
             };
 

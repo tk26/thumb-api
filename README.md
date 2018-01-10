@@ -11,7 +11,7 @@ MongoDB, Node.js (with Express)
 
 ### Dev
 Connects to MongoDB 'thumb'.
-> npm start
+> NODE_ENV=dev npm start
 
 ### Test 
 Connects to MongoDB 'thumb-test'.

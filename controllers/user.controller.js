@@ -51,7 +51,7 @@ exports.submitUser = function(req, res) {
             to: req.body.email,
             subject: 'Verify your Thumb Account',
             // TODO draft a better email
-            html: '<p>Please click <a href='+ config.BASE_URL_API +'/user/verify/'+ verificationId +'>HERE</a> ' + 
+            html: '<p>Please click <a href='+ config.BASE_URL_API +'/user/verify/'+ verificationId +'>HERE</a> ' +
             'to verify your Thumb Account </p>'
         };
 
@@ -119,7 +119,7 @@ exports.authenticateUser = function(req, res) {
             res.status(400).send({ message: "Incorrect password" });
         }
         else {
-            const payload = { 
+            const payload = {
                 userId: user._id,
                 userPublicId: user.userPublicId,
                 userFirstName: user.firstName,
@@ -144,7 +144,7 @@ exports.submitForgotPasswordUser = function(req, res) {
             to: req.body.email,
             subject: 'Reset your Thumb Password',
             // TODO draft a better email
-            html: '<p>Please click <a href="'+ config.BASE_URL_WEBAPP +'/#/reset/'+ _token +'">HERE</a> ' + 
+            html: '<p>Please click <a href="'+ config.BASE_URL_WEBAPP +'/#/reset/'+ _token +'">HERE</a> ' +
             'to verify your Thumb Account </p>'
         };
 
@@ -168,11 +168,11 @@ exports.submitForgotPasswordUser = function(req, res) {
         const _token = jwt.sign(payload, config.RESET_SECRET, {
             expiresIn: 300
         });
-        
+
         if (process.env.NODE_ENV !== 'test') {
             sendPasswordResetEmail(_token);
         }
-        
+
         user.password_reset_token = _token;
 
         User.update({ '_id': user._id }, user, function(err, result) {
@@ -193,7 +193,7 @@ exports.submitResetPasswordUser = function(req, res) {
     if(!req.body.password) {
         res.status(400).send({ message: "Missing User's Password" });
     }
-    
+
     User.findOne({
         '_id' : req.decoded.userId
     }, function(err, user) {
@@ -215,7 +215,7 @@ exports.submitResetPasswordUser = function(req, res) {
 exports.getUserInfo = function(req, res) {
     User.findOne({
         'userPublicId' : req.params.publicId,
-        'verified' : true   
+        'verified' : true
     }, function(err, user) {
         if(err || !user) {
             res.status(500).send({ message: "Incorrect publicId of user" });

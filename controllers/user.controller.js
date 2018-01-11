@@ -1,20 +1,8 @@
 var User = require('models/user.model.js');
 var jwt = require('jsonwebtoken');
 var config = require('config.js');
-var nodemailer = require('nodemailer');
-var smtpTransport = require("nodemailer-smtp-transport");
+var sgMailer = require('extensions/mailer.js')
 
-var transporter = require('extensions/mail.js')
-
-// var transporter = nodemailer.createTransport(smtpTransport, {
-//     host: 'smtp.gmail.com',
-//     port: 587,
-//     secure: false,
-//     auth: {
-//         user: 'info@thumbtravel.co',
-//         pass: 'Polarpop10'
-//     }
-// });
 
 const crypto = require('crypto');
 var verificationId = crypto.randomBytes(20).toString('hex');
@@ -47,20 +35,15 @@ exports.submitUser = function(req, res) {
 
     var sendVerificationEmail = () => {
         const mailOptions = {
-            from: config.MAIL_USER,
+            from: 'accounts@thumbtravel.co',
             to: req.body.email,
             subject: 'Verify your Thumb Account',
             // TODO draft a better email
-            html: '<p>Please click <a href='+ config.BASE_URL_API +'/user/verify/'+ verificationId +'>HERE</a> ' + 
+            html: '<p>Please click <a href='+ config.BASE_URL_API +'/user/verify/'+ verificationId +'>HERE</a> ' +
             'to verify your Thumb Account </p>'
         };
 
-        transporter.sendMail(mailOptions, function (err, info) {
-            if(err)
-                console.log(err)
-            else
-                console.log(info);
-        });
+        sgMailer.send(mailOptions);
     };
 
     var user = new User(req.body);
@@ -119,7 +102,7 @@ exports.authenticateUser = function(req, res) {
             res.status(400).send({ message: "Incorrect password" });
         }
         else {
-            const payload = { 
+            const payload = {
                 userId: user._id,
                 userPublicId: user.userPublicId,
                 userFirstName: user.firstName,
@@ -140,20 +123,15 @@ exports.submitForgotPasswordUser = function(req, res) {
 
     const sendPasswordResetEmail = (_token) => {
         const mailOptions = {
-            from: config.MAIL_USER,
+            from: 'accounts@thumbtravel.co',
             to: req.body.email,
             subject: 'Reset your Thumb Password',
             // TODO draft a better email
-            html: '<p>Please click <a href="'+ config.BASE_URL_WEBAPP +'/#/reset/'+ _token +'">HERE</a> ' + 
-            'to verify your Thumb Account </p>'
+            html: '<p>Please click <a href="'+ config.BASE_URL_WEBAPP +'/#/reset/'+ _token +'">HERE</a> ' +
+            'to reset your account password </p>'
         };
 
-        transporter.sendMail(mailOptions, function (err, info) {
-            if(err)
-                console.log(err)
-            else
-                console.log(info);
-        });
+        sgMailer.send(mailOptions);
     };
 
     User.findOne({
@@ -168,11 +146,11 @@ exports.submitForgotPasswordUser = function(req, res) {
         const _token = jwt.sign(payload, config.RESET_SECRET, {
             expiresIn: 300
         });
-        
+
         if (process.env.NODE_ENV !== 'test') {
             sendPasswordResetEmail(_token);
         }
-        
+
         user.password_reset_token = _token;
 
         User.update({ '_id': user._id }, user, function(err, result) {
@@ -193,7 +171,7 @@ exports.submitResetPasswordUser = function(req, res) {
     if(!req.body.password) {
         res.status(400).send({ message: "Missing User's Password" });
     }
-    
+
     User.findOne({
         '_id' : req.decoded.userId
     }, function(err, user) {
@@ -215,7 +193,7 @@ exports.submitResetPasswordUser = function(req, res) {
 exports.getUserInfo = function(req, res) {
     User.findOne({
         'userPublicId' : req.params.publicId,
-        'verified' : true   
+        'verified' : true
     }, function(err, user) {
         if(err || !user) {
             res.status(500).send({ message: "Incorrect publicId of user" });

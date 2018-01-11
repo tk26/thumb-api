@@ -10,6 +10,7 @@
   "author": "tk",
   "license": "LICENSE.md",
   "dependencies": {
+    "@sendgrid/mail": "^6.1.4",
     "app-module-path": "^2.2.0",
     "bcrypt": "^1.0.3",
     "body-parser": "^1.18.2",
@@ -19,8 +20,6 @@
     "mongoose": "^4.13.6",
     "mongoose-auto-increment": "^5.0.1",
     "morgan": "^1.9.0",
-    "nodemailer": "^4.4.1",
-    "nodemailer-smtp-transport": "^2.7.4",
     "nodemon": "^1.12.5"
   },
   "devDependencies": {
@@ -30,6 +29,9 @@
     "nyc": "^11.4.1"
   },
   "nyc": {
-    "exclude": [ "config.js", "extensions/" ]
+    "exclude": [
+      "config.js",
+      "extensions/"
+    ]
   }
 }

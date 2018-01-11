@@ -1,8 +1,7 @@
 var User = require('models/user.model.js');
 var jwt = require('jsonwebtoken');
 var config = require('config.js');
-var sgMail = require('@sendgrid/mail');
-sgMail.setApiKey(config.SENDGRID_API_KEY);
+var sgMailer = require('extensions/mailer.js')
 //var nodemailer = require('nodemailer');
 //var smtpTransport = require("nodemailer-smtp-transport");
 
@@ -57,7 +56,7 @@ exports.submitUser = function(req, res) {
             'to verify your Thumb Account </p>'
         };
 
-        sgMail.send(mailOptions);
+        sgMailer.send(mailOptions);
     };
 
     var user = new User(req.body);
@@ -145,7 +144,7 @@ exports.submitForgotPasswordUser = function(req, res) {
             'to reset your account password </p>'
         };
 
-        sgMail.send(mailOptions);
+        sgMailer.send(mailOptions);
     };
 
     User.findOne({

@@ -111,7 +111,7 @@ exports.authenticateUser = function(req, res) {
             const _token = jwt.sign(payload, config.AUTH_SECRET, {
                 expiresIn: 18000
             });
-            res.json({ message: "Logged In Successfully", token: _token });
+            res.json({ message: "Logged In Successfully", token: _token, userPublicId: user.userPublicId });
         }
     });
 };

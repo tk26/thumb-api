@@ -2,20 +2,7 @@ var User = require('models/user.model.js');
 var jwt = require('jsonwebtoken');
 var config = require('config.js');
 var sgMailer = require('extensions/mailer.js')
-//var nodemailer = require('nodemailer');
-//var smtpTransport = require("nodemailer-smtp-transport");
 
-//var transporter = require('extensions/mail.js')
-
-// var transporter = nodemailer.createTransport(smtpTransport, {
-//     host: 'smtp.gmail.com',
-//     port: 587,
-//     secure: false,
-//     auth: {
-//         user: 'info@thumbtravel.co',
-//         pass: 'Polarpop10'
-//     }
-// });
 
 const crypto = require('crypto');
 var verificationId = crypto.randomBytes(20).toString('hex');

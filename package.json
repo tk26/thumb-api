@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "nodemon server.js",
-    "test": "NODE_ENV=test nyc --reporter=text mocha --exit"
+    "test": "nyc --reporter=text mocha --exit"
   },
   "author": "tk",
   "license": "LICENSE.md",

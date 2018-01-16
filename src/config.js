@@ -1,6 +1,5 @@
 function config(){
     const APP_NAME = 'Thumb API';
-    process.env.NODE_ENV = 'test';
     switch(process.env.NODE_ENV){
         case 'dev':
             return {

@@ -43,7 +43,7 @@ function config(){
         default:
             throw "Invalid configuration choice. NODE_ENV include ('dev', 'test', 'prod')";
     }
-};
+}
 
 // Export for use in init_api
 module.exports = config()

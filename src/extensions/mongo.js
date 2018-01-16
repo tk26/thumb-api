@@ -6,12 +6,12 @@ var config = require('config.js');
 
 function init_mongo() {
 	mongoose.connect(config.DATABASE, {
-    	useMongoClient: true
+    useMongoClient: true
 	});
 
 	mongoose.connection.on('error', function() {
-    	console.log('Could not connect to the database. Exiting now...');
-    	process.exit();
+    console.log('Could not connect to the database. Exiting now...');
+    process.exit();
 	});
 }
 

@@ -1,14 +1,14 @@
 let mongoose = require("mongoose");
-let Ride = require('../models/ride.model.js');
+let Ride = require('../src/models/ride.model.js');
 
 let chai = require('chai');
 let chaiHttp = require('chai-http');
-let server = require('../server.js');
+let server = require('../src/server.js');
 let should = chai.should();
 
 chai.use(chaiHttp);
 
-let User = require('../models/user.model.js');
+let User = require('../src/models/user.model.js');
 
 describe('Ride', () => {
     var auth_token, userPublicId;
@@ -18,7 +18,7 @@ describe('Ride', () => {
 
         // login to get auth token
         // Note - we changed user password from 12121212 to 21212121 in password reset test
-        // TODO - store auth_token globally to avoid this messy shit    
+        // TODO - store auth_token globally to avoid this messy shit
         chai.request(server)
             .post('/user/login')
             .send({
@@ -63,7 +63,7 @@ describe('Ride', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("Invalid token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 
@@ -79,7 +79,7 @@ describe('Ride', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing Ride's From Location");
-                    done();    
+                    done();
                 });
         });
 
@@ -95,7 +95,7 @@ describe('Ride', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing Ride's To Location");
-                    done();    
+                    done();
                 });
         });
 
@@ -111,7 +111,7 @@ describe('Ride', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing Ride's Travel Date");
-                    done();    
+                    done();
                 });
         });
 
@@ -127,7 +127,7 @@ describe('Ride', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing Ride's Travel Times");
-                    done();    
+                    done();
                 });
         });
 
@@ -144,7 +144,7 @@ describe('Ride', () => {
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("Ride Details Saved Successfully");
-                    done();    
+                    done();
                 });
         });
     });

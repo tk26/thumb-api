@@ -1,18 +1,18 @@
 let mongoose = require("mongoose");
-let PotentialUser = require('../models/potential_user.model.js');
+let PotentialUser = require('../src/models/potential_user.model.js');
 
 let chai = require('chai');
 let chaiHttp = require('chai-http');
-let server = require('../server.js');
+let server = require('../src/server.js');
 let should = chai.should();
 
 chai.use(chaiHttp);
 
 describe('Potential Users', () => {
     before((done) => {
-        PotentialUser.remove({}, (err) => { 
-           done();         
-        });     
+        PotentialUser.remove({}, (err) => {
+           done();
+        });
     });
 
     /*

@@ -2,9 +2,9 @@
   "name": "thumb-api",
   "version": "1.0.0",
   "description": "Thumb API powers Thumb Web and Mobile Apps",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
-    "start": "nodemon server.js",
+    "start": "nodemon src/server.js",
     "test": "nyc --reporter=text mocha --exit"
   },
   "author": "tk",
@@ -30,8 +30,9 @@
   },
   "nyc": {
     "exclude": [
-      "config.js",
-      "extensions/"
+      "src/config.js",
+      "src/extensions/",
+      "test/"
     ]
   }
 }

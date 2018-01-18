@@ -1,6 +1,6 @@
 // Initialize mongoose object and connect to project scoped database uri
 var mongoose = require('mongoose');
-mongoose.Promise = Promise;
+mongoose.Promise = Promise; // eslint-disable-line no-undef
 
 var config = require('config.js');
 
@@ -10,7 +10,7 @@ function init_mongo() {
 	});
 
 	mongoose.connection.on('error', function() {
-    console.log('Could not connect to the database. Exiting now...');
+    console.log('Could not connect to the database. Exiting now...'); // eslint-disable-line no-console
     process.exit();
 	});
 }

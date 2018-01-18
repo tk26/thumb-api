@@ -29,6 +29,6 @@ var project = app.get('config').APP;
 
 app.listen(port);
 
-console.log('------------------------------\n'+project+' running on port '+port+'\n------------------------------\n');
+console.log('------------------------------\n'+project+' running on port '+port+'\n------------------------------\n'); // eslint-disable-line no-console
 
 module.exports = app;

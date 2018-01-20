@@ -14,7 +14,7 @@
     "test": "cross-env NODE_ENV=test nyc --reporter=text mocha --exit",
     "test:watch": "npm run test -- --watch",
     "checkcoverage": "nyc check-coverage --lines 95 --functions 95 --branches 95",
-    "build": "npm-run-all --parallel security-check lint"
+    "build": "npm-run-all --parallel security-check lint test"
   },
   "author": "tk",
   "license": "LICENSE.md",

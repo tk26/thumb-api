@@ -645,4 +645,53 @@ describe('Users', () => {
             done();
         });
     });
+
+    // test the /PUT /user/bio route
+    describe('/PUT /user/bio', () => {
+        it('it should not PUT a user bio without token', (done) => {
+            chai.request(server)
+                .put('/user/bio')
+                .send({})
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("No token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();    
+                });
+        });
+
+        it('it should not PUT a user bio with invalid token', (done) => {
+            chai.request(server)
+                .put('/user/bio')
+                .send({
+                    "token" : "random"
+                })
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("Invalid token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();    
+                });
+        });
+
+        it('it should PUT a user bio with valid token', (done) => {
+            chai.request(server)
+                .put('/user/bio')
+                .send({
+                    "token" : auth_token,
+                    "bio" : "this is a sample bio. very exciting."
+                })
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property("message").eql("User bio updated successfully");
+                    User.findOne({
+                        'email': "jdoe@email.com"
+                    }, (err, user) => {
+                        chai.assert.equal("this is a sample bio. very exciting.", user.bio);
+                    }).then(() => {
+                        done();
+                    });
+                });
+        });
+    });
 });

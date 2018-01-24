@@ -275,3 +275,27 @@ exports.savePaymentInformation = function(req, res) {
         });
     });
 };
+
+exports.editBio = function(req, res) {
+    if(!req.decoded.userId) {
+        res.status(400).send({ message: "userId not decoded" });
+    }
+
+    User.findOne({
+        '_id' : req.decoded.userId,
+        'verified' : true
+    }, function(err, user) {
+        if(err || !user) {
+            res.status(400).send({ message: "Incorrect userId" });
+        }
+    }).then( (user) => {
+        user.bio = req.body.bio || user.bio;
+        User.update({ '_id': user._id }, user, function(err, result) {
+            if(err) {
+                return next(err);
+            } else {
+                res.json({ message: "User bio updated successfully" });
+            }
+        });
+    });
+}

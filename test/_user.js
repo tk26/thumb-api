@@ -568,6 +568,7 @@ describe('Users', () => {
         });
     });
 
+<<<<<<< HEAD
     /*
     * Test the /POST /user/payment/save route
     */
@@ -575,6 +576,13 @@ describe('Users', () => {
         it('it should not POST a payment information without auth token', (done) => {
             chai.request(server)
                 .post('/user/payment/save')
+=======
+    // test the /PUT /user/bio route
+    describe('/PUT /user/bio', () => {
+        it('it should not PUT a user bio without token', (done) => {
+            chai.request(server)
+                .put('/user/bio')
+>>>>>>> added a new endpoint to the api for saving a users bio
                 .send({})
                 .end((err, res) => {
                     res.should.have.status(403);
@@ -584,9 +592,15 @@ describe('Users', () => {
                 });
         });
 
+<<<<<<< HEAD
         it('it should not POST a payment information with invalid auth token', (done) => {
             chai.request(server)
                 .post('/user/payment/save')
+=======
+        it('it should not PUT a user bio with invalid token', (done) => {
+            chai.request(server)
+                .put('/user/bio')
+>>>>>>> added a new endpoint to the api for saving a users bio
                 .send({
                     "token" : "random"
                 })
@@ -594,6 +608,7 @@ describe('Users', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("Invalid token provided");
                     res.body.should.have.property("success").eql(false);
+<<<<<<< HEAD
                     done();
                 });
         });
@@ -644,4 +659,36 @@ describe('Users', () => {
             done();
         });
     });
+=======
+                    done();    
+                });
+        });
+
+        it('it should PUT a user bio with valid token', (done) => {
+            chai.request(server)
+                .put('/user/bio')
+                .send({
+                    "token" : auth_token,
+                    "firstName" : "Jane",
+                    "lastName" : "Foe",
+                    "bio" : "this is a sample bio. very exciting."
+                })
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property("message").eql("User bio updated successfully");
+                    User.findOne({
+                        'email': "jdoe@email.com"
+                    }, (err, user) => {
+                        chai.assert.equal("Jane", user.firstName);
+                        chai.assert.equal("Foe", user.lastName);
+                        chai.assert.equal("this is a sample bio. very exciting.", user.bio);
+                    }).then(() => {
+                        done();
+                    });
+                });
+        });
+        
+    });
+
+>>>>>>> added a new endpoint to the api for saving a users bio
 });

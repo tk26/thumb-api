@@ -235,13 +235,9 @@ exports.editUser = function(req, res) {
     });
 };
 
-exports.savePaymentInformation = function(req, res) {
+exports.editBio = function(req, res) {
     if(!req.decoded.userId) {
         res.status(400).send({ message: "userId not decoded" });
-    }
-
-    if(!req.body.stripeToken) {
-        res.status(400).send({ message: "stripeToken not sent" });
     }
 
     User.findOne({
@@ -252,22 +248,38 @@ exports.savePaymentInformation = function(req, res) {
             res.status(400).send({ message: "Incorrect userId" });
         }
     }).then( (user) => {
-        stripe.customers.create({
-            email: user.email,
-            source: req.body.stripeToken,
-        })
-        .then( (customer) => {
-            user.stripeCustomerId = customer.id;
-            User.update({ '_id': user._id }, user, function(err, result) {
-                if(err) {
-                    return next(err);
-                } else {
-                    res.json({ message: "User stripe customer Id saved successfully" });
-                }
-            });
-        })
-        .catch( error => {
-            res.status(400).send({ message: "Invalid stripe token"});
+    	user.bio = req.body.bio || user.bio;
+        User.update({ '_id': user._id }, user, function(err, result) {
+            if(err) {
+                return next(err);
+            } else {
+                res.json({ message: "User bio updated successfully" });
+            }
         });
     });
-};
+};    
+
+exports.savePaymentInformation = function(req, res) {
+    if(!req.body.stripeToken) {
+        res.status(400).send({ message: "stripeToken not sent" });
+    }
+
+    stripe.customers.create({
+        email: user.email,
+        source: req.body.stripeToken,
+    })
+    .then( (customer) => {
+        user.stripeCustomerId = customer.id;
+        User.update({ '_id': user._id }, user, function(err, result) {
+            if(err) {
+                return next(err);
+            } else {
+                res.json({ message: "User stripe customer Id saved successfully" });
+            }
+        });
+    })
+    .catch( error => {
+        res.status(400).send({ message: "Invalid stripe token"});
+    });
+        
+}

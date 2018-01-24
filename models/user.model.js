@@ -29,7 +29,11 @@ var UserSchema = mongoose.Schema({
     password_reset_token : String,
     rides: Array,
     drives: Array,
+<<<<<<< HEAD
     stripeCustomerId: String
+=======
+    bio: String
+>>>>>>> added a new endpoint to the api for saving a users bio
 }, {
     timestamps: true
 });

@@ -686,5 +686,58 @@ describe('Users', () => {
         
     });
 
+<<<<<<< HEAD
 >>>>>>> added a new endpoint to the api for saving a users bio
+=======
+    // test the /PUT /user/pic route
+    describe('/PUT /user/pic', () => {
+        it('it should not PUT a user profile picture without token', (done) => {
+            chai.request(server)
+                .put('/user/pic')
+                .send({})
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("No token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();    
+                });
+        });
+
+        it('it should not PUT a user profile picture with invalid token', (done) => {
+            chai.request(server)
+                .put('/user/pic')
+                .send({
+                    "token" : "random"
+                })
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("Invalid token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();    
+                });
+        });
+
+        it('it should PUT a user profile picture with valid token', (done) => {
+            chai.request(server)
+                .put('/user/pic')
+                .send({
+                    "token" : auth_token,
+                    "profile_picture" : "profile picture string"
+                })
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property("message").eql("User profile picture updated successfully");
+                    User.findOne({
+                        'email': "jdoe@email.com"
+                    }, (err, user) => {
+                        chai.assert.equal("profile picture string", user.profile_picture);
+                    }).then(() => {
+                        done();
+                    });
+                });
+        });
+        
+    });
+
+>>>>>>> added endpoint for updating user profile picture, implemented as a string for now
 });

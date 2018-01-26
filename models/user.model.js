@@ -30,10 +30,15 @@ var UserSchema = mongoose.Schema({
     rides: Array,
     drives: Array,
 <<<<<<< HEAD
+<<<<<<< HEAD
     stripeCustomerId: String
 =======
     bio: String
 >>>>>>> added a new endpoint to the api for saving a users bio
+=======
+    bio: String,
+    profile_picture: String
+>>>>>>> added endpoint for updating user profile picture, implemented as a string for now
 }, {
     timestamps: true
 });

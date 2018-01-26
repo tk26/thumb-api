@@ -283,3 +283,27 @@ exports.savePaymentInformation = function(req, res) {
     });
         
 }
+
+exports.editProfilePicture = function(req, res) {
+    if(!req.decoded.userId) {
+        res.status(400).send({ message: "userId not decoded" });
+    }
+
+    User.findOne({
+        '_id' : req.decoded.userId,
+        'verified' : true
+    }, function(err, user) {
+        if(err || !user) {
+            res.status(400).send({ message: "Incorrect userId" });
+        }
+    }).then( (user) => {
+        user.profile_picture = req.body.profile_picture || user.profile_picture;
+        User.update({ '_id': user._id }, user, function(err, result) {
+            if(err) {
+                return next(err);
+            } else {
+                res.json({ message: "User profile picture updated successfully" });
+            }
+        });
+    });
+}

@@ -669,8 +669,6 @@ describe('Users', () => {
                 .put('/user/bio')
                 .send({
                     "token" : auth_token,
-                    "firstName" : "Jane",
-                    "lastName" : "Foe",
                     "bio" : "this is a sample bio. very exciting."
                 })
                 .end((err, res) => {
@@ -679,8 +677,6 @@ describe('Users', () => {
                     User.findOne({
                         'email': "jdoe@email.com"
                     }, (err, user) => {
-                        chai.assert.equal("Jane", user.firstName);
-                        chai.assert.equal("Foe", user.lastName);
                         chai.assert.equal("this is a sample bio. very exciting.", user.bio);
                     }).then(() => {
                         done();

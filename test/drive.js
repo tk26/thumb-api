@@ -244,31 +244,44 @@ describe('Drive', () => {
                 });
         });
 
-        it('it should GET drive details with correct drivePublicId', (done) => {
-            let drivePublicId;
-            Drive.findOne({
-                "user_publicId" : userPublicId
-            }, (err, drive) => {
-                 drivePublicId = drive.drivePublicId;
-            }).then(() => {
-                chai.request(server)
-                    .get('/drive/info/' + drivePublicId)
-                    .send({})
-                    .end((err, res) => {
-                        res.should.have.status(200);
-                        res.body.should.have.property("driveFrom").eql("Bloomington");
-                        res.body.should.have.property("driveTo").eql("Indy");
-                        res.body.should.have.property("driveDate").eql("02/28/2018");
-                        chai.assert.deepEqual([
-                            "6am-9am", "12pm-3pm"
-                        ], res.body.driveTime);
-                        res.body.should.have.property("driveComment");
-                        chai.assert.equal(userPublicId, res.body.driveUserPublicId);
-                        res.body.should.have.property("driveUserFirstName");
-                        res.body.should.have.property("driveUserLastName");
-                        done();
-                    });
+        it('it should GET drive details with correct drivePublicId', async () => {
+            const user = await User.create({
+              "email": "drivedetails@email.com",
+              "firstName": "Jon",
+              "lastName": "Smith",
+              "school": "hogwarts",
+              "verified": "true",
+              "password": "121212"
             });
+
+            const drive = await Drive.create({
+              "user_firstName": user.firstName,
+              "user_lastName": user.lastName,
+              "user_publicId": user.userPublicId,
+              "user_id": user._id,
+              "from_location": "Bloomington",
+              "to_location": "Indy",
+              "travel_date": "02/28/2018",
+              "seats_available": "3",
+              "travel_time": ["6am-9am","12pm-3pm"],
+              "comment": ""
+            });
+
+            const res = await chai.request(server)
+              .get('/drive/info/' + drive.drivePublicId)
+              .send({});
+
+            res.should.have.status(200);
+            res.body.should.have.property("driveFrom").eql("Bloomington");
+            res.body.should.have.property("driveTo").eql("Indy");
+            res.body.should.have.property("driveDate").eql("02/28/2018");
+            chai.assert.deepEqual([
+                "6am-9am", "12pm-3pm"
+            ], res.body.driveTime);
+            res.body.should.have.property("driveComment");
+            chai.assert.equal(user.userPublicId, res.body.driveUserPublicId);
+            res.body.should.have.property("driveUserFirstName");
+            res.body.should.have.property("driveUserLastName");
         });
     });
 });

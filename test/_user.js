@@ -473,28 +473,24 @@ describe('Users', () => {
                 });
         });
 
-        it('it should GET user profile with correct publicId', (done) => {
-            // find the only user's details
-            let publicId, firstName, lastName, school;
-            User.findOne({
-                    "email": "jdoe@email.com"
-                }, (err, user) => {
-                    publicId = user.userPublicId;
-                    firstName = user.firstName;
-                    lastName = user.lastName;
-                    school = user.school;
-                }).then(() => {
-                    chai.request(server)
-                        .get('/user/profile/' + publicId)
-                        .send({})
-                        .end((err, res) => {
-                            res.should.have.status(200);
-                            res.body.should.have.property("firstName").eql(firstName);
-                            res.body.should.have.property("lastName").eql(lastName);
-                            res.body.should.have.property("school").eql(school);
-                        done();
-                        });
-                });
+        it('it should GET user profile with correct publicId', async () => {
+            const user = await User.create({
+              "email": "userprofile@email.com",
+              "firstName": "Joe",
+              "lastName": "Smith",
+              "school": "hogwarts",
+              "verified": "true",
+              "password": "121212"
+            });
+
+            const response = await chai.request(server)
+              .get('/user/profile/' + user.userPublicId)
+              .send({});
+
+            response.should.have.status(200);
+            response.body.should.have.property("firstName").eql(user.firstName);
+            response.body.should.have.property("lastName").eql(user.lastName);
+            response.body.should.have.property("school").eql(user.school);
         });
     });
 
@@ -580,7 +576,7 @@ describe('Users', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("No token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 

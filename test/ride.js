@@ -221,31 +221,44 @@ describe('Ride', () => {
                 });
         });
 
-        it('it should GET ride details with correct ridePublicId', (done) => {
-            let ridePublicId;
-            Ride.findOne({
-                "user_publicId" : userPublicId
-            }, (err, ride) => {
-                 ridePublicId = ride.ridePublicId;
-            }).then(() => {
-                chai.request(server)
-                    .get('/ride/info/' + ridePublicId)
-                    .send({})
-                    .end((err, res) => {
-                        res.should.have.status(200);
-                        res.body.should.have.property("rideFrom").eql("Bloomington");
-                        res.body.should.have.property("rideTo").eql("Indy");
-                        res.body.should.have.property("rideDate").eql("02/28/2018");
-                        chai.assert.deepEqual([
-                            "6am-9am", "12pm-3pm"
-                        ], res.body.rideTime);
-                        res.body.should.have.property("rideComment");
-                        chai.assert.equal(userPublicId, res.body.rideUserPublicId);
-                        res.body.should.have.property("rideUserFirstName");
-                        res.body.should.have.property("rideUserLastName");
-                        done();
-                    });
-            });
+        it('it should GET ride details with correct ridePublicId', async () => {
+          const user = await User.create({
+            "email": "ridedetails@email.com",
+            "firstName": "Tim",
+            "lastName": "Smith",
+            "school": "hogwarts",
+            "verified": "true",
+            "password": "121212"
+          });
+
+          const ride = await Ride.create({
+            "user_firstName": user.firstName,
+            "user_lastName": user.lastName,
+            "user_publicId": user.userPublicId,
+            "user_id": user._id,
+            "from_location": "Bloomington",
+            "to_location": "Indy",
+            "travel_date": "02/28/2018",
+            "seats_available": "3",
+            "travel_time": ["6am-9am","12pm-3pm"],
+            "comment": ""
+          });
+
+          const res = await chai.request(server)
+            .get('/ride/info/' + ride.ridePublicId)
+            .send({});
+
+          res.should.have.status(200);
+          res.body.should.have.property("rideFrom").eql("Bloomington");
+          res.body.should.have.property("rideTo").eql("Indy");
+          res.body.should.have.property("rideDate").eql("02/28/2018");
+          chai.assert.deepEqual([
+              "6am-9am", "12pm-3pm"
+          ], res.body.rideTime);
+          res.body.should.have.property("rideComment");
+          chai.assert.equal(user.userPublicId, res.body.rideUserPublicId);
+          res.body.should.have.property("rideUserFirstName");
+          res.body.should.have.property("rideUserLastName");
         });
     });
 });

@@ -7,6 +7,7 @@ function config(){
                 'BASE_URL_WEBAPP': 'http://localhost:3000',
                 'AUTH_SECRET': 'xX7pnOOAGvctC1TUVFgd',
                 'RESET_SECRET': 'j7skAEnGdMElUgYfHV9l',
+                'STRIPE_SECRET':'sk_test_G0A5SoF2Du8KVR0MPDzE4hRO',
                 'APP': APP_NAME,
                 'PORT': 2611,
                 'SENDGRID_API_KEY': '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' ,
@@ -19,6 +20,7 @@ function config(){
                 'BASE_URL_WEBAPP': 'http://localhost:3000',
                 'AUTH_SECRET': '9XGaWPDp26SW8UjsQbOV',
                 'RESET_SECRET': 'e25v32rmSd5Jk6CDvh0s',
+                'STRIPE_SECRET':'sk_test_G0A5SoF2Du8KVR0MPDzE4hRO',
                 'APP': APP_NAME,
                 'PORT': 2611,
                 'SENDGRID_API_KEY': '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' ,
@@ -34,6 +36,7 @@ function config(){
                 'BASE_URL_WEBAPP': 'https://thumb-webapp.herokuapp.com',
                 'AUTH_SECRET': process.env.AUTH_SECRET,
                 'RESET_SECRET': process.env.RESET_SECRET,
+                'STRIPE_SECRET':'sk_test_G0A5SoF2Du8KVR0MPDzE4hRO', // TODO change to production
                 'APP': APP_NAME,
                 'PORT' : process.env.PORT,
                 'SENDGRID_API_KEY': process.env.SENDGRID_API_KEY,

@@ -28,7 +28,8 @@ var UserSchema = mongoose.Schema({
     verificationId : String,
     password_reset_token : String,
     rides: Array,
-    drives: Array
+    drives: Array,
+    stripeCustomerId: String
 }, {
     timestamps: true
 });

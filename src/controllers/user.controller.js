@@ -6,6 +6,7 @@ var sgMailer = require('extensions/mailer.js')
 
 const crypto = require('crypto');
 var verificationId = crypto.randomBytes(20).toString('hex');
+var stripe = require('stripe')(config.STRIPE_SECRET);
 
 exports.submitUser = function(req, res) {
     if(!req.body.firstName){
@@ -230,6 +231,43 @@ exports.editUser = function(req, res) {
             } else {
                 res.json({ message: "User details updated successfully" });
             }
+        });
+    });
+};
+
+exports.savePaymentInformation = function(req, res) {
+    if(!req.decoded.userId) {
+        res.status(400).send({ message: "userId not decoded" });
+    }
+
+    if(!req.body.stripeToken) {
+        res.status(400).send({ message: "stripeToken not sent" });
+    }
+
+    User.findOne({
+        '_id' : req.decoded.userId,
+        'verified' : true
+    }, function(err, user) {
+        if(err || !user) {
+            res.status(400).send({ message: "Incorrect userId" });
+        }
+    }).then( (user) => {
+        stripe.customers.create({
+            email: user.email,
+            source: req.body.stripeToken,
+        })
+        .then( (customer) => {
+            user.stripeCustomerId = customer.id;
+            User.update({ '_id': user._id }, user, function(err, result) {
+                if(err) {
+                    return next(err);
+                } else {
+                    res.json({ message: "User stripe customer Id saved successfully" });
+                }
+            });
+        })
+        .catch( error => {
+            res.status(400).send({ message: "Invalid stripe token"});
         });
     });
 };

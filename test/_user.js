@@ -567,4 +567,81 @@ describe('Users', () => {
                 });
         });
     });
+
+    /*
+    * Test the /POST /user/payment/save route
+    */
+    describe('/POST /user/payment/save', () => {
+        it('it should not POST a payment information without auth token', (done) => {
+            chai.request(server)
+                .post('/user/payment/save')
+                .send({})
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("No token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();    
+                });
+        });
+
+        it('it should not POST a payment information with invalid auth token', (done) => {
+            chai.request(server)
+                .post('/user/payment/save')
+                .send({
+                    "token" : "random"
+                })
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("Invalid token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();
+                });
+        });
+
+        it('it should not POST a payment information without stripe token', (done) => {
+            chai.request(server)
+                .post('/user/payment/save')
+                .send({
+                    "token" : auth_token
+                })
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property("message").eql("stripeToken not sent");
+                    done();
+                });
+        });
+
+        it('it should not POST a payment information with an invalid stripe token', (done) => {
+            chai.request(server)
+                .post('/user/payment/save')
+                .send({
+                    "token" : auth_token,
+                    "stripeToken": "random"
+                })
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property("message").eql("Invalid stripe token");
+                });
+            done();
+        });
+
+        it('it should POST a payment information with valid auth and stripe tokens', (done) => {
+            chai.request(server)
+                .post('/user/payment/save')
+                .send({
+                    "token" : auth_token,
+                    "stripeToken": "tok_visa"
+                })
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property("message").eql("User stripe customer Id saved successfully");
+                    User.findOne({
+                        'email': "jdoe@email.com"
+                    }, (err, user) => {
+                        chai.assert.notEqual(0, user.stripeCustomerId.length);
+                    })
+                });
+            done();
+        });
+    });
 });

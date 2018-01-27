@@ -15,4 +15,6 @@ module.exports = function(app) {
     app.get('/user/profile/:publicId', user.getUserInfo);
 
     app.put('/user/edit', middleware('auth'), user.editUser);
+
+    app.post('/user/payment/save', middleware('auth'), user.savePaymentInformation);
 }

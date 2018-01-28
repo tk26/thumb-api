@@ -1,9 +1,9 @@
 let mongoose = require("mongoose");
-let User = require('../models/user.model.js');
+let User = require('../src/models/user.model.js');
 
 let chai = require('chai');
 let chaiHttp = require('chai-http');
-let server = require('../server.js');
+let server = require('../src/server.js');
 let should = chai.should();
 
 chai.use(chaiHttp);
@@ -12,9 +12,9 @@ describe('Users', () => {
     var verificationId, auth_token, password_reset_token;
 
     before((done) => {
-        User.remove({}, (err) => { 
-           done();         
-        });     
+        User.remove({}, (err) => {
+           done();
+        });
     });
 
     /*
@@ -190,7 +190,7 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing User's Email");
-                    done();    
+                    done();
                 });
         });
 
@@ -203,7 +203,7 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing User's Password");
-                    done();    
+                    done();
                 });
         });
 
@@ -217,7 +217,7 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Incorrect or unverified email");
-                    done();    
+                    done();
                 });
         });
 
@@ -243,16 +243,16 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Incorrect or unverified email");
-                    done();    
+                    done();
                 });
-            
+
             // delete the temp user
             after((done) => {
                 User.remove({
                     "email" : "jdoe_temp@email.com"
-                }, (err) => { 
-                    done();         
-                });     
+                }, (err) => {
+                    done();
+                });
             });
         });
 
@@ -268,7 +268,7 @@ describe('Users', () => {
                     res.body.should.have.property("message").eql("Logged In Successfully");
                     res.body.should.have.property("token").length.not.eql(0);
                     auth_token = res.body.token;
-                    done();   
+                    done();
                 });
         });
     });
@@ -284,7 +284,7 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing User's Email");
-                    done();    
+                    done();
                 });
         });
 
@@ -297,7 +297,7 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Incorrect or unverified email");
-                    done();    
+                    done();
                 });
         });
 
@@ -322,16 +322,16 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Incorrect or unverified email");
-                    done();    
+                    done();
                 });
-            
+
             // delete the temp user
             after((done) => {
                 User.remove({
                     "email" : "jdoe_temp@email.com"
-                }, (err) => { 
-                    done();         
-                });     
+                }, (err) => {
+                    done();
+                });
             });
         });
 
@@ -370,7 +370,7 @@ describe('Users', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("No token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 
@@ -385,7 +385,7 @@ describe('Users', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("Invalid token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 
@@ -398,7 +398,7 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing User's Password");
-                    done();    
+                    done();
                 });
         });
 
@@ -412,7 +412,7 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("Password reset successfully");
-                    done();    
+                    done();
                 });
         });
 
@@ -426,7 +426,7 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Incorrect password");
-                    done();   
+                    done();
                 });
         });
 
@@ -473,28 +473,28 @@ describe('Users', () => {
                 });
         });
 
-        it('it should GET user profile with correct publicId', (done) => {
-            // find the only user's details
-            let publicId, firstName, lastName, school;
-            User.findOne({
-                    "email": "jdoe@email.com"
-                }, (err, user) => {
-                    publicId = user.userPublicId;
-                    firstName = user.firstName;
-                    lastName = user.lastName;
-                    school = user.school;
-                }).then(() => {
-                    chai.request(server)
-                        .get('/user/profile/' + publicId)
-                        .send({})
-                        .end((err, res) => {
-                            res.should.have.status(200);
-                            res.body.should.have.property("firstName").eql(firstName);
-                            res.body.should.have.property("lastName").eql(lastName);
-                            res.body.should.have.property("school").eql(school);
-                        done();
-                        });
-                });
+        it('it should GET user profile with correct publicId', async () => {
+          try{
+            const user = await User.create({
+              "email": "userprofile@email.com",
+              "firstName": "Joe",
+              "lastName": "Smith",
+              "school": "hogwarts",
+              "verified": "true",
+              "password": "121212"
+            });
+
+            const response = await chai.request(server)
+              .get('/user/profile/' + user.userPublicId)
+              .send({});
+
+            response.should.have.status(200);
+            response.body.should.have.property("firstName").eql(user.firstName);
+            response.body.should.have.property("lastName").eql(user.lastName);
+            response.body.should.have.property("school").eql(user.school);
+          } catch(error){
+            throw error;
+          }
         });
     });
 
@@ -510,7 +510,7 @@ describe('Users', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("No token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 
@@ -524,7 +524,7 @@ describe('Users', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("Invalid token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 
@@ -564,7 +564,7 @@ describe('Users', () => {
                 })
                 .end((err, res) => {
                     done();
-                });    
+                });
         });
     });
 
@@ -580,7 +580,7 @@ describe('Users', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("No token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 

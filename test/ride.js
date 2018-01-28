@@ -1,14 +1,14 @@
 let mongoose = require("mongoose");
-let Ride = require('../models/ride.model.js');
+let Ride = require('../src/models/ride.model.js');
 
 let chai = require('chai');
 let chaiHttp = require('chai-http');
-let server = require('../server.js');
+let server = require('../src/server.js');
 let should = chai.should();
 
 chai.use(chaiHttp);
 
-let User = require('../models/user.model.js');
+let User = require('../src/models/user.model.js');
 
 describe('Ride', () => {
     var auth_token, userPublicId;
@@ -18,7 +18,7 @@ describe('Ride', () => {
 
         // login to get auth token
         // Note - we changed user password from 12121212 to 21212121 in password reset test
-        // TODO - store auth_token globally to avoid this messy shit    
+        // TODO - store auth_token globally to avoid this messy shit
         chai.request(server)
             .post('/user/login')
             .send({
@@ -63,7 +63,7 @@ describe('Ride', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("Invalid token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 
@@ -79,7 +79,7 @@ describe('Ride', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing Ride's From Location");
-                    done();    
+                    done();
                 });
         });
 
@@ -95,7 +95,7 @@ describe('Ride', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing Ride's To Location");
-                    done();    
+                    done();
                 });
         });
 
@@ -111,7 +111,7 @@ describe('Ride', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing Ride's Travel Date");
-                    done();    
+                    done();
                 });
         });
 
@@ -127,7 +127,7 @@ describe('Ride', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing Ride's Travel Times");
-                    done();    
+                    done();
                 });
         });
 
@@ -144,7 +144,7 @@ describe('Ride', () => {
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("Ride Details Saved Successfully");
-                    done();    
+                    done();
                 });
         });
     });
@@ -221,31 +221,48 @@ describe('Ride', () => {
                 });
         });
 
-        it('it should GET ride details with correct ridePublicId', (done) => {
-            let ridePublicId;
-            Ride.findOne({
-                "user_publicId" : userPublicId
-            }, (err, ride) => {
-                 ridePublicId = ride.ridePublicId;
-            }).then(() => {
-                chai.request(server)
-                    .get('/ride/info/' + ridePublicId)
-                    .send({})
-                    .end((err, res) => {
-                        res.should.have.status(200);
-                        res.body.should.have.property("rideFrom").eql("Bloomington");
-                        res.body.should.have.property("rideTo").eql("Indy");
-                        res.body.should.have.property("rideDate").eql("02/28/2018");
-                        chai.assert.deepEqual([
-                            "6am-9am", "12pm-3pm"
-                        ], res.body.rideTime);
-                        res.body.should.have.property("rideComment");
-                        chai.assert.equal(userPublicId, res.body.rideUserPublicId);
-                        res.body.should.have.property("rideUserFirstName");
-                        res.body.should.have.property("rideUserLastName");
-                        done();
-                    });
+        it('it should GET ride details with correct ridePublicId', async () => {
+          try {
+            const user = await User.create({
+              "email": "ridedetails@email.com",
+              "firstName": "Tim",
+              "lastName": "Smith",
+              "school": "hogwarts",
+              "verified": "true",
+              "password": "121212"
             });
+
+            const ride = await Ride.create({
+              "user_firstName": user.firstName,
+              "user_lastName": user.lastName,
+              "user_publicId": user.userPublicId,
+              "user_id": user._id,
+              "from_location": "Bloomington",
+              "to_location": "Indy",
+              "travel_date": "02/28/2018",
+              "seats_available": "3",
+              "travel_time": ["6am-9am","12pm-3pm"],
+              "comment": ""
+            });
+
+            const res = await chai.request(server)
+              .get('/ride/info/' + ride.ridePublicId)
+              .send({});
+
+            res.should.have.status(200);
+            res.body.should.have.property("rideFrom").eql("Bloomington");
+            res.body.should.have.property("rideTo").eql("Indy");
+            res.body.should.have.property("rideDate").eql("02/28/2018");
+            chai.assert.deepEqual([
+                "6am-9am", "12pm-3pm"
+            ], res.body.rideTime);
+            res.body.should.have.property("rideComment");
+            chai.assert.equal(user.userPublicId, res.body.rideUserPublicId);
+            res.body.should.have.property("rideUserFirstName");
+            res.body.should.have.property("rideUserLastName");
+          } catch(error){
+            throw error;
+          }
         });
     });
 });

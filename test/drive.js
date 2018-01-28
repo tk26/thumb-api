@@ -1,14 +1,14 @@
 let mongoose = require("mongoose");
-let Drive = require('../models/drive.model.js');
+let Drive = require('../src/models/drive.model.js');
 
 let chai = require('chai');
 let chaiHttp = require('chai-http');
-let server = require('../server.js');
+let server = require('../src/server.js');
 let should = chai.should();
 
 chai.use(chaiHttp);
 
-let User = require('../models/user.model.js');
+let User = require('../src/models/user.model.js');
 
 describe('Drive', () => {
     var auth_token, userPublicId;
@@ -18,7 +18,7 @@ describe('Drive', () => {
 
         // login to get auth token
         // Note - we changed user password from 12121212 to 21212121 in password reset test
-        // TODO - store auth_token globally to avoid this messy shit    
+        // TODO - store auth_token globally to avoid this messy shit
         chai.request(server)
             .post('/user/login')
             .send({
@@ -63,7 +63,7 @@ describe('Drive', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("Invalid token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 
@@ -80,7 +80,7 @@ describe('Drive', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing Drive's From Location");
-                    done();    
+                    done();
                 });
         });
 
@@ -97,7 +97,7 @@ describe('Drive', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing Drive's To Location");
-                    done();    
+                    done();
                 });
         });
 
@@ -114,7 +114,7 @@ describe('Drive', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing Drive's Travel Date");
-                    done();    
+                    done();
                 });
         });
 
@@ -131,7 +131,7 @@ describe('Drive', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing Drive's Travel Times");
-                    done();    
+                    done();
                 });
         });
 
@@ -148,7 +148,7 @@ describe('Drive', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing Drive's Seats Available");
-                    done();    
+                    done();
                 });
         });
 
@@ -166,7 +166,7 @@ describe('Drive', () => {
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("Drive Details Saved Successfully");
-                    done();    
+                    done();
                 });
         });
     });
@@ -244,31 +244,48 @@ describe('Drive', () => {
                 });
         });
 
-        it('it should GET drive details with correct drivePublicId', (done) => {
-            let drivePublicId;
-            Drive.findOne({
-                "user_publicId" : userPublicId
-            }, (err, drive) => {
-                 drivePublicId = drive.drivePublicId;
-            }).then(() => {
-                chai.request(server)
-                    .get('/drive/info/' + drivePublicId)
-                    .send({})
-                    .end((err, res) => {
-                        res.should.have.status(200);
-                        res.body.should.have.property("driveFrom").eql("Bloomington");
-                        res.body.should.have.property("driveTo").eql("Indy");
-                        res.body.should.have.property("driveDate").eql("02/28/2018");
-                        chai.assert.deepEqual([
-                            "6am-9am", "12pm-3pm"
-                        ], res.body.driveTime);
-                        res.body.should.have.property("driveComment");
-                        chai.assert.equal(userPublicId, res.body.driveUserPublicId);
-                        res.body.should.have.property("driveUserFirstName");
-                        res.body.should.have.property("driveUserLastName");
-                        done();
-                    });
+        it('it should GET drive details with correct drivePublicId', async () => {
+          try {
+            const user = await User.create({
+              "email": "drivedetails@email.com",
+              "firstName": "Jon",
+              "lastName": "Smith",
+              "school": "hogwarts",
+              "verified": "true",
+              "password": "121212"
             });
+
+            const drive = await Drive.create({
+              "user_firstName": user.firstName,
+              "user_lastName": user.lastName,
+              "user_publicId": user.userPublicId,
+              "user_id": user._id,
+              "from_location": "Bloomington",
+              "to_location": "Indy",
+              "travel_date": "02/28/2018",
+              "seats_available": "3",
+              "travel_time": ["6am-9am","12pm-3pm"],
+              "comment": ""
+            });
+
+            const res = await chai.request(server)
+              .get('/drive/info/' + drive.drivePublicId)
+              .send({});
+
+            res.should.have.status(200);
+            res.body.should.have.property("driveFrom").eql("Bloomington");
+            res.body.should.have.property("driveTo").eql("Indy");
+            res.body.should.have.property("driveDate").eql("02/28/2018");
+            chai.assert.deepEqual([
+                "6am-9am", "12pm-3pm"
+            ], res.body.driveTime);
+            res.body.should.have.property("driveComment");
+            chai.assert.equal(user.userPublicId, res.body.driveUserPublicId);
+            res.body.should.have.property("driveUserFirstName");
+            res.body.should.have.property("driveUserLastName");
+          } catch(error){
+            throw error;
+          }
         });
     });
 });

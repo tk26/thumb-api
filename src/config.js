@@ -1,6 +1,5 @@
 function config(){
     const APP_NAME = 'Thumb API';
-
     switch(process.env.NODE_ENV){
         case 'dev':
             return {
@@ -47,7 +46,7 @@ function config(){
         default:
             throw "Invalid configuration choice. NODE_ENV include ('dev', 'test', 'prod')";
     }
-};
+}
 
 // Export for use in init_api
 module.exports = config()

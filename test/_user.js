@@ -474,6 +474,7 @@ describe('Users', () => {
         });
 
         it('it should GET user profile with correct publicId', async () => {
+          try{
             const user = await User.create({
               "email": "userprofile@email.com",
               "firstName": "Joe",
@@ -491,6 +492,9 @@ describe('Users', () => {
             response.body.should.have.property("firstName").eql(user.firstName);
             response.body.should.have.property("lastName").eql(user.lastName);
             response.body.should.have.property("school").eql(user.school);
+          } catch(error){
+            throw error;
+          }
         });
     });
 

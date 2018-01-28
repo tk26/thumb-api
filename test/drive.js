@@ -245,6 +245,7 @@ describe('Drive', () => {
         });
 
         it('it should GET drive details with correct drivePublicId', async () => {
+          try {
             const user = await User.create({
               "email": "drivedetails@email.com",
               "firstName": "Jon",
@@ -282,6 +283,9 @@ describe('Drive', () => {
             chai.assert.equal(user.userPublicId, res.body.driveUserPublicId);
             res.body.should.have.property("driveUserFirstName");
             res.body.should.have.property("driveUserLastName");
+          } catch(error){
+            throw error;
+          }
         });
     });
 });

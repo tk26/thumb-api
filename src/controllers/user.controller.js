@@ -115,7 +115,9 @@ exports.authenticateUser = function(req, res) {
             res.json({ message: "Logged In Successfully", 
                 token: _token, 
                 userPublicId: user.userPublicId,
-                hasPaymentInformation: user.stripeCustomerId ? true : false 
+                hasPaymentInformation: user.stripeCustomerId ? true : false,
+                hasProfilePicture: user.profile_picture ? true : false,
+                hasBio: user.bio ? true : false
             });
         }
     });

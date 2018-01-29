@@ -13,7 +13,7 @@
     "pretest": "node buildScripts/test.js",
     "test": "cross-env NODE_ENV=test npm run checkcoverage mocha --exit",
     "test:watch": "npm run test -- --watch",
-    "checkcoverage": "nyc --check-coverage --lines 80 --functions 80 --branches 80 --reporter=text",
+    "checkcoverage": "nyc --check-coverage --lines 80 --functions 80 --branches 75 --reporter=text",
     "build": "npm-run-all --parallel security-check lint"
   },
   "author": "tk",
@@ -50,7 +50,8 @@
     "exclude": [
       "src/config.js",
       "src/extensions/",
-      "test/"
+      "test/",
+      "src/server.js"
     ]
   }
 }

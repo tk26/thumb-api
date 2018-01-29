@@ -267,6 +267,7 @@ describe('Users', () => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("Logged In Successfully");
                     res.body.should.have.property("token").length.not.eql(0);
+                    res.body.should.have.property("hasPaymentInformation");
                     auth_token = res.body.token;
                     done();
                 });

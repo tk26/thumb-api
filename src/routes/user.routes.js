@@ -19,4 +19,6 @@ module.exports = function(app) {
     app.post('/user/payment/save', middleware('auth'), user.savePaymentInformation);
     
     app.put('/user/bio', middleware('auth'), user.editBio);
+
+    app.put('/user/pic', middleware('auth'), user.editProfilePicture);
 }

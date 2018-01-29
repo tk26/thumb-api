@@ -30,7 +30,8 @@ var UserSchema = mongoose.Schema({
     rides: Array,
     drives: Array,
     stripeCustomerId: String,
-    bio: String
+    bio: String,
+    profile_picture: String
 }, {
     timestamps: true
 });

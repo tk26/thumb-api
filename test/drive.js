@@ -9,32 +9,21 @@ let should = chai.should();
 chai.use(chaiHttp);
 
 let User = require('../src/models/user.model.js');
+let userUtility = require('./utilities/user.utility.js');
 
 describe('Drive', () => {
-    var auth_token, userPublicId;
+    let auth_token, userPublicId, user;
+    let email = "driveuser@email.com";
 
-    before((done) => {
-        Drive.remove({}, (err) => {});
+    before(async() => {
+      let userPassword = "Test123!";
+      await Drive.remove({});
+      user = await userUtility.createVerifiedUser("Joe", "Smith", email, "Hogwarts",userPassword);
+      auth_token = await userUtility.getUserAuthToken(user.email, userPassword);
+    });
 
-        // login to get auth token
-        // Note - we changed user password from 12121212 to 21212121 in password reset test
-        // TODO - store auth_token globally to avoid this messy shit
-        chai.request(server)
-            .post('/user/login')
-            .send({
-                "email" : "jdoe@email.com",
-                "password": "21212121"
-            })
-            .end((err, res) => {
-                auth_token = res.body.token;
-                User.findOne({
-                    'email': "jdoe@email.com"
-                }, (err, user) => {
-                    userPublicId = user.userPublicId;
-                }).then(() => {
-                    done();
-                });
-            });
+    after(async () => {
+      await userUtility.deleteUserByEmail(email);
     });
 
     /*
@@ -199,7 +188,7 @@ describe('Drive', () => {
 
         it('it should GET drives of user with correct publicId', (done) => {
             chai.request(server)
-                .get('/drive/user/' + userPublicId)
+                .get('/drive/user/' + user.userPublicId)
                 .send({})
                 .end((err, res) => {
                     res.should.have.status(200);
@@ -246,15 +235,6 @@ describe('Drive', () => {
 
         it('it should GET drive details with correct drivePublicId', async () => {
           try {
-            const user = await User.create({
-              "email": "drivedetails@email.com",
-              "firstName": "Jon",
-              "lastName": "Smith",
-              "school": "hogwarts",
-              "verified": "true",
-              "password": "121212"
-            });
-
             const drive = await Drive.create({
               "user_firstName": user.firstName,
               "user_lastName": user.lastName,
@@ -270,7 +250,7 @@ describe('Drive', () => {
 
             const res = await chai.request(server)
               .get('/drive/info/' + drive.drivePublicId)
-              .send({});
+              .send({auth_token});
 
             res.should.have.status(200);
             res.body.should.have.property("driveFrom").eql("Bloomington");

@@ -9,32 +9,21 @@ let should = chai.should();
 chai.use(chaiHttp);
 
 let User = require('../src/models/user.model.js');
+let userUtility = require('./utilities/user.utility.js');
 
 describe('Ride', () => {
-    var auth_token, userPublicId;
+    var auth_token, userPublicId, user;
+    let email = "rideuser@email.com";
 
-    before((done) => {
-        Ride.remove({}, (err) => {});
+    before(async () => {
+      await Ride.remove({});
+      let userPassword = "Test123!";
+      user = await userUtility.createVerifiedUser("Jon", "Smith", email, "Hogwarts",userPassword);
+      auth_token = await userUtility.getUserAuthToken(user.email, userPassword);
+    });
 
-        // login to get auth token
-        // Note - we changed user password from 12121212 to 21212121 in password reset test
-        // TODO - store auth_token globally to avoid this messy shit
-        chai.request(server)
-            .post('/user/login')
-            .send({
-                "email" : "jdoe@email.com",
-                "password": "21212121"
-            })
-            .end((err, res) => {
-                auth_token = res.body.token;
-                User.findOne({
-                    'email': "jdoe@email.com"
-                }, (err, user) => {
-                    userPublicId = user.userPublicId;
-                }).then(() => {
-                    done();
-                });
-            });
+    after(async () => {
+      await userUtility.deleteUserByEmail(email);
     });
 
     /*
@@ -177,7 +166,7 @@ describe('Ride', () => {
 
         it('it should GET rides of user with correct publicId', (done) => {
             chai.request(server)
-                .get('/ride/user/' + userPublicId)
+                .get('/ride/user/' + user.userPublicId)
                 .send({})
                 .end((err, res) => {
                     res.should.have.status(200);
@@ -223,15 +212,6 @@ describe('Ride', () => {
 
         it('it should GET ride details with correct ridePublicId', async () => {
           try {
-            const user = await User.create({
-              "email": "ridedetails@email.com",
-              "firstName": "Tim",
-              "lastName": "Smith",
-              "school": "hogwarts",
-              "verified": "true",
-              "password": "121212"
-            });
-
             const ride = await Ride.create({
               "user_firstName": user.firstName,
               "user_lastName": user.lastName,

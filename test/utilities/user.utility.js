@@ -27,7 +27,7 @@ exports.createVerifiedUser = async function (firstName, lastName, email, school,
     .get('/user/verify/' + createdUser.verificationId)
     .send({});
   } catch(error) {
-
+    console.log("UserUtility:  Ignored redirect after verifying user..."); // eslint-disable-line no-console
   }
   createdUser = await User.findOne({'email': email});
   chai.assert.equal(0, createdUser.verificationId.length);

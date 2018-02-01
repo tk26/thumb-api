@@ -7,6 +7,7 @@ let server = require('../src/server.js');
 let should = chai.should();
 
 chai.use(chaiHttp);
+let userUtility = require('./utilities/user.utility.js');
 
 describe('Users', () => {
     var verificationId, auth_token, password_reset_token;
@@ -126,22 +127,25 @@ describe('Users', () => {
                 });
         });
 
-        it('it should not POST a user with duplicate email', (done) => {
-            chai.request(server)
-                .post('/user/create')
-                .send({
-                    "firstName": "John",
-                    "lastName": "Doe",
-                    "email": "jdoe@email.com",
-                    "school": "hogwarts",
-                    "password": "12121212"
-                })
-                .end((err, res) => {
-                    res.should.have.status(500);
-                    res.body.should.have.property("code").eql(11000);
-                    res.body.should.have.property("errmsg");
-                    done();
-                });
+        it('it should not POST a user with duplicate email', async () => {
+          let dupeUserPassword = "Test123!";
+          let dupeUserEmail = "dupeuser@email.com";
+          let dupeUser = await userUtility.createVerifiedUser("Jane", "Doe", dupeUserEmail, "hogwarts", dupeUserPassword);
+
+          let res = await chai.request(server)
+              .post('/user/create')
+              .send({
+                  "firstName": dupeUser.firstName,
+                  "lastName": dupeUser.lastName,
+                  "email": dupeUserEmail,
+                  "school": dupeUser.school,
+                  "password": dupeUserPassword
+              });
+          res.should.have.status(500);
+          res.body.should.have.property("code").eql(11000);
+          res.body.should.have.property("errmsg");
+
+          await userUtility.deleteUserByEmail(dupeUserEmail);
         });
     });
 
@@ -363,6 +367,19 @@ describe('Users', () => {
     * Test the /POST /user/reset route
     */
     describe('/POST /user/reset', () => {
+      let resetUser;
+      let resetUserEmail = "resetuser@email.com";
+      let resetUserPassword = "Test123!";
+      let resetAuthToken;
+      before( async() => {
+        resetUser = await userUtility.createVerifiedUser("Tim", "Smith", resetUserEmail, "hogwarts", resetUserPassword);
+        resetAuthToken = await userUtility.getResetAuthToken(resetUserEmail);
+      });
+
+      after(async () => {
+        await userUtility.deleteUserByEmail(resetUserEmail);
+      });
+
         it('it should not POST a user reset without token', (done) => {
             chai.request(server)
                 .post('/user/reset')
@@ -396,7 +413,7 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/reset')
                 .send({
-                    "token" : password_reset_token
+                    "token" : resetAuthToken
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -409,7 +426,7 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/reset')
                 .send({
-                    "token" : password_reset_token,
+                    "token" : resetAuthToken,
                     "password" : "21212121"
                 })
                 .end((err, res) => {
@@ -423,8 +440,8 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/login')
                 .send({
-                    "email" : "jdoe@email.com",
-                    "password": "12121212"
+                    "email" : resetUserEmail,
+                    "password": resetUserPassword
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -437,7 +454,7 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/login')
                 .send({
-                    "email" : "jdoe@email.com",
+                    "email" : resetUserEmail,
                     "password": "21212121"
                 })
                 .end((err, res) => {
@@ -658,7 +675,7 @@ describe('Users', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("No token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 
@@ -672,7 +689,7 @@ describe('Users', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("Invalid token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 
@@ -707,7 +724,7 @@ describe('Users', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("No token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 
@@ -721,7 +738,7 @@ describe('Users', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("Invalid token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 

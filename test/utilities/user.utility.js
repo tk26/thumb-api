@@ -24,8 +24,8 @@ exports.createVerifiedUser = async function (firstName, lastName, email, school,
   let createdUser = await User.findOne({'email': email});
   try {
      let verifyResponse = await chai.request(server)
-    .get('/user/verify/' + createdUser.verificationId)
-    .send({});
+      .get('/user/verify/' + createdUser.verificationId)
+      .send({});
   } catch(error) {
     console.log("UserUtility:  Ignored redirect after verifying user..."); // eslint-disable-line no-console
   }
@@ -49,4 +49,19 @@ exports.getUserAuthToken = async function(email, password){
 
 exports.deleteUserByEmail = async function(email){
   await User.deleteOne({'email': email});
+}
+
+exports.getResetAuthToken = async function(email){
+  let res = await chai.request(server)
+    .post('/user/forgot')
+    .send({
+        "email" : email
+  });
+
+  res.should.have.status(200);
+  res.body.should.have.property("message").eql("Password Reset Email Sent");
+
+  let user = User.findOne({'email': email});
+  chai.assert.notEqual(0, user.password_reset_token.length);
+  return user.password_reset_token;
 }

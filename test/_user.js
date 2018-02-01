@@ -10,12 +10,27 @@ chai.use(chaiHttp);
 let userUtility = require('./utilities/user.utility.js');
 
 describe('Users', () => {
-    var verificationId, auth_token, password_reset_token;
+    let verificationId, auth_token, password_reset_token;
 
-    before((done) => {
-        User.remove({}, (err) => {
-           done();
-        });
+    //Duplicate user variables
+    let dupeUserPassword = "Test123!";
+    let dupeUserEmail = "dupeuser@email.com";
+    let dupeUser;
+
+    //Reset password user variables
+    let resetUser;
+    let resetUserEmail = "resetuser@email.com";
+    let resetUserPassword = "Test123!";
+
+    before(async () => {
+      await User.remove({});
+      dupeUser = await userUtility.createVerifiedUser("Jane", "Doe", dupeUserEmail, "hogwarts", dupeUserPassword);
+      resetUser = await userUtility.createVerifiedUser("Tim", "Smith", resetUserEmail, "hogwarts", resetUserPassword);
+    });
+
+    after(async () => {
+      await userUtility.deleteUserByEmail(dupeUserEmail);
+      await userUtility.deleteUserByEmail(resetUserEmail);
     });
 
     /*
@@ -127,26 +142,23 @@ describe('Users', () => {
                 });
         });
 
-        it('it should not POST a user with duplicate email', async () => {
-          let dupeUserPassword = "Test123!";
-          let dupeUserEmail = "dupeuser@email.com";
-          let dupeUser = await userUtility.createVerifiedUser("Jane", "Doe", dupeUserEmail, "hogwarts", dupeUserPassword);
-
-          let res = await chai.request(server)
+        it('it should not POST a user with duplicate email', (done) => {
+          chai.request(server)
               .post('/user/create')
               .send({
-                  "firstName": dupeUser.firstName,
-                  "lastName": dupeUser.lastName,
-                  "email": dupeUserEmail,
-                  "school": dupeUser.school,
-                  "password": dupeUserPassword
+                "firstName": dupeUser.firstName,
+                "lastName": dupeUser.lastName,
+                "email": dupeUserEmail,
+                "school": dupeUser.school,
+                "password": dupeUserPassword
+              })
+              .end((err, res) => {
+                  res.should.have.status(500);
+                  res.body.should.have.property("code").eql(11000);
+                  res.body.should.have.property("errmsg");
+                  done();
               });
-          res.should.have.status(500);
-          res.body.should.have.property("code").eql(11000);
-          res.body.should.have.property("errmsg");
-
-          await userUtility.deleteUserByEmail(dupeUserEmail);
-        });
+      });
     });
 
     /*
@@ -367,18 +379,10 @@ describe('Users', () => {
     * Test the /POST /user/reset route
     */
     describe('/POST /user/reset', () => {
-      let resetUser;
-      let resetUserEmail = "resetuser@email.com";
-      let resetUserPassword = "Test123!";
-      let resetAuthToken;
-      before( async() => {
-        resetUser = await userUtility.createVerifiedUser("Tim", "Smith", resetUserEmail, "hogwarts", resetUserPassword);
-        resetAuthToken = await userUtility.getResetAuthToken(resetUserEmail);
-      });
-
-      after(async () => {
-        await userUtility.deleteUserByEmail(resetUserEmail);
-      });
+      let resetAuthToken, resetUserLoginToken;
+      before( async () => {
+          resetAuthToken = await userUtility.getResetAuthToken(resetUserEmail);
+        });
 
         it('it should not POST a user reset without token', (done) => {
             chai.request(server)
@@ -461,7 +465,7 @@ describe('Users', () => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("Logged In Successfully");
                     res.body.should.have.property("token").length.not.eql(0);
-                    auth_token = res.body.token;
+                    resetUserLoginToken = res.body.token;
                     done();
                 });
         });

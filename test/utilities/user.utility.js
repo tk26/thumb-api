@@ -61,7 +61,7 @@ exports.getResetAuthToken = async function(email){
   res.should.have.status(200);
   res.body.should.have.property("message").eql("Password Reset Email Sent");
 
-  let user = User.findOne({'email': email});
+  let user = await User.findOne({'email': email});
   chai.assert.notEqual(0, user.password_reset_token.length);
   return user.password_reset_token;
 }

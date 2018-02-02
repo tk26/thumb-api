@@ -274,6 +274,7 @@ describe('Users', () => {
                     res.body.should.have.property("hasPaymentInformation");
                     res.body.should.have.property("hasProfilePicture");
                     res.body.should.have.property("hasBio");
+                    res.body.should.have.property("phone");
                     auth_token = res.body.token;
                     done();
                 });

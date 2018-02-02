@@ -15,17 +15,17 @@ describe('Users', () => {
         password_reset_token,
         phoneVerificationId;
 
-    //Duplicate user variables
+    //Duplicate User - for tests involving the duplicate user scenario
     let dupeUser;
     let dupeUserPassword = "Test123!";
     let dupeUserEmail = "dupeuser@email.com";
 
-    //Reset password user variables
+    //Reset Password User - for all tests involving the reset password scenario
     let resetUser;
     let resetUserEmail = "resetuser@email.com";
     let resetUserPassword = "Test123!";
 
-    //Test User - for all other operations outside of user create
+    //Test User - for general test user scenarios
     let testUser;
     let testUserEmail = "testuser@email.com";
     let testUserPassword = "Test123!";
@@ -41,6 +41,7 @@ describe('Users', () => {
 
     after(async () => {
       await userUtility.deleteUserByEmail(dupeUserEmail);
+      await userUtility.deleteUserByEmail(resetUserEmail);
       await userUtility.deleteUserByEmail(resetUserEmail);
     });
 

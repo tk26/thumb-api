@@ -6,7 +6,8 @@ var sgMailer = require('extensions/mailer.js')
 const crypto = require('crypto');
 var verificationId = crypto.randomBytes(20).toString('hex');
 var stripe = require('stripe')(config.STRIPE_SECRET);
-var phoneVerificationId = require('randomstring').generate(7);
+
+const randomstring = require('randomstring');
 var Twilio = require('twilio');
 var twilio = new Twilio(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN);
 
@@ -56,7 +57,7 @@ exports.submitUser = function(req, res) {
 
     user.phone = '';
     user.phoneVerified = false;
-    user.phoneVerificationId = phoneVerificationId;
+    user.phoneVerificationId = '';
 
     user.save((err, data) => {
         if(err) {
@@ -344,6 +345,8 @@ exports.submitPhone = function(req, res) {
     if(req.body.phone.length !== 10) {
         res.status(400).send({ message: "Incorrect phone" });
     }
+    
+    const phoneVerificationId = randomstring.generate(7);
 
     var sendPhoneVerificationSMS = (phone, phoneVerificationId) => {
         const toPhone = '+1' + phone;
@@ -376,11 +379,19 @@ exports.submitPhone = function(req, res) {
                 return next(err);
             } else {
                 if (process.env.NODE_ENV !== 'test') {
-                    sendPhoneVerificationSMS(req.body.phone, user.phoneVerificationId);
+                    sendPhoneVerificationSMS(req.body.phone, phoneVerificationId);
                 }
-                res.json({ message: "User phone saved successfully" });
             }
         });
+        user.phoneVerificationId = phoneVerificationId;
+        user.phoneVerified = false;
+        User.update({ '_id': user._id }, user, function(err, result) {
+            if(err) {
+                return next(err);
+            } else {
+                res.json({ message: "User phone saved successfully" });
+            }
+        })
     });
 }
 

@@ -122,10 +122,8 @@ describe('Users', () => {
                     }, (err, user) => {
                         chai.assert.notEqual(0, user.verificationId.length);
                         chai.assert.equal(false, user.verified);
-                        chai.assert.notEqual(0, user.phoneVerificationId.length);
                         chai.assert.equal(false, user.phoneVerified);
                         verificationId = user.verificationId;
-                        phoneVerificationId = user.phoneVerificationId;
                     }).then(() => {
                         done();
                     });
@@ -819,6 +817,11 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("User phone saved successfully");
+                    User.findOne({
+                        'email': "jdoe@email.com"
+                    }, (err, user) => {
+                        phoneVerificationId = user.phoneVerificationId;
+                    });
                 });
             done();
         });

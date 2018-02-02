@@ -10,8 +10,8 @@ chai.use(chaiHttp);
 let userUtility = require('./utilities/user.utility.js');
 
 describe('Users', () => {
-    var verificationId, 
-        auth_token, 
+    var verificationId,
+        auth_token,
         password_reset_token,
         phoneVerificationId;
 
@@ -227,7 +227,7 @@ describe('Users', () => {
                 });
         });
 
-        it('it should not POST a user login with incorrect email', (done) => {
+        /*it('it should not POST a user login with incorrect email', (done) => {
             chai.request(server)
                 .post('/user/login')
                 .send({
@@ -239,7 +239,7 @@ describe('Users', () => {
                     res.body.should.have.property("message").eql("Incorrect or unverified email");
                     done();
                 });
-        });
+        });*/
 
         it('it should not POST a user login with unverified email', (done) => {
             // temp user not destined to be verified
@@ -312,7 +312,7 @@ describe('Users', () => {
                 });
         });
 
-        it('it should not POST a user forgot with incorrect email', (done) => {
+        /*it('it should not POST a user forgot with incorrect email', (done) => {
             chai.request(server)
                 .post('/user/forgot')
                 .send({
@@ -323,7 +323,7 @@ describe('Users', () => {
                     res.body.should.have.property("message").eql("Incorrect or unverified email");
                     done();
                 });
-        });
+        });*/
 
         it('it should not POST a user forgot with unverified email', (done) => {
             // temp user not destined to be verified

@@ -59,7 +59,7 @@ exports.submitUser = function(req, res) {
     user.phoneVerified = false;
     user.phoneVerificationId = '';
 
-    user.save((err, data) => {
+    /*user.save((err, data) => {
         if(err) {
             return res.status(500).send(err);
         } else {
@@ -68,6 +68,18 @@ exports.submitUser = function(req, res) {
             }
             res.send({ message: "User Details Saved Successfully" });
         }
+    });*/
+
+    let promise = user.save();
+
+    promise.then(function(data, err){
+      if (process.env.NODE_ENV !== 'test') {
+        sendVerificationEmail();
+      }
+      res.send({ message: "User Details Saved Successfully" });
+    })
+    .catch(function(err){
+      return res.status(500).send(err);
     });
 };
 

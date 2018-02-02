@@ -9,7 +9,10 @@ let should = chai.should();
 chai.use(chaiHttp);
 
 describe('Users', () => {
-    var verificationId, auth_token, password_reset_token;
+    var verificationId, 
+        auth_token, 
+        password_reset_token,
+        phoneVerificationId;
 
     before((done) => {
         User.remove({}, (err) => {
@@ -119,7 +122,10 @@ describe('Users', () => {
                     }, (err, user) => {
                         chai.assert.notEqual(0, user.verificationId.length);
                         chai.assert.equal(false, user.verified);
+                        chai.assert.notEqual(0, user.phoneVerificationId.length);
+                        chai.assert.equal(false, user.phoneVerified);
                         verificationId = user.verificationId;
+                        phoneVerificationId = user.phoneVerificationId;
                     }).then(() => {
                         done();
                     });
@@ -739,6 +745,143 @@ describe('Users', () => {
                         'email': "jdoe@email.com"
                     }, (err, user) => {
                         chai.assert.equal("profile picture string", user.profile_picture);
+                    }).then(() => {
+                        done();
+                    });
+                });
+        });
+    });
+
+    /*
+    * Test the /POST /user/phone/save route
+    */
+    describe('/POST /user/phone/save', () => {
+        it('it should not POST a phone number without auth token', (done) => {
+            chai.request(server)
+                .post('/user/phone/save')
+                .send({})
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("No token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();
+                });
+        });
+
+        it('it should not POST a phone number with invalid auth token', (done) => {
+            chai.request(server)
+                .post('/user/phone/save')
+                .send({
+                    "token" : "random"
+                })
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("Invalid token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();
+                });
+        });
+
+        it('it should not POST a phone number without phone number', (done) => {
+            chai.request(server)
+                .post('/user/phone/save')
+                .send({
+                    "token" : auth_token
+                })
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property("message").eql("Missing User's phone");
+                    done();
+                });
+        });
+
+        it('it should not POST a phone number with invalid phone number', (done) => {
+            chai.request(server)
+                .post('/user/phone/save')
+                .send({
+                    "token" : auth_token,
+                    "phone": "123"
+                })
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property("message").eql("Incorrect phone");
+                    done();
+                });
+        });
+
+        it('it should POST a phone number with valid auth token and phone number', (done) => {
+            chai.request(server)
+                .post('/user/phone/save')
+                .send({
+                    "token" : auth_token,
+                    "phone": "1234567890"
+                })
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property("message").eql("User phone saved successfully");
+                });
+            done();
+        });
+    });
+
+    /*
+    * Test the /POST /user/phone/verify route
+    */
+    describe('/POST /user/phone/verify', () => {
+        it('it should not POST a verify phone number without auth token', (done) => {
+            chai.request(server)
+                .post('/user/phone/verify')
+                .send({})
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("No token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();
+                });
+        });
+
+        it('it should not POST a verify phone number with invalid auth token', (done) => {
+            chai.request(server)
+                .post('/user/phone/verify')
+                .send({
+                    "token" : "random"
+                })
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("Invalid token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();
+                });
+        });
+
+        it('it should not POST a verify phone number without phoneVerificationId', (done) => {
+            chai.request(server)
+                .post('/user/phone/verify')
+                .send({
+                    "token" : auth_token
+                })
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property("message").eql("Missing User's phoneVerificationId");
+                    done();
+                });
+        });
+
+        it('it should POST a verify phone number with valid auth token and phoneVerificationId', (done) => {
+            chai.request(server)
+                .post('/user/phone/verify')
+                .send({
+                    "token" : auth_token,
+                    "phoneVerificationId": phoneVerificationId
+                })
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property("message").eql("User phone verified successfully");
+                    User.findOne({
+                        'email': "jdoe@email.com"
+                    }, (err, user) => {
+                        chai.assert.equal(0, user.phoneVerificationId.length);
+                        chai.assert.equal(true, user.phoneVerified);
                     }).then(() => {
                         done();
                     });

@@ -3,10 +3,12 @@ var jwt = require('jsonwebtoken');
 var config = require('config.js');
 var sgMailer = require('extensions/mailer.js')
 
-
 const crypto = require('crypto');
 var verificationId = crypto.randomBytes(20).toString('hex');
 var stripe = require('stripe')(config.STRIPE_SECRET);
+var phoneVerificationId = require('randomstring').generate(7);
+var Twilio = require('twilio');
+var twilio = new Twilio(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN);
 
 exports.submitUser = function(req, res) {
     if(!req.body.firstName){
@@ -51,6 +53,10 @@ exports.submitUser = function(req, res) {
     user.verified = false;
     user.verificationId = verificationId;
     user.password = user.generateHash(req.body.password);
+
+    user.phone = '';
+    user.phoneVerified = false;
+    user.phoneVerificationId = phoneVerificationId;
 
     user.save((err, data) => {
         if(err) {
@@ -108,7 +114,7 @@ exports.authenticateUser = function(req, res) {
                 userPublicId: user.userPublicId,
                 userFirstName: user.firstName,
                 userLastName: user.lastName
-             };
+            };
             const _token = jwt.sign(payload, config.AUTH_SECRET, {
                 expiresIn: 18000
             });
@@ -321,6 +327,89 @@ exports.editProfilePicture = function(req, res) {
                 return next(err);
             } else {
                 res.json({ message: "User profile picture updated successfully" });
+            }
+        });
+    });
+}
+
+exports.submitPhone = function(req, res) {
+    if(!req.decoded.userId) {
+        res.status(400).send({ message: "userId not decoded" });
+    }
+
+    if(!req.body.phone) {
+        res.status(400).send({ message: "Missing User's phone" });
+    }
+
+    if(req.body.phone.length !== 10) {
+        res.status(400).send({ message: "Incorrect phone" });
+    }
+
+    var sendPhoneVerificationSMS = (phone, phoneVerificationId) => {
+        const toPhone = '+1' + phone;
+        const messageBody = "Your thumb verification code is " + phoneVerificationId;
+        twilio.messages.create({
+            from: config.TWILIO_PHONE_NUMBER,
+            to: toPhone,
+            body: messageBody
+        }, function(err, result) {
+            if(err) {
+                // TODO log err
+            }
+            else {
+                // TODO log result.sid
+            }
+        });
+    };
+
+    User.findOne({
+        '_id' : req.decoded.userId,
+        'verified' : true
+    }, function(err, user) {
+        if(err || !user) {
+            res.status(400).send({ message: "Incorrect userId" });
+        }
+    }).then( (user) => {
+        user.phone = req.body.phone;
+        User.update({ '_id': user._id }, user, function(err, result) {
+            if(err) {
+                return next(err);
+            } else {
+                if (process.env.NODE_ENV !== 'test') {
+                    sendPhoneVerificationSMS(req.body.phone, user.phoneVerificationId);
+                }
+                res.json({ message: "User phone saved successfully" });
+            }
+        });
+    });
+}
+
+exports.verifyPhone = function(req, res) {
+    if(!req.decoded.userId) {
+        res.status(400).send({ message: "userId not decoded" });
+    }
+
+    if(!req.body.phoneVerificationId) {
+        res.status(400).send({ message: "Missing User's phoneVerificationId" });
+    }
+
+    User.findOne({
+        '_id' : req.decoded.userId,
+        'verified' : true,
+        'phoneVerified': false,
+        'phoneVerificationId': req.body.phoneVerificationId
+    }, function(err, user) {
+        if(err || !user) {
+            res.status(400).send({ message: "Incorrect userId" });
+        }
+    }).then( (user) => {
+        user.phoneVerified = true;
+        user.phoneVerificationId = '';
+        User.update({ '_id': user._id }, user, function(err, result) {
+            if(err) {
+                return next(err);
+            } else {
+                res.json({ message: "User phone verified successfully" });
             }
         });
     });

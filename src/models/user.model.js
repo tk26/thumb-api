@@ -24,12 +24,19 @@ var UserSchema = mongoose.Schema({
         type: String,
         required: true
     },
+    phone: {
+        type: String
+    },
+    phoneVerified: Boolean,
+    phoneVerificationId: String,
     verified: Boolean,
     verificationId : String,
     password_reset_token : String,
     rides: Array,
     drives: Array,
-    stripeCustomerId: String
+    stripeCustomerId: String,
+    bio: String,
+    profile_picture: String
 }, {
     timestamps: true
 });

@@ -17,4 +17,12 @@ module.exports = function(app) {
     app.put('/user/edit', middleware('auth'), user.editUser);
 
     app.post('/user/payment/save', middleware('auth'), user.savePaymentInformation);
+    
+    app.put('/user/bio', middleware('auth'), user.editBio);
+
+    app.put('/user/pic', middleware('auth'), user.editProfilePicture);
+
+    app.post('/user/phone/save', middleware('auth'), user.submitPhone);
+
+    app.post('/user/phone/verify', middleware('auth'), user.verifyPhone);
 }

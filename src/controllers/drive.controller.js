@@ -8,7 +8,7 @@ exports.submitDrive = function(req, res) {
     }
 
     if(!req.body.from_location) {
-        res.status(400).send({ message: "Missing Drive's From Location" });
+        res.status(400).send({ message: "Missing Drive's From Location" });       
         next();
     }
 

@@ -6,3 +6,5 @@ node_modules
 .nyc_output
 npm-debug.log
 /*.env
+.vscode
+dist

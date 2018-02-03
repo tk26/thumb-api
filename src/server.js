@@ -1,5 +1,3 @@
-#!/usr/bin/env nodejs
-
 require('app-module-path').addPath(__dirname);
 var express = require('express');
 var cors = require('cors');
@@ -25,12 +23,12 @@ require('routes/user.routes.js')(app);
 require('routes/potential_user.routes.js')(app);
 require('routes/drive.routes.js')(app);
 require('routes/ride.routes.js')(app);
-    
+
 var port = app.get('config').PORT;
 var project = app.get('config').APP;
 
 app.listen(port);
 
-console.log('------------------------------\n'+project+' running on port '+port+'\n------------------------------\n');
+console.log('------------------------------\n'+project+' running on port '+port+'\n------------------------------\n'); // eslint-disable-line no-console
 
 module.exports = app;

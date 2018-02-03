@@ -1,20 +1,59 @@
 let mongoose = require("mongoose");
-let User = require('../models/user.model.js');
+let User = require('../src/models/user.model.js');
 
 let chai = require('chai');
 let chaiHttp = require('chai-http');
-let server = require('../server.js');
+let server = require('../src/server.js');
 let should = chai.should();
 
 chai.use(chaiHttp);
+let userUtility = require('./utilities/user.utility.js');
 
 describe('Users', () => {
-    var verificationId, auth_token, password_reset_token;
+    var verificationId,
+        auth_token,
+        password_reset_token,
+        phoneVerificationId;
 
-    before((done) => {
-        User.remove({}, (err) => { 
-           done();         
-        });     
+    //Duplicate User - for tests involving the duplicate user scenario
+    let dupeUser;
+    let dupeUserPassword = "Test123!";
+    let dupeUserEmail = "dupeuser@email.com";
+
+    //Reset Password User - for all tests involving the reset password scenario
+    let resetUser;
+    let resetUserEmail = "resetuser@email.com";
+    let resetUserPassword = "Test123!";
+
+    //Test User - for general test user scenarios
+    let testUser;
+    let testUserEmail = "testuser@email.com";
+    let testUserPassword = "Test123!";
+    let testUserAuthToken;
+
+
+    //Phone User - for phone user scenarios
+    let phoneUser, phoneUserVerificationId, phoneUserAuthToken;
+    let phoneUserEmail = "phoneuser@email.com";
+    let phoneUserPassword = "Test123!";
+
+    before(async () => {
+      await User.remove({});
+      dupeUser = await userUtility.createVerifiedUser("Jane", "Doe", dupeUserEmail, "hogwarts", dupeUserPassword);
+      resetUser = await userUtility.createVerifiedUser("Tim", "Smith", resetUserEmail, "hogwarts", resetUserPassword);
+      testUser = await userUtility.createVerifiedUser("Test", "User", testUserEmail, "Hogwarts", testUserPassword);
+      testUserAuthToken = await userUtility.getUserAuthToken(testUserEmail, testUserPassword);
+
+      phoneUser = await userUtility.createVerifiedUser("Phone", "User", phoneUserEmail, "Hogwarts", phoneUserPassword);
+      phoneUserAuthToken = await userUtility.getUserAuthToken(phoneUserEmail, phoneUserPassword);
+      phoneUserVerificationId = await userUtility.savePhoneNumber(phoneUserEmail, phoneUserAuthToken, "1234567890");
+    });
+
+    after(async () => {
+      await userUtility.deleteUserByEmail(dupeUserEmail);
+      await userUtility.deleteUserByEmail(resetUserEmail);
+      await userUtility.deleteUserByEmail(testUserEmail);
+      await userUtility.deleteUserByEmail(phoneUserEmail);
     });
 
     /*
@@ -119,6 +158,7 @@ describe('Users', () => {
                     }, (err, user) => {
                         chai.assert.notEqual(0, user.verificationId.length);
                         chai.assert.equal(false, user.verified);
+                        chai.assert.equal(false, user.phoneVerified);
                         verificationId = user.verificationId;
                     }).then(() => {
                         done();
@@ -127,22 +167,22 @@ describe('Users', () => {
         });
 
         it('it should not POST a user with duplicate email', (done) => {
-            chai.request(server)
-                .post('/user/create')
-                .send({
-                    "firstName": "John",
-                    "lastName": "Doe",
-                    "email": "jdoe@email.com",
-                    "school": "hogwarts",
-                    "password": "12121212"
-                })
-                .end((err, res) => {
-                    res.should.have.status(500);
-                    res.body.should.have.property("code").eql(11000);
-                    res.body.should.have.property("errmsg");
-                    done();
-                });
-        });
+          chai.request(server)
+              .post('/user/create')
+              .send({
+                "firstName": dupeUser.firstName,
+                "lastName": dupeUser.lastName,
+                "email": dupeUserEmail,
+                "school": dupeUser.school,
+                "password": dupeUserPassword
+              })
+              .end((err, res) => {
+                  res.should.have.status(500);
+                  res.body.should.have.property("code").eql(11000);
+                  res.body.should.have.property("errmsg");
+                  done();
+              });
+      });
     });
 
     /*
@@ -190,7 +230,7 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing User's Email");
-                    done();    
+                    done();
                 });
         });
 
@@ -203,7 +243,7 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing User's Password");
-                    done();    
+                    done();
                 });
         });
 
@@ -217,7 +257,7 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Incorrect or unverified email");
-                    done();    
+                    done();
                 });
         });
 
@@ -243,16 +283,16 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Incorrect or unverified email");
-                    done();    
+                    done();
                 });
-            
+
             // delete the temp user
             after((done) => {
                 User.remove({
                     "email" : "jdoe_temp@email.com"
-                }, (err) => { 
-                    done();         
-                });     
+                }, (err) => {
+                    done();
+                });
             });
         });
 
@@ -260,15 +300,19 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/login')
                 .send({
-                    "email" : "jdoe@email.com",
-                    "password": "12121212"
+                    "email" : testUserEmail,
+                    "password": testUserPassword
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("Logged In Successfully");
                     res.body.should.have.property("token").length.not.eql(0);
+                    res.body.should.have.property("hasPaymentInformation");
+                    res.body.should.have.property("hasProfilePicture");
+                    res.body.should.have.property("hasBio");
+                    res.body.should.have.property("phone");
                     auth_token = res.body.token;
-                    done();   
+                    done();
                 });
         });
     });
@@ -284,7 +328,7 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing User's Email");
-                    done();    
+                    done();
                 });
         });
 
@@ -297,7 +341,7 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Incorrect or unverified email");
-                    done();    
+                    done();
                 });
         });
 
@@ -322,16 +366,16 @@ describe('Users', () => {
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Incorrect or unverified email");
-                    done();    
+                    done();
                 });
-            
+
             // delete the temp user
             after((done) => {
                 User.remove({
                     "email" : "jdoe_temp@email.com"
-                }, (err) => { 
-                    done();         
-                });     
+                }, (err) => {
+                    done();
+                });
             });
         });
 
@@ -360,6 +404,11 @@ describe('Users', () => {
     * Test the /POST /user/reset route
     */
     describe('/POST /user/reset', () => {
+      let resetAuthToken, resetUserLoginToken;
+      before( async () => {
+          resetAuthToken = await userUtility.getResetAuthToken(resetUserEmail);
+        });
+
         it('it should not POST a user reset without token', (done) => {
             chai.request(server)
                 .post('/user/reset')
@@ -370,7 +419,7 @@ describe('Users', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("No token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 
@@ -385,7 +434,7 @@ describe('Users', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("Invalid token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 
@@ -393,12 +442,12 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/reset')
                 .send({
-                    "token" : password_reset_token
+                    "token" : resetAuthToken
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing User's Password");
-                    done();    
+                    done();
                 });
         });
 
@@ -406,13 +455,13 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/reset')
                 .send({
-                    "token" : password_reset_token,
+                    "token" : resetAuthToken,
                     "password" : "21212121"
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("Password reset successfully");
-                    done();    
+                    done();
                 });
         });
 
@@ -420,13 +469,13 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/login')
                 .send({
-                    "email" : "jdoe@email.com",
-                    "password": "12121212"
+                    "email" : resetUserEmail,
+                    "password": resetUserPassword
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Incorrect password");
-                    done();   
+                    done();
                 });
         });
 
@@ -434,14 +483,14 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/login')
                 .send({
-                    "email" : "jdoe@email.com",
+                    "email" : resetUserEmail,
                     "password": "21212121"
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("Logged In Successfully");
                     res.body.should.have.property("token").length.not.eql(0);
-                    auth_token = res.body.token;
+                    resetUserLoginToken = res.body.token;
                     done();
                 });
         });
@@ -473,28 +522,19 @@ describe('Users', () => {
                 });
         });
 
-        it('it should GET user profile with correct publicId', (done) => {
-            // find the only user's details
-            let publicId, firstName, lastName, school;
-            User.findOne({
-                    "email": "jdoe@email.com"
-                }, (err, user) => {
-                    publicId = user.userPublicId;
-                    firstName = user.firstName;
-                    lastName = user.lastName;
-                    school = user.school;
-                }).then(() => {
-                    chai.request(server)
-                        .get('/user/profile/' + publicId)
-                        .send({})
-                        .end((err, res) => {
-                            res.should.have.status(200);
-                            res.body.should.have.property("firstName").eql(firstName);
-                            res.body.should.have.property("lastName").eql(lastName);
-                            res.body.should.have.property("school").eql(school);
-                        done();
-                        });
-                });
+        it('it should GET user profile with correct publicId', async () => {
+          try{
+            const response = await chai.request(server)
+              .get('/user/profile/' + testUser.userPublicId)
+              .send({});
+
+            response.should.have.status(200);
+            response.body.should.have.property("firstName").eql(testUser.firstName);
+            response.body.should.have.property("lastName").eql(testUser.lastName);
+            response.body.should.have.property("school").eql(testUser.school);
+          } catch(error){
+            throw error;
+          }
         });
     });
 
@@ -510,7 +550,7 @@ describe('Users', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("No token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 
@@ -524,7 +564,7 @@ describe('Users', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("Invalid token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 
@@ -532,7 +572,7 @@ describe('Users', () => {
             chai.request(server)
                 .put('/user/edit')
                 .send({
-                    "token" : auth_token,
+                    "token" : testUserAuthToken,
                     "firstName" : "Jane",
                     "lastName" : "Foe",
                     "school" : "harvard"
@@ -541,7 +581,7 @@ describe('Users', () => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("User details updated successfully");
                     User.findOne({
-                        'email': "jdoe@email.com"
+                        'email': testUserEmail
                     }, (err, user) => {
                         chai.assert.equal("Jane", user.firstName);
                         chai.assert.equal("Foe", user.lastName);
@@ -558,13 +598,13 @@ describe('Users', () => {
                 .put('/user/edit')
                 .send({
                     "token" : auth_token,
-                    "firstName" : "John",
-                    "lastName" : "Doe",
+                    "firstName" : "Test",
+                    "lastName" : "User",
                     "school" : "hogwarts"
                 })
                 .end((err, res) => {
                     done();
-                });    
+                });
         });
     });
 
@@ -580,7 +620,7 @@ describe('Users', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("No token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 
@@ -602,7 +642,7 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/payment/save')
                 .send({
-                    "token" : auth_token
+                    "token" : testUserAuthToken
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -615,7 +655,7 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/payment/save')
                 .send({
-                    "token" : auth_token,
+                    "token" : testUserAuthToken,
                     "stripeToken": "random"
                 })
                 .end((err, res) => {
@@ -629,19 +669,260 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/payment/save')
                 .send({
-                    "token" : auth_token,
+                    "token" : testUserAuthToken,
                     "stripeToken": "tok_visa"
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("User stripe customer Id saved successfully");
                     User.findOne({
-                        'email': "jdoe@email.com"
+                        'email': testUserEmail
                     }, (err, user) => {
                         chai.assert.notEqual(0, user.stripeCustomerId.length);
                     })
                 });
             done();
+        });
+    });
+
+    // test the /PUT /user/bio route
+    describe('/PUT /user/bio', () => {
+        it('it should not PUT a user bio without token', (done) => {
+            chai.request(server)
+                .put('/user/bio')
+                .send({})
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("No token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();
+                });
+        });
+
+        it('it should not PUT a user bio with invalid token', (done) => {
+            chai.request(server)
+                .put('/user/bio')
+                .send({
+                    "token" : "random"
+                })
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("Invalid token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();
+                });
+        });
+
+        it('it should PUT a user bio with valid token', (done) => {
+            chai.request(server)
+                .put('/user/bio')
+                .send({
+                    "token" : testUserAuthToken,
+                    "bio" : "this is a sample bio. very exciting."
+                })
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property("message").eql("User bio updated successfully");
+                    User.findOne({
+                        'email': testUserEmail
+                    }, (err, user) => {
+                        chai.assert.equal("this is a sample bio. very exciting.", user.bio);
+                    }).then(() => {
+                        done();
+                    });
+                });
+        });
+    });
+
+    // test the /PUT /user/pic route
+    describe('/PUT /user/pic', () => {
+        it('it should not PUT a user profile picture without token', (done) => {
+            chai.request(server)
+                .put('/user/pic')
+                .send({})
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("No token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();
+                });
+        });
+
+        it('it should not PUT a user profile picture with invalid token', (done) => {
+            chai.request(server)
+                .put('/user/pic')
+                .send({
+                    "token" : "random"
+                })
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("Invalid token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();
+                });
+        });
+
+        it('it should PUT a user profile picture with valid token', (done) => {
+            chai.request(server)
+                .put('/user/pic')
+                .send({
+                    "token" : testUserAuthToken,
+                    "profile_picture" : "profile picture string"
+                })
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property("message").eql("User profile picture updated successfully");
+                    User.findOne({
+                        'email': testUserEmail
+                    }, (err, user) => {
+                        chai.assert.equal("profile picture string", user.profile_picture);
+                    }).then(() => {
+                        done();
+                    });
+                });
+        });
+    });
+
+    /*
+    * Test the /POST /user/phone/save route
+    */
+    describe('/POST /user/phone/save', () => {
+        it('it should not POST a phone number without auth token', (done) => {
+            chai.request(server)
+                .post('/user/phone/save')
+                .send({})
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("No token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();
+                });
+        });
+
+        it('it should not POST a phone number with invalid auth token', (done) => {
+            chai.request(server)
+                .post('/user/phone/save')
+                .send({
+                    "token" : "random"
+                })
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("Invalid token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();
+                });
+        });
+
+        it('it should not POST a phone number without phone number', (done) => {
+            chai.request(server)
+                .post('/user/phone/save')
+                .send({
+                    "token" : testUserAuthToken
+                })
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property("message").eql("Missing User's phone");
+                    done();
+                });
+        });
+
+        it('it should not POST a phone number with invalid phone number', (done) => {
+            chai.request(server)
+                .post('/user/phone/save')
+                .send({
+                    "token" : testUserAuthToken,
+                    "phone": "123"
+                })
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property("message").eql("Incorrect phone");
+                    done();
+                });
+        });
+
+        it('it should POST a phone number with valid auth token and phone number', (done) => {
+            chai.request(server)
+                .post('/user/phone/save')
+                .send({
+                    "token" : testUserAuthToken,
+                    "phone": "1234567890"
+                })
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property("message").eql("User phone saved successfully");
+                    User.findOne({
+                        'email': testUserEmail
+                    }, (err, user) => {
+                        phoneVerificationId = user.phoneVerificationId;
+                    });
+                });
+            done();
+        });
+    });
+
+    /*
+    * Test the /POST /user/phone/verify route
+    */
+    describe('/POST /user/phone/verify', () => {
+
+        it('it should not POST a verify phone number without auth token', (done) => {
+            chai.request(server)
+                .post('/user/phone/verify')
+                .send({})
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("No token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();
+                });
+        });
+
+        it('it should not POST a verify phone number with invalid auth token', (done) => {
+            chai.request(server)
+                .post('/user/phone/verify')
+                .send({
+                    "token" : "random"
+                })
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("Invalid token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();
+                });
+        });
+
+        it('it should not POST a verify phone number without phoneVerificationId', (done) => {
+            chai.request(server)
+                .post('/user/phone/verify')
+                .send({
+                    "token" : phoneUserAuthToken
+                })
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property("message").eql("Missing User's phoneVerificationId");
+                    done();
+                });
+        });
+
+        it('it should POST a verify phone number with valid auth token and phoneVerificationId', (done) => {
+            chai.request(server)
+                .post('/user/phone/verify')
+                .send({
+                    "token" : phoneUserAuthToken,
+                    "phoneVerificationId": phoneUserVerificationId
+                })
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property("message").eql("User phone verified successfully");
+                    User.findOne({
+                        'email': phoneUserEmail
+                    }, (err, user) => {
+                        chai.assert.equal(0, user.phoneVerificationId.length);
+                        chai.assert.equal(true, user.phoneVerified);
+                    }).then(() => {
+                        done();
+                    });
+                });
         });
     });
 });

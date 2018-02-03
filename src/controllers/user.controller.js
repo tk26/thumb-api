@@ -3,12 +3,16 @@ var jwt = require('jsonwebtoken');
 var config = require('config.js');
 var sgMailer = require('extensions/mailer.js')
 
-
 const crypto = require('crypto');
-var verificationId = crypto.randomBytes(20).toString('hex');
 var stripe = require('stripe')(config.STRIPE_SECRET);
 
+const randomstring = require('randomstring');
+var Twilio = require('twilio');
+var twilio = new Twilio(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN);
+
 exports.submitUser = function(req, res) {
+    const verificationId = crypto.randomBytes(20).toString('hex');
+    
     if(!req.body.firstName){
         res.status(400).send({ message: "Missing User's First Name"});
         next();
@@ -52,9 +56,13 @@ exports.submitUser = function(req, res) {
     user.verificationId = verificationId;
     user.password = user.generateHash(req.body.password);
 
+    user.phone = '';
+    user.phoneVerified = false;
+    user.phoneVerificationId = '';
+
     user.save((err, data) => {
         if(err) {
-            res.status(500).send(err);
+            return res.status(500).send(err);
         } else {
             if (process.env.NODE_ENV !== 'test') {
                 sendVerificationEmail();
@@ -84,11 +92,11 @@ exports.verifyUser = function(req, res, next) {
 
 exports.authenticateUser = function(req, res) {
     if(!req.body.email){
-        res.status(400).send({ message: "Missing User's Email"});
+        return res.status(400).send({ message: "Missing User's Email"});
     }
 
     if(!req.body.password){
-        res.status(400).send({ message: "Missing User's Password"});
+        return res.status(400).send({ message: "Missing User's Password"});
     }
 
     User.findOne({
@@ -108,18 +116,25 @@ exports.authenticateUser = function(req, res) {
                 userPublicId: user.userPublicId,
                 userFirstName: user.firstName,
                 userLastName: user.lastName
-             };
+            };
             const _token = jwt.sign(payload, config.AUTH_SECRET, {
                 expiresIn: 18000
             });
-            res.json({ message: "Logged In Successfully", token: _token, userPublicId: user.userPublicId });
+            res.json({ message: "Logged In Successfully",
+                token: _token,
+                userPublicId: user.userPublicId,
+                hasPaymentInformation: user.stripeCustomerId ? true : false,
+                hasProfilePicture: user.profile_picture ? true : false,
+                hasBio: user.bio ? true : false,
+                phone: user.phoneVerified ? user.phone : ''
+            });
         }
     });
 };
 
 exports.submitForgotPasswordUser = function(req, res) {
     if(!req.body.email){
-        res.status(400).send({ message: "Missing User's Email"});
+        return res.status(400).send({ message: "Missing User's Email"});
     }
 
     const sendPasswordResetEmail = (_token) => {
@@ -197,7 +212,7 @@ exports.getUserInfo = function(req, res) {
         'verified' : true
     }, function(err, user) {
         if(err || !user) {
-            res.status(500).send({ message: "Incorrect publicId of user" });
+          return res.status(500).send({ message: "Incorrect publicId of user" });
         }
         else {
             res.send({
@@ -271,3 +286,144 @@ exports.savePaymentInformation = function(req, res) {
         });
     });
 };
+
+exports.editBio = function(req, res) {
+    if(!req.decoded.userId) {
+        res.status(400).send({ message: "userId not decoded" });
+    }
+
+    User.findOne({
+        '_id' : req.decoded.userId,
+        'verified' : true
+    }, function(err, user) {
+        if(err || !user) {
+            res.status(400).send({ message: "Incorrect userId" });
+        }
+    }).then( (user) => {
+        user.bio = req.body.bio || user.bio;
+        User.update({ '_id': user._id }, user, function(err, result) {
+            if(err) {
+                return next(err);
+            } else {
+                res.json({ message: "User bio updated successfully" });
+            }
+        });
+    });
+}
+
+exports.editProfilePicture = function(req, res) {
+    if(!req.decoded.userId) {
+        res.status(400).send({ message: "userId not decoded" });
+    }
+
+    User.findOne({
+        '_id' : req.decoded.userId,
+        'verified' : true
+    }, function(err, user) {
+        if(err || !user) {
+            res.status(400).send({ message: "Incorrect userId" });
+        }
+    }).then( (user) => {
+        user.profile_picture = req.body.profile_picture || user.profile_picture;
+        User.update({ '_id': user._id }, user, function(err, result) {
+            if(err) {
+                return next(err);
+            } else {
+                res.json({ message: "User profile picture updated successfully" });
+            }
+        });
+    });
+}
+
+exports.submitPhone = function(req, res) {
+    if(!req.decoded.userId) {
+      return res.status(400).send({ message: "userId not decoded" });
+    }
+
+    if(!req.body.phone) {
+      return res.status(400).send({ message: "Missing User's phone" });
+    }
+
+    if(req.body.phone.length !== 10) {
+      return res.status(400).send({ message: "Incorrect phone" });
+    }
+
+    const phoneVerificationId = randomstring.generate(7);
+
+    var sendPhoneVerificationSMS = (phone, phoneVerificationId) => {
+        const toPhone = '+1' + phone;
+        const messageBody = "Your thumb verification code is " + phoneVerificationId;
+        twilio.messages.create({
+            from: config.TWILIO_PHONE_NUMBER,
+            to: toPhone,
+            body: messageBody
+        }, function(err, result) {
+            if(err) {
+                // TODO log err
+            }
+            else {
+                // TODO log result.sid
+            }
+        });
+    };
+
+    User.findOne({
+        '_id' : req.decoded.userId,
+        'verified' : true
+    }, function(err, user) {
+        if(err || !user) {
+            res.status(400).send({ message: "Incorrect userId" });
+        }
+    }).then( (user) => {
+        user.phone = req.body.phone;
+        User.update({ '_id': user._id }, user, function(err, result) {
+            if(err) {
+                return next(err);
+            } else {
+                if (process.env.NODE_ENV !== 'test') {
+                    sendPhoneVerificationSMS(req.body.phone, phoneVerificationId);
+                }
+            }
+        });
+        user.phoneVerificationId = phoneVerificationId;
+        user.phoneVerified = false;
+        User.update({ '_id': user._id }, user, function(err, result) {
+            if(err) {
+                return next(err);
+            } else {
+                res.json({ message: "User phone saved successfully" });
+            }
+        })
+    });
+}
+
+exports.verifyPhone = function(req, res) {
+    if(!req.decoded.userId) {
+      return res.status(400).send({ message: "userId not decoded" });
+    }
+
+    if(!req.body.phoneVerificationId) {
+      return res.status(400).send({ message: "Missing User's phoneVerificationId" });
+    }
+
+    User.findOne({
+        '_id' : req.decoded.userId,
+        'verified' : true,
+        'phoneVerified': false,
+        'phoneVerificationId': req.body.phoneVerificationId
+    }, function(err, user) {
+        if(err || !user) {
+            return res.status(400).send({ message: "Incorrect userId" });
+        }
+    }).then( (user) => {
+        user.phoneVerified = true;
+        user.phoneVerificationId = '';
+        User.update({ '_id': user._id }, user, function(err, result) {
+            if(err) {
+                return next(err);
+            } else {
+                return res.status(200).send({ message: "User phone verified successfully" });
+            }
+        });
+    });
+}

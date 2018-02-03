@@ -893,6 +893,10 @@ describe('Users', () => {
         });
 
         it('it should POST a verify phone number with valid auth token and phoneVerificationId', (done) => {
+            setTimeout(function() {
+                return;
+            }, 3000);
+
             chai.request(server)
                 .post('/user/phone/verify')
                 .send({

@@ -31,18 +31,29 @@ describe('Users', () => {
     let testUserPassword = "Test123!";
     let testUserAuthToken;
 
+
+    //Phone User - for phone user scenarios
+    let phoneUser, phoneUserVerificationId, phoneUserAuthToken;
+    let phoneUserEmail = "phoneuser@email.com";
+    let phoneUserPassword = "Test123!";
+
     before(async () => {
       await User.remove({});
       dupeUser = await userUtility.createVerifiedUser("Jane", "Doe", dupeUserEmail, "hogwarts", dupeUserPassword);
       resetUser = await userUtility.createVerifiedUser("Tim", "Smith", resetUserEmail, "hogwarts", resetUserPassword);
       testUser = await userUtility.createVerifiedUser("Test", "User", testUserEmail, "Hogwarts", testUserPassword);
       testUserAuthToken = await userUtility.getUserAuthToken(testUserEmail, testUserPassword);
+
+      phoneUser = await userUtility.createVerifiedUser("Phone", "User", phoneUserEmail, "Hogwarts", phoneUserPassword);
+      phoneUserAuthToken = await userUtility.getUserAuthToken(phoneUserEmail, phoneUserPassword);
+      phoneUserVerificationId = await userUtility.savePhoneNumber(phoneUserEmail, phoneUserAuthToken, "1234567890");
     });
 
     after(async () => {
       await userUtility.deleteUserByEmail(dupeUserEmail);
       await userUtility.deleteUserByEmail(resetUserEmail);
-      await userUtility.deleteUserByEmail(resetUserEmail);
+      await userUtility.deleteUserByEmail(testUserEmail);
+      await userUtility.deleteUserByEmail(phoneUserEmail);
     });
 
     /*
@@ -853,6 +864,7 @@ describe('Users', () => {
     * Test the /POST /user/phone/verify route
     */
     describe('/POST /user/phone/verify', () => {
+
         it('it should not POST a verify phone number without auth token', (done) => {
             chai.request(server)
                 .post('/user/phone/verify')
@@ -883,7 +895,7 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/phone/verify')
                 .send({
-                    "token" : testUserAuthToken
+                    "token" : phoneUserAuthToken
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -893,21 +905,17 @@ describe('Users', () => {
         });
 
         it('it should POST a verify phone number with valid auth token and phoneVerificationId', (done) => {
-            setTimeout(function() {
-                return;
-            }, 3000);
-
             chai.request(server)
                 .post('/user/phone/verify')
                 .send({
-                    "token" : testUserAuthToken,
-                    "phoneVerificationId": phoneVerificationId
+                    "token" : phoneUserAuthToken,
+                    "phoneVerificationId": phoneUserVerificationId
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("User phone verified successfully");
                     User.findOne({
-                        'email': testUserEmail
+                        'email': phoneUserEmail
                     }, (err, user) => {
                         chai.assert.equal(0, user.phoneVerificationId.length);
                         chai.assert.equal(true, user.phoneVerified);

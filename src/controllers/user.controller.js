@@ -412,7 +412,7 @@ exports.verifyPhone = function(req, res) {
         'phoneVerificationId': req.body.phoneVerificationId
     }, function(err, user) {
         if(err || !user) {
-            res.status(400).send({ message: "Incorrect userId" });
+            return res.status(400).send({ message: "Incorrect userId" });
         }
     }).then( (user) => {
         user.phoneVerified = true;

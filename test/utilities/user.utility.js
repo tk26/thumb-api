@@ -65,3 +65,18 @@ exports.getResetAuthToken = async function(email){
   chai.assert.notEqual(0, user.password_reset_token.length);
   return user.password_reset_token;
 }
+
+exports.savePhoneNumber = async function(email, authToken, number){
+  let res = await chai.request(server)
+    .post('/user/phone/save')
+    .send({
+        "token" : authToken,
+        "phone":  number
+    });
+
+  res.should.have.status(200);
+  res.body.should.have.property("message").eql("User phone saved successfully");
+  let user = await User.findOne({'email': email});
+
+  return user.phoneVerificationId;
+}

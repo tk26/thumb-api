@@ -7,17 +7,53 @@ let server = require('../src/server.js');
 let should = chai.should();
 
 chai.use(chaiHttp);
+let userUtility = require('./utilities/user.utility.js');
 
 describe('Users', () => {
-    var verificationId, 
-        auth_token, 
+    var verificationId,
+        auth_token,
         password_reset_token,
         phoneVerificationId;
 
-    before((done) => {
-        User.remove({}, (err) => {
-           done();
-        });
+    //Duplicate User - for tests involving the duplicate user scenario
+    let dupeUser;
+    let dupeUserPassword = "Test123!";
+    let dupeUserEmail = "dupeuser@email.com";
+
+    //Reset Password User - for all tests involving the reset password scenario
+    let resetUser;
+    let resetUserEmail = "resetuser@email.com";
+    let resetUserPassword = "Test123!";
+
+    //Test User - for general test user scenarios
+    let testUser;
+    let testUserEmail = "testuser@email.com";
+    let testUserPassword = "Test123!";
+    let testUserAuthToken;
+
+
+    //Phone User - for phone user scenarios
+    let phoneUser, phoneUserVerificationId, phoneUserAuthToken;
+    let phoneUserEmail = "phoneuser@email.com";
+    let phoneUserPassword = "Test123!";
+
+    before(async () => {
+      await User.remove({});
+      dupeUser = await userUtility.createVerifiedUser("Jane", "Doe", dupeUserEmail, "hogwarts", dupeUserPassword);
+      resetUser = await userUtility.createVerifiedUser("Tim", "Smith", resetUserEmail, "hogwarts", resetUserPassword);
+      testUser = await userUtility.createVerifiedUser("Test", "User", testUserEmail, "Hogwarts", testUserPassword);
+      testUserAuthToken = await userUtility.getUserAuthToken(testUserEmail, testUserPassword);
+
+      phoneUser = await userUtility.createVerifiedUser("Phone", "User", phoneUserEmail, "Hogwarts", phoneUserPassword);
+      phoneUserAuthToken = await userUtility.getUserAuthToken(phoneUserEmail, phoneUserPassword);
+      phoneUserVerificationId = await userUtility.savePhoneNumber(phoneUserEmail, phoneUserAuthToken, "1234567890");
+    });
+
+    after(async () => {
+      await userUtility.deleteUserByEmail(dupeUserEmail);
+      await userUtility.deleteUserByEmail(resetUserEmail);
+      await userUtility.deleteUserByEmail(testUserEmail);
+      await userUtility.deleteUserByEmail(phoneUserEmail);
     });
 
     /*
@@ -131,22 +167,22 @@ describe('Users', () => {
         });
 
         it('it should not POST a user with duplicate email', (done) => {
-            chai.request(server)
-                .post('/user/create')
-                .send({
-                    "firstName": "John",
-                    "lastName": "Doe",
-                    "email": "jdoe@email.com",
-                    "school": "hogwarts",
-                    "password": "12121212"
-                })
-                .end((err, res) => {
-                    res.should.have.status(500);
-                    res.body.should.have.property("code").eql(11000);
-                    res.body.should.have.property("errmsg");
-                    done();
-                });
-        });
+          chai.request(server)
+              .post('/user/create')
+              .send({
+                "firstName": dupeUser.firstName,
+                "lastName": dupeUser.lastName,
+                "email": dupeUserEmail,
+                "school": dupeUser.school,
+                "password": dupeUserPassword
+              })
+              .end((err, res) => {
+                  res.should.have.status(500);
+                  res.body.should.have.property("code").eql(11000);
+                  res.body.should.have.property("errmsg");
+                  done();
+              });
+      });
     });
 
     /*
@@ -264,8 +300,8 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/login')
                 .send({
-                    "email" : "jdoe@email.com",
-                    "password": "12121212"
+                    "email" : testUserEmail,
+                    "password": testUserPassword
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
@@ -368,6 +404,11 @@ describe('Users', () => {
     * Test the /POST /user/reset route
     */
     describe('/POST /user/reset', () => {
+      let resetAuthToken, resetUserLoginToken;
+      before( async () => {
+          resetAuthToken = await userUtility.getResetAuthToken(resetUserEmail);
+        });
+
         it('it should not POST a user reset without token', (done) => {
             chai.request(server)
                 .post('/user/reset')
@@ -401,7 +442,7 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/reset')
                 .send({
-                    "token" : password_reset_token
+                    "token" : resetAuthToken
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -414,7 +455,7 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/reset')
                 .send({
-                    "token" : password_reset_token,
+                    "token" : resetAuthToken,
                     "password" : "21212121"
                 })
                 .end((err, res) => {
@@ -428,8 +469,8 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/login')
                 .send({
-                    "email" : "jdoe@email.com",
-                    "password": "12121212"
+                    "email" : resetUserEmail,
+                    "password": resetUserPassword
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -442,14 +483,14 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/login')
                 .send({
-                    "email" : "jdoe@email.com",
+                    "email" : resetUserEmail,
                     "password": "21212121"
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("Logged In Successfully");
                     res.body.should.have.property("token").length.not.eql(0);
-                    auth_token = res.body.token;
+                    resetUserLoginToken = res.body.token;
                     done();
                 });
         });
@@ -483,23 +524,14 @@ describe('Users', () => {
 
         it('it should GET user profile with correct publicId', async () => {
           try{
-            const user = await User.create({
-              "email": "userprofile@email.com",
-              "firstName": "Joe",
-              "lastName": "Smith",
-              "school": "hogwarts",
-              "verified": "true",
-              "password": "121212"
-            });
-
             const response = await chai.request(server)
-              .get('/user/profile/' + user.userPublicId)
+              .get('/user/profile/' + testUser.userPublicId)
               .send({});
 
             response.should.have.status(200);
-            response.body.should.have.property("firstName").eql(user.firstName);
-            response.body.should.have.property("lastName").eql(user.lastName);
-            response.body.should.have.property("school").eql(user.school);
+            response.body.should.have.property("firstName").eql(testUser.firstName);
+            response.body.should.have.property("lastName").eql(testUser.lastName);
+            response.body.should.have.property("school").eql(testUser.school);
           } catch(error){
             throw error;
           }
@@ -540,7 +572,7 @@ describe('Users', () => {
             chai.request(server)
                 .put('/user/edit')
                 .send({
-                    "token" : auth_token,
+                    "token" : testUserAuthToken,
                     "firstName" : "Jane",
                     "lastName" : "Foe",
                     "school" : "harvard"
@@ -549,7 +581,7 @@ describe('Users', () => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("User details updated successfully");
                     User.findOne({
-                        'email': "jdoe@email.com"
+                        'email': testUserEmail
                     }, (err, user) => {
                         chai.assert.equal("Jane", user.firstName);
                         chai.assert.equal("Foe", user.lastName);
@@ -566,8 +598,8 @@ describe('Users', () => {
                 .put('/user/edit')
                 .send({
                     "token" : auth_token,
-                    "firstName" : "John",
-                    "lastName" : "Doe",
+                    "firstName" : "Test",
+                    "lastName" : "User",
                     "school" : "hogwarts"
                 })
                 .end((err, res) => {
@@ -610,7 +642,7 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/payment/save')
                 .send({
-                    "token" : auth_token
+                    "token" : testUserAuthToken
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -623,7 +655,7 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/payment/save')
                 .send({
-                    "token" : auth_token,
+                    "token" : testUserAuthToken,
                     "stripeToken": "random"
                 })
                 .end((err, res) => {
@@ -637,14 +669,14 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/payment/save')
                 .send({
-                    "token" : auth_token,
+                    "token" : testUserAuthToken,
                     "stripeToken": "tok_visa"
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("User stripe customer Id saved successfully");
                     User.findOne({
-                        'email': "jdoe@email.com"
+                        'email': testUserEmail
                     }, (err, user) => {
                         chai.assert.notEqual(0, user.stripeCustomerId.length);
                     })
@@ -663,7 +695,7 @@ describe('Users', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("No token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 
@@ -677,7 +709,7 @@ describe('Users', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("Invalid token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 
@@ -685,14 +717,14 @@ describe('Users', () => {
             chai.request(server)
                 .put('/user/bio')
                 .send({
-                    "token" : auth_token,
+                    "token" : testUserAuthToken,
                     "bio" : "this is a sample bio. very exciting."
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("User bio updated successfully");
                     User.findOne({
-                        'email': "jdoe@email.com"
+                        'email': testUserEmail
                     }, (err, user) => {
                         chai.assert.equal("this is a sample bio. very exciting.", user.bio);
                     }).then(() => {
@@ -712,7 +744,7 @@ describe('Users', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("No token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 
@@ -726,7 +758,7 @@ describe('Users', () => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("Invalid token provided");
                     res.body.should.have.property("success").eql(false);
-                    done();    
+                    done();
                 });
         });
 
@@ -734,14 +766,14 @@ describe('Users', () => {
             chai.request(server)
                 .put('/user/pic')
                 .send({
-                    "token" : auth_token,
+                    "token" : testUserAuthToken,
                     "profile_picture" : "profile picture string"
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("User profile picture updated successfully");
                     User.findOne({
-                        'email': "jdoe@email.com"
+                        'email': testUserEmail
                     }, (err, user) => {
                         chai.assert.equal("profile picture string", user.profile_picture);
                     }).then(() => {
@@ -785,7 +817,7 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/phone/save')
                 .send({
-                    "token" : auth_token
+                    "token" : testUserAuthToken
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -798,7 +830,7 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/phone/save')
                 .send({
-                    "token" : auth_token,
+                    "token" : testUserAuthToken,
                     "phone": "123"
                 })
                 .end((err, res) => {
@@ -812,14 +844,14 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/phone/save')
                 .send({
-                    "token" : auth_token,
+                    "token" : testUserAuthToken,
                     "phone": "1234567890"
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("User phone saved successfully");
                     User.findOne({
-                        'email': "jdoe@email.com"
+                        'email': testUserEmail
                     }, (err, user) => {
                         phoneVerificationId = user.phoneVerificationId;
                     });
@@ -832,6 +864,7 @@ describe('Users', () => {
     * Test the /POST /user/phone/verify route
     */
     describe('/POST /user/phone/verify', () => {
+
         it('it should not POST a verify phone number without auth token', (done) => {
             chai.request(server)
                 .post('/user/phone/verify')
@@ -862,7 +895,7 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/phone/verify')
                 .send({
-                    "token" : auth_token
+                    "token" : phoneUserAuthToken
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -875,14 +908,14 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/phone/verify')
                 .send({
-                    "token" : auth_token,
-                    "phoneVerificationId": phoneVerificationId
+                    "token" : phoneUserAuthToken,
+                    "phoneVerificationId": phoneUserVerificationId
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("User phone verified successfully");
                     User.findOne({
-                        'email': "jdoe@email.com"
+                        'email': phoneUserEmail
                     }, (err, user) => {
                         chai.assert.equal(0, user.phoneVerificationId.length);
                         chai.assert.equal(true, user.phoneVerified);

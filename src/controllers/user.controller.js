@@ -61,7 +61,7 @@ exports.submitUser = function(req, res) {
 
     user.save((err, data) => {
         if(err) {
-            res.status(500).send(err);
+            return res.status(500).send(err);
         } else {
             if (process.env.NODE_ENV !== 'test') {
                 sendVerificationEmail();
@@ -91,11 +91,11 @@ exports.verifyUser = function(req, res, next) {
 
 exports.authenticateUser = function(req, res) {
     if(!req.body.email){
-        res.status(400).send({ message: "Missing User's Email"});
+        return res.status(400).send({ message: "Missing User's Email"});
     }
 
     if(!req.body.password){
-        res.status(400).send({ message: "Missing User's Password"});
+        return res.status(400).send({ message: "Missing User's Password"});
     }
 
     User.findOne({
@@ -119,8 +119,8 @@ exports.authenticateUser = function(req, res) {
             const _token = jwt.sign(payload, config.AUTH_SECRET, {
                 expiresIn: 18000
             });
-            res.json({ message: "Logged In Successfully", 
-                token: _token, 
+            res.json({ message: "Logged In Successfully",
+                token: _token,
                 userPublicId: user.userPublicId,
                 hasPaymentInformation: user.stripeCustomerId ? true : false,
                 hasProfilePicture: user.profile_picture ? true : false,
@@ -133,7 +133,7 @@ exports.authenticateUser = function(req, res) {
 
 exports.submitForgotPasswordUser = function(req, res) {
     if(!req.body.email){
-        res.status(400).send({ message: "Missing User's Email"});
+        return res.status(400).send({ message: "Missing User's Email"});
     }
 
     const sendPasswordResetEmail = (_token) => {
@@ -211,7 +211,7 @@ exports.getUserInfo = function(req, res) {
         'verified' : true
     }, function(err, user) {
         if(err || !user) {
-            res.status(500).send({ message: "Incorrect publicId of user" });
+          return res.status(500).send({ message: "Incorrect publicId of user" });
         }
         else {
             res.send({
@@ -336,17 +336,17 @@ exports.editProfilePicture = function(req, res) {
 
 exports.submitPhone = function(req, res) {
     if(!req.decoded.userId) {
-        res.status(400).send({ message: "userId not decoded" });
+      return res.status(400).send({ message: "userId not decoded" });
     }
 
     if(!req.body.phone) {
-        res.status(400).send({ message: "Missing User's phone" });
+      return res.status(400).send({ message: "Missing User's phone" });
     }
 
     if(req.body.phone.length !== 10) {
-        res.status(400).send({ message: "Incorrect phone" });
+      return res.status(400).send({ message: "Incorrect phone" });
     }
-    
+
     const phoneVerificationId = randomstring.generate(7);
 
     var sendPhoneVerificationSMS = (phone, phoneVerificationId) => {
@@ -398,11 +398,11 @@ exports.submitPhone = function(req, res) {
 
 exports.verifyPhone = function(req, res) {
     if(!req.decoded.userId) {
-        res.status(400).send({ message: "userId not decoded" });
+      return res.status(400).send({ message: "userId not decoded" });
     }
 
     if(!req.body.phoneVerificationId) {
-        res.status(400).send({ message: "Missing User's phoneVerificationId" });
+      return res.status(400).send({ message: "Missing User's phoneVerificationId" });
     }
 
     User.findOne({
@@ -412,7 +412,7 @@ exports.verifyPhone = function(req, res) {
         'phoneVerificationId': req.body.phoneVerificationId
     }, function(err, user) {
         if(err || !user) {
-            res.status(400).send({ message: "Incorrect userId" });
+            return res.status(400).send({ message: "Incorrect userId" });
         }
     }).then( (user) => {
         user.phoneVerified = true;
@@ -421,7 +421,7 @@ exports.verifyPhone = function(req, res) {
             if(err) {
                 return next(err);
             } else {
-                res.json({ message: "User phone verified successfully" });
+                return res.status(200).send({ message: "User phone verified successfully" });
             }
         });
     });

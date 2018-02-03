@@ -59,7 +59,7 @@ exports.submitUser = function(req, res) {
     user.phoneVerified = false;
     user.phoneVerificationId = '';
 
-    /*user.save((err, data) => {
+    user.save((err, data) => {
         if(err) {
             return res.status(500).send(err);
         } else {
@@ -68,18 +68,6 @@ exports.submitUser = function(req, res) {
             }
             res.send({ message: "User Details Saved Successfully" });
         }
-    });*/
-
-    let promise = user.save();
-
-    promise.then(function(data, err){
-      if (process.env.NODE_ENV !== 'test') {
-        sendVerificationEmail();
-      }
-      res.send({ message: "User Details Saved Successfully" });
-    })
-    .catch(function(err){
-      return res.status(500).send(err);
     });
 };
 
@@ -103,11 +91,11 @@ exports.verifyUser = function(req, res, next) {
 
 exports.authenticateUser = function(req, res) {
     if(!req.body.email){
-        res.status(400).send({ message: "Missing User's Email"});
+        return res.status(400).send({ message: "Missing User's Email"});
     }
 
     if(!req.body.password){
-        res.status(400).send({ message: "Missing User's Password"});
+        return res.status(400).send({ message: "Missing User's Password"});
     }
 
     User.findOne({
@@ -145,7 +133,7 @@ exports.authenticateUser = function(req, res) {
 
 exports.submitForgotPasswordUser = function(req, res) {
     if(!req.body.email){
-        res.status(400).send({ message: "Missing User's Email"});
+        return res.status(400).send({ message: "Missing User's Email"});
     }
 
     const sendPasswordResetEmail = (_token) => {
@@ -348,15 +336,15 @@ exports.editProfilePicture = function(req, res) {
 
 exports.submitPhone = function(req, res) {
     if(!req.decoded.userId) {
-        res.status(400).send({ message: "userId not decoded" });
+      return res.status(400).send({ message: "userId not decoded" });
     }
 
     if(!req.body.phone) {
-        res.status(400).send({ message: "Missing User's phone" });
+      return res.status(400).send({ message: "Missing User's phone" });
     }
 
     if(req.body.phone.length !== 10) {
-        res.status(400).send({ message: "Incorrect phone" });
+      return res.status(400).send({ message: "Incorrect phone" });
     }
 
     const phoneVerificationId = randomstring.generate(7);
@@ -410,11 +398,11 @@ exports.submitPhone = function(req, res) {
 
 exports.verifyPhone = function(req, res) {
     if(!req.decoded.userId) {
-        res.status(400).send({ message: "userId not decoded" });
+      return res.status(400).send({ message: "userId not decoded" });
     }
 
     if(!req.body.phoneVerificationId) {
-        res.status(400).send({ message: "Missing User's phoneVerificationId" });
+      return res.status(400).send({ message: "Missing User's phoneVerificationId" });
     }
 
     User.findOne({

@@ -4,7 +4,6 @@ var config = require('config.js');
 var sgMailer = require('extensions/mailer.js')
 
 const crypto = require('crypto');
-var verificationId = crypto.randomBytes(20).toString('hex');
 var stripe = require('stripe')(config.STRIPE_SECRET);
 
 const randomstring = require('randomstring');
@@ -12,6 +11,8 @@ var Twilio = require('twilio');
 var twilio = new Twilio(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN);
 
 exports.submitUser = function(req, res) {
+    const verificationId = crypto.randomBytes(20).toString('hex');
+    
     if(!req.body.firstName){
         res.status(400).send({ message: "Missing User's First Name"});
         next();

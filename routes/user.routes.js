@@ -16,5 +16,14 @@ module.exports = function(app) {
 
     app.put('/user/edit', middleware('auth'), user.editUser);
 
+<<<<<<< HEAD
     app.post('/user/payment/save', middleware('auth'), user.savePaymentInformation);
+=======
+    app.put('/user/bio', middleware('auth'), user.editBio);
+<<<<<<< HEAD
+>>>>>>> added a new endpoint to the api for saving a users bio
+=======
+
+    app.put('/user/pic', middleware('auth'), user.editProfilePicture);
+>>>>>>> added endpoint for updating user profile picture, implemented as a string for now
 }

@@ -38,6 +38,11 @@ exports.submitUser = function(req, res) {
         next();
     }
 
+    if(!req.body.username){
+        res.status(400).send({ message: "Missing User's Username" });
+        next();
+    }
+
     var sendVerificationEmail = () => {
         const mailOptions = {
             from: 'accounts@thumbtravel.co',

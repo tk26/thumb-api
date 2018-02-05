@@ -4,7 +4,7 @@ chai.use(chaiHttp);
 let User = require('../../src/models/user.model.js')
 let server = require('../../src/server.js');
 
-exports.createVerifiedUser = async function (firstName, lastName, email, school, password){
+exports.createVerifiedUser = async function (firstName, lastName, email, school, password, username){
   let should = chai.should();
   await User.deleteOne({'email': email});
 
@@ -15,7 +15,8 @@ exports.createVerifiedUser = async function (firstName, lastName, email, school,
         "lastName": lastName,
         "email": email,
         "school": school,
-        "password": password
+        "password": password,
+        "username": username
     });
 
   res.should.have.status(200);

@@ -14,11 +14,12 @@ let userUtility = require('./utilities/user.utility.js');
 describe('Ride', () => {
     var auth_token, userPublicId, user;
     let email = "rideuser@email.com";
+    let username = "rideuser";
 
     before(async () => {
       await Ride.remove({});
       let userPassword = "Test123!";
-      user = await userUtility.createVerifiedUser("Jon", "Smith", email, "Hogwarts",userPassword);
+      user = await userUtility.createVerifiedUser("Jon", "Smith", email, "Hogwarts", userPassword, username);
       auth_token = await userUtility.getUserAuthToken(user.email, userPassword);
     });
 

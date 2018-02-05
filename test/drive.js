@@ -14,11 +14,12 @@ let userUtility = require('./utilities/user.utility.js');
 describe('Drive', () => {
     let auth_token, userPublicId, user;
     let email = "driveuser@email.com";
+    let username = "driveuser";
 
     before(async() => {
       let userPassword = "Test123!";
       await Drive.remove({});
-      user = await userUtility.createVerifiedUser("Joe", "Smith", email, "Hogwarts",userPassword);
+      user = await userUtility.createVerifiedUser("Joe", "Smith", email, "Hogwarts", userPassword, username);
       auth_token = await userUtility.getUserAuthToken(user.email, userPassword);
     });
 

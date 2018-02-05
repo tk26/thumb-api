@@ -19,16 +19,26 @@ describe('Users', () => {
     let dupeUser;
     let dupeUserPassword = "Test123!";
     let dupeUserEmail = "dupeuser@email.com";
+    let dupeUserUsername = "dupeuser";
+
+    //Another Duplicate User - for tests involving duplicate username scenario
+    let dupeUser2;
+    let dupeUser2Password = "Test123!";
+    let dupeUser2Email1 = "dupeUser2Email1@email.com";
+    let dupeUser2Email2 = "dupeUser2Email2@email.com";
+    let dupeUser2Username = "dupeUser2Username";
 
     //Reset Password User - for all tests involving the reset password scenario
     let resetUser;
     let resetUserEmail = "resetuser@email.com";
     let resetUserPassword = "Test123!";
+    let resetUserUsername = "resetuser";
 
     //Test User - for general test user scenarios
     let testUser;
     let testUserEmail = "testuser@email.com";
     let testUserPassword = "Test123!";
+    let testUserUsername = "testuser";
     let testUserAuthToken;
 
 
@@ -36,15 +46,17 @@ describe('Users', () => {
     let phoneUser, phoneUserVerificationId, phoneUserAuthToken;
     let phoneUserEmail = "phoneuser@email.com";
     let phoneUserPassword = "Test123!";
+    let phoneUserUsername = "phoneuser";
 
     before(async () => {
       await User.remove({});
-      dupeUser = await userUtility.createVerifiedUser("Jane", "Doe", dupeUserEmail, "hogwarts", dupeUserPassword);
-      resetUser = await userUtility.createVerifiedUser("Tim", "Smith", resetUserEmail, "hogwarts", resetUserPassword);
-      testUser = await userUtility.createVerifiedUser("Test", "User", testUserEmail, "Hogwarts", testUserPassword);
+      dupeUser = await userUtility.createVerifiedUser("Jane", "Doe", dupeUserEmail, "hogwarts", dupeUserPassword, dupeUserUsername);
+      dupeUser2 = await userUtility.createVerifiedUser("Jane", "Doe", dupeUser2Email1, "hogwarts", dupeUser2Password, dupeUser2Username);
+      resetUser = await userUtility.createVerifiedUser("Tim", "Smith", resetUserEmail, "hogwarts", resetUserPassword, resetUserUsername);
+      testUser = await userUtility.createVerifiedUser("Test", "User", testUserEmail, "Hogwarts", testUserPassword, testUserUsername);
       testUserAuthToken = await userUtility.getUserAuthToken(testUserEmail, testUserPassword);
 
-      phoneUser = await userUtility.createVerifiedUser("Phone", "User", phoneUserEmail, "Hogwarts", phoneUserPassword);
+      phoneUser = await userUtility.createVerifiedUser("Phone", "User", phoneUserEmail, "Hogwarts", phoneUserPassword, phoneUserUsername);
       phoneUserAuthToken = await userUtility.getUserAuthToken(phoneUserEmail, phoneUserPassword);
       phoneUserVerificationId = await userUtility.savePhoneNumber(phoneUserEmail, phoneUserAuthToken, "1234567890");
     });
@@ -67,7 +79,8 @@ describe('Users', () => {
                     "lastName": "Doe",
                     "email": "jdoe@email.com",
                     "school": "hogwarts",
-                    "password": "12121212"
+                    "password": "12121212",
+                    "username": "jdoe"
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -83,7 +96,8 @@ describe('Users', () => {
                     "firstName": "John",
                     "email": "jdoe@email.com",
                     "school": "hogwarts",
-                    "password": "12121212"
+                    "password": "12121212",
+                    "username": "jdoe"
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -99,7 +113,8 @@ describe('Users', () => {
                     "firstName": "John",
                     "lastName": "Doe",
                     "school": "hogwarts",
-                    "password": "12121212"
+                    "password": "12121212",
+                    "username": "jdoe"
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -115,7 +130,8 @@ describe('Users', () => {
                     "firstName": "John",
                     "lastName": "Doe",
                     "email": "jdoe@email.com",
-                    "password": "12121212"
+                    "password": "12121212",
+                    "username": "jdoe"
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -132,10 +148,28 @@ describe('Users', () => {
                     "lastName": "Doe",
                     "email": "jdoe@email.com",
                     "school": "hogwarts",
+                    "username": "jdoe"
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing User's Password");
+                    done();
+                });
+        });
+
+        it('it should not POST a user without username', (done) => {
+            chai.request(server)
+                .post('/user/create')
+                .send({
+                    "firstName": "John",
+                    "lastName": "Doe",
+                    "email": "jdoe@email.com",
+                    "school": "hogwarts",
+                    "password": "12121212"
+                })
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property("message").eql("Missing User's Username");
                     done();
                 });
         });
@@ -148,7 +182,8 @@ describe('Users', () => {
                     "lastName": "Doe",
                     "email": "jdoe@email.com",
                     "school": "hogwarts",
-                    "password": "12121212"
+                    "password": "12121212",
+                    "username": "jdoe"
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
@@ -174,12 +209,32 @@ describe('Users', () => {
                 "lastName": dupeUser.lastName,
                 "email": dupeUserEmail,
                 "school": dupeUser.school,
-                "password": dupeUserPassword
+                "password": dupeUserPassword,
+                "username": dupeUserUsername
               })
               .end((err, res) => {
                   res.should.have.status(500);
-                  res.body.should.have.property("code").eql(11000);
-                  res.body.should.have.property("errmsg");
+                  let errors = res.body.errors;
+                  errors.should.have.property("email");
+                  done();
+              });
+      });
+
+        it('it should not POST a user with duplicate username', (done) => {
+          chai.request(server)
+              .post('/user/create')
+              .send({
+                "firstName": dupeUser2.firstName,
+                "lastName": dupeUser2.lastName,
+                "email": dupeUser2Email2,
+                "school": dupeUser2.school,
+                "password": dupeUser2Password,
+                "username": dupeUser2.username
+              })
+              .end((err, res) => {
+                  res.should.have.status(500);
+                  let errors = res.body.errors;
+                  errors.should.have.property("username");
                   done();
               });
       });

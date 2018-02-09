@@ -130,7 +130,7 @@ exports.authenticateUser = function(req, res) {
                 userPublicId: user.userPublicId,
                 hasPaymentInformation: user.stripeCustomerId ? true : false,
                 hasProfilePicture: user.profile_picture ? true : false,
-                hasBio: user.bio ? true : false,
+                bio: user.bio ? user.bio : '',
                 phone: user.phoneVerified ? user.phone : ''
             });
         }

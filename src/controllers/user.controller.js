@@ -438,6 +438,10 @@ exports.inviteContacts = function(req, res) {
       return res.status(400).send({ message: "userId not decoded" });
     }
 
+    if(!req.body.contactsInvited) {
+      return res.status(400).send({ message: "Missing User's contactsInvited" });
+    }
+
     var sendAppInvitationSMS = (userFirstName, userLastName, contactsInvited) => {
         const messageIntro = userFirstName + " " + userLastName + " has invited you to try thumb.";
         const messageBody = " Thumb is a ride sharing platform exclusively built for college students.";
@@ -455,7 +459,6 @@ exports.inviteContacts = function(req, res) {
                     }
                     else {
                         // TODO log result.sid
-                        console.log(result.sid);
                     }
             });
         })

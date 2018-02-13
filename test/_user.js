@@ -980,4 +980,87 @@ describe('Users', () => {
                 });
         });
     });
+
+    /*
+    * Test the /POST /user/invite route
+    */
+    describe('/POST /user/invite', () => {
+        it('it should not POST a user invite without auth token', (done) => {
+            chai.request(server)
+                .post('/user/invite')
+                .send({})
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("No token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();
+                });
+        });
+
+        it('it should not POST a user invite with invalid auth token', (done) => {
+            chai.request(server)
+                .post('/user/invite')
+                .send({
+                    "token" : "random"
+                })
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("Invalid token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();
+                });
+        });
+
+        it('it should not POST a user invite without contactsInvited', (done) => {
+            chai.request(server)
+                .post('/user/invite')
+                .send({
+                    "token" : testUserAuthToken
+                })
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property("message").eql("Missing User's contactsInvited");
+                    done();
+                });
+        });
+
+        it('it should POST a user invite with valid auth token and contactsInvited', (done) => {
+            chai.request(server)
+                .post('/user/invite')
+                .send({
+                    "token" : testUserAuthToken,
+                    "contactsInvited": [
+                        {
+                            "phone" : "8122722961",
+                            "name" : "def"
+                        }, 
+                        {
+                            "phone" : "1231231231",
+                            "name" : "abc"
+                        }
+                    ]
+                })
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property("message").eql("User invitations sent successfully");
+                    User.findOne({
+                        'email': testUserEmail
+                    }, (err, user) => {
+                        let contactsInvited = [
+                            [{
+                                "phone" : "8122722961",
+                                "name" : "def"
+                            }, 
+                            {
+                                "phone" : "1231231231",
+                                "name" : "abc"
+                            }]
+                        ];
+                    chai.assert.deepEqual(contactsInvited, user.contactsInvited);
+                    }).then(() => {
+                        done();
+                    });
+                });
+        });
+    });
 });

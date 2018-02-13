@@ -432,3 +432,58 @@ exports.verifyPhone = function(req, res) {
         });
     });
 }
+
+exports.inviteContacts = function(req, res) {
+    if(!req.decoded.userId) {
+      return res.status(400).send({ message: "userId not decoded" });
+    }
+
+    var sendAppInvitationSMS = (userFirstName, userLastName, contactsInvited) => {
+        const messageIntro = userFirstName + " " + userLastName + " has invited you to try thumb.";
+        const messageBody = " Thumb is a ride sharing platform exclusively built for college students.";
+        const messageEnd = " Please download Thumb app from http://www.google.com and sign up.";
+        contactsInvited.map(contactInvited => {
+            let toPhone = '+1' + contactInvited.phone;
+            let message = "Hey " + contactInvited.name.split(" ")[0] + ", " + messageIntro + messageBody + messageEnd;
+            twilio.messages.create({
+                from: config.TWILIO_PHONE_NUMBER,
+                to: toPhone,
+                body: message
+                }, function(err, result) {
+                    if(err) {
+                        // TODO log err
+                    }
+                    else {
+                        // TODO log result.sid
+                        console.log(result.sid);
+                    }
+            });
+        })
+    };
+
+    User.findOne({
+        '_id' : req.decoded.userId,
+        'verified' : true
+    }, function(err, user) {
+        if(err || !user) {
+            res.status(400).send({ message: "Incorrect userId" });
+        }
+    }).then( (user) => {
+        user.contactsInvited.push(req.body.contactsInvited.map(contactInvited => {
+            return {
+                "name": contactInvited.name,
+                "phone": contactInvited.phone
+            }
+        }));
+        User.update({ '_id': user._id }, user, function(err, result) {
+            if(err) {
+                return next(err);
+            } else {
+                if (process.env.NODE_ENV !== 'test') {
+                    sendAppInvitationSMS(user.firstName, user.lastName, req.body.contactsInvited);
+                }
+                res.json({ message: "User invitations sent successfully" });
+            }
+        });
+    });
+}

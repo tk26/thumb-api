@@ -25,4 +25,6 @@ module.exports = function(app) {
     app.post('/user/phone/save', middleware('auth'), user.submitPhone);
 
     app.post('/user/phone/verify', middleware('auth'), user.verifyPhone);
+
+    app.post('/user/invite', middleware('auth'), user.inviteContacts);
 }

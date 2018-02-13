@@ -42,7 +42,8 @@ var UserSchema = mongoose.Schema({
     drives: Array,
     stripeCustomerId: String,
     bio: String,
-    profile_picture: String
+    profile_picture: String,
+    contactsInvited: Array,
 }, {
     timestamps: true
 });

@@ -27,4 +27,8 @@ module.exports = function(app) {
     app.post('/user/phone/verify', middleware('auth'), user.verifyPhone);
 
     app.post('/user/invite', middleware('auth'), user.inviteContacts);
+
+    app.get('/user/validate/username/:username', user.validateUsername);
+
+    app.get('/user/validate/email/:email', user.validateEmail);
 }

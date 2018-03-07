@@ -77,7 +77,7 @@ describe('Users', () => {
                 .post('/user/create')
                 .send({
                     "lastName": "Doe",
-                    "email": "jdoe@email.com",
+                    "email": "jdoe@email.edu",
                     "school": "hogwarts",
                     "password": "12121212",
                     "username": "jdoe"
@@ -94,7 +94,7 @@ describe('Users', () => {
                 .post('/user/create')
                 .send({
                     "firstName": "John",
-                    "email": "jdoe@email.com",
+                    "email": "jdoe@email.edu",
                     "school": "hogwarts",
                     "password": "12121212",
                     "username": "jdoe"
@@ -129,7 +129,7 @@ describe('Users', () => {
                 .send({
                     "firstName": "John",
                     "lastName": "Doe",
-                    "email": "jdoe@email.com",
+                    "email": "jdoe@email.edu",
                     "password": "12121212",
                     "username": "jdoe"
                 })
@@ -146,7 +146,7 @@ describe('Users', () => {
                 .send({
                     "firstName": "John",
                     "lastName": "Doe",
-                    "email": "jdoe@email.com",
+                    "email": "jdoe@email.edu",
                     "school": "hogwarts",
                     "username": "jdoe"
                 })
@@ -163,7 +163,7 @@ describe('Users', () => {
                 .send({
                     "firstName": "John",
                     "lastName": "Doe",
-                    "email": "jdoe@email.com",
+                    "email": "jdoe@email.edu",
                     "school": "hogwarts",
                     "password": "12121212"
                 })
@@ -180,7 +180,7 @@ describe('Users', () => {
                 .send({
                     "firstName": "John",
                     "lastName": "Doe",
-                    "email": "jdoe@email.com",
+                    "email": "jdoe@email.edu",
                     "school": "hogwarts",
                     "password": "12121212",
                     "username": "jdoe"
@@ -189,7 +189,7 @@ describe('Users', () => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("User Details Saved Successfully");
                     User.findOne({
-                        'email': "jdoe@email.com"
+                        'email': "jdoe@email.edu"
                     }, (err, user) => {
                         chai.assert.notEqual(0, user.verificationId.length);
                         chai.assert.equal(false, user.verified);
@@ -261,7 +261,7 @@ describe('Users', () => {
                 .send({})
                 .end((err, res) => {
                     User.findOne({
-                        'email': "jdoe@email.com"
+                        'email': "jdoe@email.edu"
                     }, (err, user) => {
                         chai.assert.equal(0, user.verificationId.length);
                         chai.assert.equal(true, user.verified);
@@ -293,7 +293,7 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/login')
                 .send({
-                    "email" : "jdoe@email.com"
+                    "email" : "jdoe@email.edu"
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -438,13 +438,13 @@ describe('Users', () => {
             chai.request(server)
                 .post('/user/forgot')
                 .send({
-                    "email" : "jdoe@email.com"
+                    "email" : "jdoe@email.edu"
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("Password Reset Email Sent");
                     User.findOne({
-                        'email': "jdoe@email.com"
+                        'email': "jdoe@email.edu"
                     }, (err, user) => {
                         chai.assert.notEqual(0, user.password_reset_token.length);
                         password_reset_token = user.password_reset_token;
@@ -1060,6 +1060,127 @@ describe('Users', () => {
                     }).then(() => {
                         done();
                     });
+                });
+        });
+    });
+
+    /**
+     * Test GET /user/validate/username/:username route
+     */
+    describe('GET /user/validate/username/:username', () => {
+        it('should return invalid for length less than 3', (done) => {
+            chai.request(server)
+                .get('/user/validate/username/' + 'ab')
+                .send({})
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property('message').eql('Invalid username');
+                    done();
+                });
+        });
+
+        it('should return invalid for length more than 30', (done) => {
+            let usernameMoreThan30Chars = 'abababababababababababababababc';
+            chai.request(server)
+                .get('/user/validate/username/' + usernameMoreThan30Chars)
+                .send({})
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property('message').eql('Invalid username');
+                    done();
+                });
+        });
+
+        it('should return invalid for special characters other than . or _', (done) => {
+            chai.request(server)
+                .get('/user/validate/username/' + 'ab$cd')
+                .send({})
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property('message').eql('Invalid username');
+                    done();
+                });
+        });
+
+        it('should return valid for alphanumeric and . and _ characters', (done) => {
+            chai.request(server)
+                .get('/user/validate/username/' + 'Ab.cd_eF.12')
+                .send({})
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property('message').eql('Valid username');
+                    done();
+                });
+        });
+
+        it('should return valid for alphanumeric and . and _ characters', (done) => {
+            chai.request(server)
+                .get('/user/validate/username/' + 'Ab.cd_eF.12')
+                .send({})
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property('message').eql('Valid username');
+                    done();
+                });
+        });
+
+        it('should return duplicate for a duplicate username', (done) => {
+            chai.request(server)
+                .get('/user/validate/username/' + 'jdoe') //username 'jdoe' exists already
+                .send({})
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property('message').eql('Duplicate username');
+                    done();
+                });
+        });
+    });
+
+    /**
+     * Test GET /user/validate/email/:email route
+     */
+    describe('GET /user/validate/email/:email', () => {
+        it('should return invalid for an invalid email', (done) => {
+            chai.request(server)
+                .get('/user/validate/email/' + 'test_email')
+                .send({})
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property('message').eql('Invalid email');
+                    done();
+                });
+        });
+
+        it('should return non student for a non .edu email', (done) => {
+            chai.request(server)
+                .get('/user/validate/email/' + 'abc@gmail.com')
+                .send({})
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property('message').eql('Non-student email');
+                    done();
+                });
+        });
+
+        it('should return duplicate for a duplicate email', (done) => {
+            chai.request(server)
+                .get('/user/validate/email/' + 'jdoe@email.edu') //email 'jdoe@email.edu' exists already
+                .send({})
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property('message').eql('Duplicate email');
+                    done();
+                });
+        });
+
+        it('should return valid for a valid email', (done) => {
+            chai.request(server)
+                .get('/user/validate/email/' + 'tk@somaiya.edu')
+                .send({})
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property('message').eql('Valid email');
+                    done();
                 });
         });
     });

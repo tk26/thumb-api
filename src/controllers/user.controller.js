@@ -490,3 +490,50 @@ exports.inviteContacts = function(req, res) {
         });
     });
 }
+
+exports.validateUsername = (req, res) => {
+    // check if lower and upper case letters, numbers, . and _
+    // check if [3,30] chars
+    let regex = /^[a-zA-Z0-9._]{3,30}$/;
+    if (!regex.test(req.params.username)) {
+        return res.status(400).send({ message: "Invalid username" });
+    }
+
+    User.findOne({
+        'username' : req.params.username.toLowerCase(),
+        'verified': true
+    }, function(err, user) {
+        if (err) {
+            return res.status(500).send({ message: "Some error occured"});
+        }
+        if (user) {
+            return res.status(400).send({ message: "Duplicate username"});
+        }
+        return res.json({ message: "Valid username" });
+    });
+}
+
+exports.validateEmail = (req, res) => {
+    let email = req.params.email.toLowerCase();
+    let regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/ ;
+    if (!regex.test(email)) {
+        return res.status(400).send({ message: "Invalid email" });
+    }
+    // check if ends in .edu
+    if (email.substr(email.length - 4) !== '.edu') {
+        return res.status(400).send({ message: "Non-student email" });
+    }
+
+    User.findOne({
+        'email' : email,
+        'verified': true
+    }, function(err, user) {
+        if (err) {
+            return res.status(500).send({ message: "Some error occured"});
+        }
+        if (user) {
+            return res.status(400).send({ message: "Duplicate email"});
+        }
+        return res.json({ message: "Valid email" });
+    });
+}

@@ -30,6 +30,10 @@ var UserSchema = mongoose.Schema({
         required: true,
         unique: true
     },
+    birthday: {
+        type: String,
+        required: true
+    },
     phone: {
         type: String
     },

@@ -20,6 +20,7 @@ describe('Users', () => {
     let dupeUserPassword = "Test123!";
     let dupeUserEmail = "dupeuser@email.com";
     let dupeUserUsername = "dupeuser";
+    let dupeUserBirthday = "03/21/2001";
 
     //Another Duplicate User - for tests involving duplicate username scenario
     let dupeUser2;
@@ -27,18 +28,21 @@ describe('Users', () => {
     let dupeUser2Email1 = "dupeUser2Email1@email.com";
     let dupeUser2Email2 = "dupeUser2Email2@email.com";
     let dupeUser2Username = "dupeUser2Username";
+    let dupeUser2Birthday = "03/21/2001";
 
     //Reset Password User - for all tests involving the reset password scenario
     let resetUser;
     let resetUserEmail = "resetuser@email.com";
     let resetUserPassword = "Test123!";
     let resetUserUsername = "resetuser";
+    let resetUserBirthday = "03/21/2001";
 
     //Test User - for general test user scenarios
     let testUser;
     let testUserEmail = "testuser@email.com";
     let testUserPassword = "Test123!";
     let testUserUsername = "testuser";
+    let testUserBirthday = "03/21/2001";
     let testUserAuthToken;
 
 
@@ -47,16 +51,17 @@ describe('Users', () => {
     let phoneUserEmail = "phoneuser@email.com";
     let phoneUserPassword = "Test123!";
     let phoneUserUsername = "phoneuser";
+    let phoneUserBirthday = "03/21/2001";
 
     before(async () => {
       await User.remove({});
-      dupeUser = await userUtility.createVerifiedUser("Jane", "Doe", dupeUserEmail, "hogwarts", dupeUserPassword, dupeUserUsername);
-      dupeUser2 = await userUtility.createVerifiedUser("Jane", "Doe", dupeUser2Email1, "hogwarts", dupeUser2Password, dupeUser2Username);
-      resetUser = await userUtility.createVerifiedUser("Tim", "Smith", resetUserEmail, "hogwarts", resetUserPassword, resetUserUsername);
-      testUser = await userUtility.createVerifiedUser("Test", "User", testUserEmail, "Hogwarts", testUserPassword, testUserUsername);
+      dupeUser = await userUtility.createVerifiedUser("Jane", "Doe", dupeUserEmail, "hogwarts", dupeUserPassword, dupeUserUsername, dupeUserBirthday);
+      dupeUser2 = await userUtility.createVerifiedUser("Jane", "Doe", dupeUser2Email1, "hogwarts", dupeUser2Password, dupeUser2Username, dupeUser2Birthday);
+      resetUser = await userUtility.createVerifiedUser("Tim", "Smith", resetUserEmail, "hogwarts", resetUserPassword, resetUserUsername, resetUserBirthday);
+      testUser = await userUtility.createVerifiedUser("Test", "User", testUserEmail, "Hogwarts", testUserPassword, testUserUsername, testUserBirthday);
       testUserAuthToken = await userUtility.getUserAuthToken(testUserEmail, testUserPassword);
 
-      phoneUser = await userUtility.createVerifiedUser("Phone", "User", phoneUserEmail, "Hogwarts", phoneUserPassword, phoneUserUsername);
+      phoneUser = await userUtility.createVerifiedUser("Phone", "User", phoneUserEmail, "Hogwarts", phoneUserPassword, phoneUserUsername, phoneUserBirthday);
       phoneUserAuthToken = await userUtility.getUserAuthToken(phoneUserEmail, phoneUserPassword);
       phoneUserVerificationId = await userUtility.savePhoneNumber(phoneUserEmail, phoneUserAuthToken, "1234567890");
     });
@@ -80,7 +85,8 @@ describe('Users', () => {
                     "email": "jdoe@email.edu",
                     "school": "hogwarts",
                     "password": "12121212",
-                    "username": "jdoe"
+                    "username": "jdoe",
+                    "birthday": "03/21/2001"
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -97,7 +103,8 @@ describe('Users', () => {
                     "email": "jdoe@email.edu",
                     "school": "hogwarts",
                     "password": "12121212",
-                    "username": "jdoe"
+                    "username": "jdoe",
+                    "birthday": "03/21/2001"
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -114,7 +121,8 @@ describe('Users', () => {
                     "lastName": "Doe",
                     "school": "hogwarts",
                     "password": "12121212",
-                    "username": "jdoe"
+                    "username": "jdoe",
+                    "birthday": "03/21/2001"
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -131,7 +139,8 @@ describe('Users', () => {
                     "lastName": "Doe",
                     "email": "jdoe@email.edu",
                     "password": "12121212",
-                    "username": "jdoe"
+                    "username": "jdoe",
+                    "birthday": "03/21/2001"
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -148,7 +157,8 @@ describe('Users', () => {
                     "lastName": "Doe",
                     "email": "jdoe@email.edu",
                     "school": "hogwarts",
-                    "username": "jdoe"
+                    "username": "jdoe",
+                    "birthday": "03/21/2001"
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -165,11 +175,30 @@ describe('Users', () => {
                     "lastName": "Doe",
                     "email": "jdoe@email.edu",
                     "school": "hogwarts",
-                    "password": "12121212"
+                    "password": "12121212",
+                    "birthday": "03/21/2001"
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql("Missing User's Username");
+                    done();
+                });
+        });
+
+        it('it should not POST a user without birthday', (done) => {
+            chai.request(server)
+                .post('/user/create')
+                .send({
+                    "firstName": "John",
+                    "lastName": "Doe",
+                    "email": "jdoe@email.edu",
+                    "school": "hogwarts",
+                    "password": "12121212",
+                    "username": "jdoe"
+                })
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property("message").eql("Missing User's Birthday");
                     done();
                 });
         });
@@ -183,7 +212,8 @@ describe('Users', () => {
                     "email": "jdoe@email.edu",
                     "school": "hogwarts",
                     "password": "12121212",
-                    "username": "jdoe"
+                    "username": "jdoe",
+                    "birthday": "03/21/2001"
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
@@ -210,7 +240,8 @@ describe('Users', () => {
                 "email": dupeUserEmail,
                 "school": dupeUser.school,
                 "password": dupeUserPassword,
-                "username": dupeUserUsername
+                "username": dupeUserUsername,
+                "birthday": dupeUserBirthday
               })
               .end((err, res) => {
                   res.should.have.status(500);
@@ -229,7 +260,8 @@ describe('Users', () => {
                 "email": dupeUser2Email2,
                 "school": dupeUser2.school,
                 "password": dupeUser2Password,
-                "username": dupeUser2.username
+                "username": dupeUser2.username,
+                "birthday": dupeUser2Birthday
               })
               .end((err, res) => {
                   res.should.have.status(500);
@@ -325,7 +357,9 @@ describe('Users', () => {
                     "lastName": "Doe",
                     "email": "jdoe_temp@email.com",
                     "school": "hogwarts",
-                    "password": "12121212"
+                    "password": "12121212",
+                    "username": "john_hogwarts",
+                    "birthday": "03/21/2001"
                 })
                 .end();
 
@@ -409,7 +443,9 @@ describe('Users', () => {
                     "lastName": "Doe",
                     "email": "jdoe_temp@email.com",
                     "school": "hogwarts",
-                    "password": "12121212"
+                    "password": "12121212",
+                    "username": "john_hogwarts",
+                    "birthday": "03/21/2001"
                 })
                 .end();
 

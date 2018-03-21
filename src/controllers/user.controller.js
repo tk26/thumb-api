@@ -43,6 +43,11 @@ exports.submitUser = function(req, res) {
         next();
     }
 
+    if(!req.body.birthday){
+        res.status(400).send({ message: "Missing User's Birthday" });
+        next();
+    }
+
     var sendVerificationEmail = () => {
         const mailOptions = {
             from: 'accounts@thumbtravel.co',

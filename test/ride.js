@@ -15,11 +15,12 @@ describe('Ride', () => {
     var auth_token, userPublicId, user;
     let email = "rideuser@email.com";
     let username = "rideuser";
+    let birthday = "03/21/2001";
 
     before(async () => {
       await Ride.remove({});
       let userPassword = "Test123!";
-      user = await userUtility.createVerifiedUser("Jon", "Smith", email, "Hogwarts", userPassword, username);
+      user = await userUtility.createVerifiedUser("Jon", "Smith", email, "Hogwarts", userPassword, username, birthday);
       auth_token = await userUtility.getUserAuthToken(user.email, userPassword);
     });
 

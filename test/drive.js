@@ -15,11 +15,12 @@ describe('Drive', () => {
     let auth_token, userPublicId, user;
     let email = "driveuser@email.com";
     let username = "driveuser";
+    let birthday = "03/21/2001";
 
     before(async() => {
       let userPassword = "Test123!";
       await Drive.remove({});
-      user = await userUtility.createVerifiedUser("Joe", "Smith", email, "Hogwarts", userPassword, username);
+      user = await userUtility.createVerifiedUser("Joe", "Smith", email, "Hogwarts", userPassword, username, birthday);
       auth_token = await userUtility.getUserAuthToken(user.email, userPassword);
     });
 

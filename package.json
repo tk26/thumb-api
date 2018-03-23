@@ -5,7 +5,10 @@
   "main": "src/server.js",
   "scripts": {
     "prestart": "node buildScripts/dev.js",
-    "start": "npm-run-all --parallel security-check open:src lint:watch",
+    "start": "npm-run-all --parallel security-check open:prodsrc lint:watch",
+    "open:prodsrc": "cross-env nodemon src/server.js",
+    "predev": "node buildScripts/dev.js",
+    "dev": "npm-run-all --parallel security-check open:src lint:watch",
     "open:src": "cross-env NODE_ENV=dev nodemon src/server.js",
     "lint": "esw src buildScripts test --color",
     "lint:watch": "npm run lint -- --watch",

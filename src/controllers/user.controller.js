@@ -110,15 +110,17 @@ exports.authenticateUser = function(req, res) {
     }
 
     User.findOne({
-        'email' : req.body.email,
-        'verified': true
+        'email' : req.body.email
     }, function(err, user) {
         if(err || !user) {
-            res.status(400).send({ message: "Incorrect or unverified email" });
+            res.status(400).send({ message: "Incorrect email" });
         }
     }).then( (user) => {
         if(!user.validatePassword(req.body.password)) {
             res.status(400).send({ message: "Incorrect password" });
+        }
+        else if(!user.verified) {
+            res.status(400).send({ message: "Unverified user" });
         }
         else {
             const payload = {

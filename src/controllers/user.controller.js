@@ -200,6 +200,26 @@ exports.submitResetPasswordUser = function(req, res) {
         res.status(400).send({ message: "Missing User's Password" });
     }
 
+    const sendPasswordResetConfirmationEmail = (email) => {
+        const mailOptions = {
+            from: 'accounts@thumbtravel.co',
+            to: email,
+            subject: 'thumb is more than just a ride.',
+            html: '<p> Hello,</p><br/>' +
+            '<p>You have successfully changed your password.</p>' +
+            '<p>Please feel free to log in to thumb using the mobile app.</p><br/>' +
+            '<p>If this wasn\'t you or believe an unauthorized person has accessed your account,' + 
+            ' please immediately reset your password. Then, contact us by emailing support@thumbtravel.com so we' + 
+            ' can confirm your account is secure.</p><br/>' +
+            '<p>To reset your password tap "Forgot your password?" on the login screen in the mobile app or ' + 
+            'click <a href="'+ config.BASE_URL_WEBAPP +'/#/forgot">HERE</a>.</p><br/>' + 
+            '<p>We hope you enjoy traveling with thumb.</p><br/>' + 
+            '<p>Thank you,</p>' + '<p>The thumb Team</p>'
+        };
+
+        sgMailer.send(mailOptions);
+    };
+
     User.findOne({
         '_id' : req.decoded.userId
     }, function(err, user) {
@@ -212,6 +232,9 @@ exports.submitResetPasswordUser = function(req, res) {
             if(err) {
                 return next(err);
             } else {
+                if (process.env.NODE_ENV !== 'test') {
+                    sendPasswordResetConfirmationEmail(user.email);
+                }
                 res.json({ message: "Password reset successfully" });
             }
         });

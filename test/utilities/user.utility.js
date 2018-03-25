@@ -58,7 +58,6 @@ exports.createUnverifiedUser = async function (firstName, lastName, email, schoo
   res.body.should.have.property("message").eql("User Details Saved Successfully");
 
   let createdUser = await User.findOne({'email': email});
-  // createdUser = await User.findOne({'email': email});
   return createdUser;
 }
 

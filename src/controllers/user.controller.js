@@ -14,7 +14,7 @@ const sendVerificationEmail = (email, verificationId) => {
         to: email,
         subject: 'Verify your Thumb Account',
         html: '<p> Welcome to thumb! In order to get started, you need to confirm your email address. ' +
-        'When your confirm your email, we know that we will be able to update you on your travel plans.</p><br/>' +  
+        'When you confirm your email, we know that we will be able to update you on your travel plans.</p><br/>' +  
         '<p>Please click <a href='+ config.BASE_URL_API +'/user/verify/'+ verificationId +'>HERE</a> ' +
         'to confirm your email address.</p><br/>' +
         '<p>Thanks,</p>' + '<p>The thumb Team</p>'

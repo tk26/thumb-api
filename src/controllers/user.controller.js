@@ -10,7 +10,7 @@ const randomstring = require('randomstring');
 
 const sendVerificationEmail = (email, verificationId) => {
     const mailOptions = {
-        from: 'confirmation@thumbtravel.co',
+        from: 'confirmation@thumbtravel.com',
         to: email,
         subject: 'Verify your Thumb Account',
         html: '<p> Welcome to thumb! In order to get started, you need to confirm your email address. ' +
@@ -156,7 +156,7 @@ exports.submitForgotPasswordUser = function(req, res) {
 
     const sendPasswordResetEmail = (_token) => {
         const mailOptions = {
-            from: 'accounts@thumbtravel.co',
+            from: 'accounts@thumbtravel.com',
             to: req.body.email,
             subject: 'Reset your Thumb Password',
             // TODO draft a better email
@@ -207,7 +207,7 @@ exports.submitResetPasswordUser = function(req, res) {
 
     const sendPasswordResetConfirmationEmail = (email) => {
         const mailOptions = {
-            from: 'accounts@thumbtravel.co',
+            from: 'accounts@thumbtravel.com',
             to: email,
             subject: 'thumb is more than just a ride.',
             html: '<p> Hello,</p><br/>' +

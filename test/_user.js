@@ -343,7 +343,7 @@ describe('Users', () => {
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
-                    res.body.should.have.property("message").eql("Incorrect or unverified email");
+                    res.body.should.have.property("message").eql("Incorrect email");
                     done();
                 });
         });
@@ -371,7 +371,7 @@ describe('Users', () => {
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
-                    res.body.should.have.property("message").eql("Incorrect or unverified email");
+                    res.body.should.have.property("message").eql("Incorrect email");
                     done();
                 });
 

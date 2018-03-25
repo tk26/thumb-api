@@ -1110,7 +1110,7 @@ describe('Users', () => {
                 .get('/user/validate/username/' + 'ab')
                 .send({})
                 .end((err, res) => {
-                    res.should.have.status(400);
+                    res.should.have.status(422);
                     res.body.should.have.property('message').eql('Invalid username');
                     done();
                 });
@@ -1122,7 +1122,7 @@ describe('Users', () => {
                 .get('/user/validate/username/' + usernameMoreThan30Chars)
                 .send({})
                 .end((err, res) => {
-                    res.should.have.status(400);
+                    res.should.have.status(422);
                     res.body.should.have.property('message').eql('Invalid username');
                     done();
                 });
@@ -1133,7 +1133,7 @@ describe('Users', () => {
                 .get('/user/validate/username/' + 'ab$cd')
                 .send({})
                 .end((err, res) => {
-                    res.should.have.status(400);
+                    res.should.have.status(422);
                     res.body.should.have.property('message').eql('Invalid username');
                     done();
                 });
@@ -1166,7 +1166,7 @@ describe('Users', () => {
                 .get('/user/validate/username/' + 'jdoe') //username 'jdoe' exists already
                 .send({})
                 .end((err, res) => {
-                    res.should.have.status(400);
+                    res.should.have.status(409);
                     res.body.should.have.property('message').eql('Duplicate username');
                     done();
                 });
@@ -1182,7 +1182,7 @@ describe('Users', () => {
                 .get('/user/validate/email/' + 'test_email')
                 .send({})
                 .end((err, res) => {
-                    res.should.have.status(400);
+                    res.should.have.status(422);
                     res.body.should.have.property('message').eql('Invalid email');
                     done();
                 });
@@ -1193,7 +1193,7 @@ describe('Users', () => {
                 .get('/user/validate/email/' + 'abc@gmail.com')
                 .send({})
                 .end((err, res) => {
-                    res.should.have.status(400);
+                    res.should.have.status(422);
                     res.body.should.have.property('message').eql('Non-student email');
                     done();
                 });
@@ -1204,7 +1204,7 @@ describe('Users', () => {
                 .get('/user/validate/email/' + 'jdoe@email.edu') //email 'jdoe@email.edu' exists already
                 .send({})
                 .end((err, res) => {
-                    res.should.have.status(400);
+                    res.should.have.status(409);
                     res.body.should.have.property('message').eql('Duplicate email');
                     done();
                 });

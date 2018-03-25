@@ -53,6 +53,13 @@ describe('Users', () => {
     let phoneUserUsername = "phoneuser";
     let phoneUserBirthday = "03/21/2001";
 
+    //Unverified User - for tests involving the unverified user scenario
+    let unverifiedUser;
+    let unverifiedUserPassword = "Test123!";
+    let unverifiedUserEmail = "unverifieduser@email.com";
+    let unverifiedUserUsername = "unverifieduser";
+    let unverifiedUserBirthday = "03/21/2001";
+
     before(async () => {
       await User.remove({});
       dupeUser = await userUtility.createVerifiedUser("Jane", "Doe", dupeUserEmail, "hogwarts", dupeUserPassword, dupeUserUsername, dupeUserBirthday);
@@ -64,6 +71,8 @@ describe('Users', () => {
       phoneUser = await userUtility.createVerifiedUser("Phone", "User", phoneUserEmail, "Hogwarts", phoneUserPassword, phoneUserUsername, phoneUserBirthday);
       phoneUserAuthToken = await userUtility.getUserAuthToken(phoneUserEmail, phoneUserPassword);
       phoneUserVerificationId = await userUtility.savePhoneNumber(phoneUserEmail, phoneUserAuthToken, "1234567890");
+
+      unverifiedUser = await userUtility.createUnverifiedUser("Unverified", "User", unverifiedUserEmail, "Hogwarts", unverifiedUserPassword, unverifiedUserUsername, unverifiedUserBirthday);
     });
 
     after(async () => {
@@ -71,6 +80,7 @@ describe('Users', () => {
       await userUtility.deleteUserByEmail(resetUserEmail);
       await userUtility.deleteUserByEmail(testUserEmail);
       await userUtility.deleteUserByEmail(phoneUserEmail);
+      await userUtility.deleteUserByEmail(unverifiedUserEmail);
     });
 
     /*
@@ -348,41 +358,32 @@ describe('Users', () => {
                 });
         });
 
-        it('it should not POST a user login with unverified email', (done) => {
-            // temp user not destined to be verified
-            chai.request(server)
-                .post('/user/create')
-                .send({
-                    "firstName": "John",
-                    "lastName": "Doe",
-                    "email": "jdoe_temp@email.com",
-                    "school": "hogwarts",
-                    "password": "12121212",
-                    "username": "john_hogwarts",
-                    "birthday": "03/21/2001"
-                })
-                .end();
-
+        it('it should not POST a user login with incorrect password', (done) => {
             chai.request(server)
                 .post('/user/login')
                 .send({
-                    "email" : "jdoe_temp@email.com",
-                    "password" : "12121212"
+                    "email" : testUserEmail,
+                    "password": "incorrectPassword"
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
-                    res.body.should.have.property("message").eql("Incorrect email");
+                    res.body.should.have.property("message").eql("Incorrect password");
                     done();
                 });
+        });
 
-            // delete the temp user
-            after((done) => {
-                User.remove({
-                    "email" : "jdoe_temp@email.com"
-                }, (err) => {
+        it('it should not POST a user login with unverified email', (done) => {
+            chai.request(server)
+                .post('/user/login')
+                .send({
+                    "email" : unverifiedUserEmail,
+                    "password" : unverifiedUserPassword
+                })
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("Unverified user");
                     done();
                 });
-            });
         });
 
         it('it should POST a user login with valid email and password', (done) => {

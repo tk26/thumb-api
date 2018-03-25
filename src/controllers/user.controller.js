@@ -7,6 +7,24 @@ const crypto = require('crypto');
 var stripe = require('stripe')(config.STRIPE_SECRET);
 
 const randomstring = require('randomstring');
+
+const sendVerificationEmail = (email, verificationId) => {
+    const mailOptions = {
+        from: 'confirmation@thumbtravel.co',
+        to: email,
+        subject: 'Verify your Thumb Account',
+        html: '<p> Welcome to thumb! In order to get started, you need to confirm your email address. ' +
+        'When your confirm your email, we know that we will be able to update you on your travel plans.</p><br/>' +  
+        '<p>Please click <a href='+ config.BASE_URL_API +'/user/verify/'+ verificationId +'>HERE</a> ' +
+        'to confirm your email address.</p><br/>' +
+        '<p>Thanks,</p>' + '<p>The thumb Team</p>'
+    };
+
+    if (process.env.NODE_ENV !== 'test') {
+        sgMailer.send(mailOptions);
+    }    
+};
+
 var Twilio = require('twilio');
 var twilio = new Twilio(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN);
 
@@ -48,19 +66,6 @@ exports.submitUser = function(req, res) {
         next();
     }
 
-    var sendVerificationEmail = () => {
-        const mailOptions = {
-            from: 'accounts@thumbtravel.co',
-            to: req.body.email,
-            subject: 'Verify your Thumb Account',
-            // TODO draft a better email
-            html: '<p>Please click <a href='+ config.BASE_URL_API +'/user/verify/'+ verificationId +'>HERE</a> ' +
-            'to verify your Thumb Account </p>'
-        };
-
-        sgMailer.send(mailOptions);
-    };
-
     var user = new User(req.body);
     user.verified = false;
     user.verificationId = verificationId;
@@ -74,9 +79,7 @@ exports.submitUser = function(req, res) {
         if(err) {
             return res.status(500).send(err);
         } else {
-            if (process.env.NODE_ENV !== 'test') {
-                sendVerificationEmail();
-            }
+            sendVerificationEmail(req.body.email, verificationId);
             res.send({ message: "User Details Saved Successfully" });
         }
     });
@@ -113,14 +116,16 @@ exports.authenticateUser = function(req, res) {
         'email' : req.body.email
     }, function(err, user) {
         if(err || !user) {
-            res.status(400).send({ message: "Incorrect email" });
+            return res.status(400).send({ message: "Incorrect email" });
         }
     }).then( (user) => {
         if(!user.validatePassword(req.body.password)) {
-            res.status(400).send({ message: "Incorrect password" });
+            return res.status(400).send({ message: "Incorrect password" });
         }
         else if(!user.verified) {
-            res.status(400).send({ message: "Unverified user" });
+            // resend user verification email
+            sendVerificationEmail(req.body.email, user.verificationId);
+            return res.status(403).send({ message: "Unverified user" });
         }
         else {
             const payload = {

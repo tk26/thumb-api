@@ -38,6 +38,30 @@ exports.createVerifiedUser = async function (firstName, lastName, email, school,
   return createdUser;
 }
 
+exports.createUnverifiedUser = async function (firstName, lastName, email, school, password, username, birthday){
+  let should = chai.should();
+  await User.deleteOne({'email': email});
+
+  res = await chai.request(server)
+    .post('/user/create')
+    .send({
+        "firstName": firstName,
+        "lastName": lastName,
+        "email": email,
+        "school": school,
+        "password": password,
+        "username": username,
+        "birthday": birthday
+    });
+
+  res.should.have.status(200);
+  res.body.should.have.property("message").eql("User Details Saved Successfully");
+
+  let createdUser = await User.findOne({'email': email});
+  // createdUser = await User.findOne({'email': email});
+  return createdUser;
+}
+
 exports.getUserAuthToken = async function(email, password){
   let res = await chai.request(server)
     .post('/user/login')

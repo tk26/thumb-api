@@ -29,44 +29,36 @@ var Twilio = require('twilio');
 var twilio = new Twilio(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN);
 
 exports.submitUser = function(req, res) {
-    const verificationId = crypto.randomBytes(20).toString('hex');
-    
     if(!req.body.firstName){
-        res.status(400).send({ message: "Missing User's First Name"});
-        next();
+        return res.status(400).send({ message: "Missing User's First Name" });
     }
 
     if(!req.body.lastName){
-        res.status(400).send({ message: "Missing User's Last Name"});
-        next();
+        return res.status(400).send({ message: "Missing User's Last Name" });
     }
 
     if(!req.body.email){
-        res.status(400).send({ message: "Missing User's Email"});
-        next();
+        return res.status(400).send({ message: "Missing User's Email" });
     }
 
     if(!req.body.school){
-        res.status(400).send({ message: "Missing User's School"});
-        next();
+        return res.status(400).send({ message: "Missing User's School" });
     }
 
     if(!req.body.password){
-        res.status(400).send({ message: "Missing User's Password"});
-        next();
+        return res.status(400).send({ message: "Missing User's Password"});
     }
 
     if(!req.body.username){
-        res.status(400).send({ message: "Missing User's Username" });
-        next();
+        return res.status(400).send({ message: "Missing User's Username" });
     }
 
     if(!req.body.birthday){
-        res.status(400).send({ message: "Missing User's Birthday" });
-        next();
+        return res.status(400).send({ message: "Missing User's Birthday" });
     }
 
-    var user = new User(req.body);
+    const verificationId = crypto.randomBytes(20).toString('hex'); 
+    let user = new User(req.body);
     user.verified = false;
     user.verificationId = verificationId;
     user.password = user.generateHash(req.body.password);
@@ -80,7 +72,7 @@ exports.submitUser = function(req, res) {
             return res.status(500).send(err);
         } else {
             sendVerificationEmail(req.body.email, verificationId);
-            res.send({ message: "User Details Saved Successfully" });
+            res.json({ message: "User Details Saved Successfully" });
         }
     });
 };

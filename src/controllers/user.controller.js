@@ -10,7 +10,7 @@ const randomstring = require('randomstring');
 
 const sendVerificationEmail = (email, verificationId) => {
     const mailOptions = {
-        from: 'confirmation@thumbtravel.co',
+        from: 'confirmation@thumbtravel.com',
         to: email,
         subject: 'Verify your Thumb Account',
         html: '<p> Welcome to thumb! In order to get started, you need to confirm your email address. ' +
@@ -29,44 +29,36 @@ var Twilio = require('twilio');
 var twilio = new Twilio(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN);
 
 exports.submitUser = function(req, res) {
-    const verificationId = crypto.randomBytes(20).toString('hex');
-    
     if(!req.body.firstName){
-        res.status(400).send({ message: "Missing User's First Name"});
-        next();
+        return res.status(400).send({ message: "Missing User's First Name" });
     }
 
     if(!req.body.lastName){
-        res.status(400).send({ message: "Missing User's Last Name"});
-        next();
+        return res.status(400).send({ message: "Missing User's Last Name" });
     }
 
     if(!req.body.email){
-        res.status(400).send({ message: "Missing User's Email"});
-        next();
+        return res.status(400).send({ message: "Missing User's Email" });
     }
 
     if(!req.body.school){
-        res.status(400).send({ message: "Missing User's School"});
-        next();
+        return res.status(400).send({ message: "Missing User's School" });
     }
 
     if(!req.body.password){
-        res.status(400).send({ message: "Missing User's Password"});
-        next();
+        return res.status(400).send({ message: "Missing User's Password"});
     }
 
     if(!req.body.username){
-        res.status(400).send({ message: "Missing User's Username" });
-        next();
+        return res.status(400).send({ message: "Missing User's Username" });
     }
 
     if(!req.body.birthday){
-        res.status(400).send({ message: "Missing User's Birthday" });
-        next();
+        return res.status(400).send({ message: "Missing User's Birthday" });
     }
 
-    var user = new User(req.body);
+    const verificationId = crypto.randomBytes(20).toString('hex'); 
+    let user = new User(req.body);
     user.verified = false;
     user.verificationId = verificationId;
     user.password = user.generateHash(req.body.password);
@@ -80,7 +72,7 @@ exports.submitUser = function(req, res) {
             return res.status(500).send(err);
         } else {
             sendVerificationEmail(req.body.email, verificationId);
-            res.send({ message: "User Details Saved Successfully" });
+            res.json({ message: "User Details Saved Successfully" });
         }
     });
 };
@@ -156,7 +148,7 @@ exports.submitForgotPasswordUser = function(req, res) {
 
     const sendPasswordResetEmail = (_token) => {
         const mailOptions = {
-            from: 'accounts@thumbtravel.co',
+            from: 'accounts@thumbtravel.com',
             to: req.body.email,
             subject: 'Reset your Thumb Password',
             // TODO draft a better email
@@ -207,7 +199,7 @@ exports.submitResetPasswordUser = function(req, res) {
 
     const sendPasswordResetConfirmationEmail = (email) => {
         const mailOptions = {
-            from: 'accounts@thumbtravel.co',
+            from: 'accounts@thumbtravel.com',
             to: email,
             subject: 'thumb is more than just a ride.',
             html: '<p> Hello,</p><br/>' +
@@ -529,9 +521,10 @@ exports.inviteContacts = function(req, res) {
 exports.validateUsername = (req, res) => {
     // check if lower and upper case letters, numbers, . and _
     // check if [3,30] chars
-    let regex = /^[a-zA-Z0-9._]{3,30}$/;
+    const regex = /^[a-zA-Z0-9._]{3,30}$/;
+
     if (!regex.test(req.params.username)) {
-        return res.status(400).send({ message: "Invalid username" });
+        return res.status(422).send({ message: "Invalid username" });
     }
 
     User.findOne({
@@ -542,7 +535,7 @@ exports.validateUsername = (req, res) => {
             return res.status(500).send({ message: "Some error occured"});
         }
         if (user) {
-            return res.status(400).send({ message: "Duplicate username"});
+            return res.status(409).send({ message: "Duplicate username"});
         }
         return res.json({ message: "Valid username" });
     });
@@ -550,13 +543,14 @@ exports.validateUsername = (req, res) => {
 
 exports.validateEmail = (req, res) => {
     let email = req.params.email.toLowerCase();
-    let regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/ ;
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/ ;
+    
     if (!regex.test(email)) {
-        return res.status(400).send({ message: "Invalid email" });
+        return res.status(422).send({ message: "Invalid email" });
     }
     // check if ends in .edu
     if (email.substr(email.length - 4) !== '.edu') {
-        return res.status(400).send({ message: "Non-student email" });
+        return res.status(422).send({ message: "Non-student email" });
     }
 
     User.findOne({
@@ -567,7 +561,7 @@ exports.validateEmail = (req, res) => {
             return res.status(500).send({ message: "Some error occured"});
         }
         if (user) {
-            return res.status(400).send({ message: "Duplicate email"});
+            return res.status(409).send({ message: "Duplicate email"});
         }
         return res.json({ message: "Valid email" });
     });

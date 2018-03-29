@@ -10,8 +10,13 @@ module.exports = function(type) {
     return function(req, res, next) {
         // Implement the middleware function based on the options object
         // check header or url parameters or post parameters for token
-        var token = req.body.token;
-
+        let token;
+        if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
+            token = req.headers.authorization.split(' ')[1];
+        }
+        else {
+            token = req.body.token;
+        }
         // decode token
         if (token) {
             // verifies secret and checks exp

@@ -397,10 +397,6 @@ describe('Users', () => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("Logged In Successfully");
                     res.body.should.have.property("token").length.not.eql(0);
-                    res.body.should.have.property("hasPaymentInformation");
-                    res.body.should.have.property("hasProfilePicture");
-                    res.body.should.have.property("bio");
-                    res.body.should.have.property("phone");
                     auth_token = res.body.token;
                     done();
                 });

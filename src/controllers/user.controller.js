@@ -265,12 +265,11 @@ exports.editUser = function(req, res) {
         'verified' : true
     }, function(err, user) {
         if(err || !user) {
-            res.status(400).send({ message: "Incorrect userId" });
+            res.status(500).send({ message: "Incorrect userId" });
         }
     }).then( (user) => {
         user.firstName = req.body.firstName || user.firstName;
         user.lastName = req.body.lastName || user.lastName;
-        user.school = req.body.school || user.school;
         User.update({ '_id': user._id }, user, function(err, result) {
             if(err) {
                 return next(err);

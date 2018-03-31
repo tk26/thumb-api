@@ -651,9 +651,8 @@ describe('Users', () => {
         it('it should not PUT a user edit with invalid token', (done) => {
             chai.request(server)
                 .put('/user/edit')
-                .send({
-                    "token" : "random"
-                })
+                .set('Authorization', 'Bearer' + ' ' + 'invalid.token.here')
+                .send({})
                 .end((err, res) => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("Invalid token provided");
@@ -665,11 +664,10 @@ describe('Users', () => {
         it('it should PUT a user edit with valid token', (done) => {
             chai.request(server)
                 .put('/user/edit')
+                .set('Authorization', 'Bearer' + ' ' + testUserAuthToken)
                 .send({
-                    "token" : testUserAuthToken,
                     "firstName" : "Jane",
-                    "lastName" : "Foe",
-                    "school" : "harvard"
+                    "lastName" : "Foe"
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
@@ -679,7 +677,6 @@ describe('Users', () => {
                     }, (err, user) => {
                         chai.assert.equal("Jane", user.firstName);
                         chai.assert.equal("Foe", user.lastName);
-                        chai.assert.equal("harvard", user.school);
                     }).then(() => {
                         done();
                     });

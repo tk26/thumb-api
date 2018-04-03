@@ -129,14 +129,7 @@ exports.authenticateUser = function(req, res) {
             const _token = jwt.sign(payload, config.AUTH_SECRET, {
                 expiresIn: 18000
             });
-            res.json({ message: "Logged In Successfully",
-                token: _token,
-                userPublicId: user.userPublicId,
-                hasPaymentInformation: user.stripeCustomerId ? true : false,
-                hasProfilePicture: user.profile_picture ? true : false,
-                bio: user.bio ? user.bio : '',
-                phone: user.phoneVerified ? user.phone : ''
-            });
+            res.json({ message: "Logged In Successfully", token: _token });
         }
     });
 };
@@ -238,19 +231,25 @@ exports.submitResetPasswordUser = function(req, res) {
     });
 };
 
-exports.getUserInfo = function(req, res) {
+exports.getUserProfile = function(req, res) {
+    if(!req.decoded.userId) {
+        res.status(400).send({ message: "userId not decoded" });
+    }
+    
     User.findOne({
-        'userPublicId' : req.params.publicId,
+        '_id' : req.decoded.userId,
         'verified' : true
     }, function(err, user) {
         if(err || !user) {
-          return res.status(500).send({ message: "Incorrect publicId of user" });
+          return res.status(500).send({ message: "Incorrect userId" });
         }
         else {
             res.send({
                 "firstName" : user.firstName,
                 "lastName" : user.lastName,
-                "school": user.school
+                "school": user.school,
+                "username": user.username,
+                "profilePicture": user.profile_picture || ''
             });
         }
     });
@@ -266,12 +265,11 @@ exports.editUser = function(req, res) {
         'verified' : true
     }, function(err, user) {
         if(err || !user) {
-            res.status(400).send({ message: "Incorrect userId" });
+            res.status(500).send({ message: "Incorrect userId" });
         }
     }).then( (user) => {
         user.firstName = req.body.firstName || user.firstName;
         user.lastName = req.body.lastName || user.lastName;
-        user.school = req.body.school || user.school;
         User.update({ '_id': user._id }, user, function(err, result) {
             if(err) {
                 return next(err);

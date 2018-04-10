@@ -1,5 +1,6 @@
 var Ride = require('models/ride.model.js');
 var User = require('models/user.model.js');
+var neo4j = require('extensions/neo4j.js');
 
 exports.submitRide = function(req, res) {
     if(!req.decoded.userId) {
@@ -106,4 +107,34 @@ exports.getRideInfo = function(req, res) {
             });
         }
     });
+};
+
+exports.createRide = function (req, res) {
+    if(!req.body.startAddress) {
+        return res.status(400).send({ message: "Missing Ride's Start Address" });
+    }
+
+    if(!req.body.endAddress) {
+        return res.status(400).send({ message: "Missing Ride's End Address" });
+    }
+
+    if(!req.body.travelDate) {
+        return res.status(400).send({ message: "Missing Ride's Travel Date" });
+    }
+
+    if(!req.body.travelTime || req.body.travelTime.length !== 2) {
+        return res.status(400).send({ message: "Missing Ride's Travel Time" });
+    }
+
+    var session = neo4j.session();
+    session
+        .run('')
+        .then( data => {
+            res.json({ message: "Ride Saved Successfully" });
+            session.close();
+        })
+        .catch( error => {
+            // TODO log error
+            return res.status(500).send(error);
+        })
 };

@@ -7,4 +7,6 @@ module.exports = function(app) {
     app.get('/ride/user/:userPublicId', ride.getRidesByUser);
     
     app.get('/ride/info/:ridePublicId', ride.getRideInfo);
+
+    app.post('/ride/create', middleware('auth'), ride.createRide);
 }

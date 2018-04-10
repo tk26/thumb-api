@@ -30,6 +30,7 @@
     "express": "^4.16.2",
     "hoek": "^5.0.3",
     "jsonwebtoken": "^8.1.0",
+    "moment": "^2.22.0",
     "mongoose": "^4.13.6",
     "mongoose-auto-increment": "^5.0.1",
     "mongoose-unique-validator": "^2.0.0",
@@ -37,8 +38,8 @@
     "nodemon": "^1.12.5",
     "randomstring": "^1.1.5",
     "stripe": "^5.4.0",
-    "twilio": "^3.11.2",
-    "thumb-worker": "git+ssh://git@github.com:tk26/thumb-worker.git#master"
+    "thumb-worker": "git+ssh://git@github.com:tk26/thumb-worker.git#master",
+    "twilio": "^3.11.2"
   },
   "devDependencies": {
     "chai": "^4.1.2",

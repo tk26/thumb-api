@@ -3,6 +3,7 @@ var jwt = require('jsonwebtoken');
 var config = require('config.js');
 var sgMailer = require('extensions/mailer.js');
 const worker = require('thumb-worker');
+const moment = require('moment');
 
 const crypto = require('crypto');
 var stripe = require('stripe')(config.STRIPE_SECRET);
@@ -74,7 +75,8 @@ exports.submitUser = function(req, res) {
             return res.status(500).send(err);
         } else {
             sendVerificationEmail(req.body.email, verificationId);
-            worker.scheduleJobNow('welcome email', {
+            let emailTime = moment(new Date().getTime()).add(1, 'm').toDate();
+            worker.scheduleJob(emailTime, 'welcome email', {
               'emailAddress': user.email,
               'firstName': user.firstName
             }).then(() => {

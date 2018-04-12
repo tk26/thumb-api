@@ -1,6 +1,6 @@
 var Ride = require('models/ride.model.js');
 var User = require('models/user.model.js');
-var neo4j = require('extensions/neo4j.js');
+var rideDB = require('db/rides.js');
 
 exports.submitRide = function(req, res) {
     if(!req.decoded.userId) {
@@ -28,7 +28,7 @@ exports.submitRide = function(req, res) {
         next();
     }
 
-    var ride = new Ride(req.body); 
+    var ride = new Ride(req.body);
     ride.user_id = req.decoded.userId;
     ride.user_publicId = req.decoded.userPublicId;
     ride.user_firstName = req.decoded.userFirstName;
@@ -60,7 +60,7 @@ exports.submitRide = function(req, res) {
 exports.getRidesByUser = function(req, res) {
     User.findOne({
         'userPublicId' : req.params.userPublicId,
-        'verified' : true   
+        'verified' : true
     }, function(err, user) {
         if(err || !user) {
             res.status(500).send({ message: "Incorrect publicId of user" });
@@ -126,15 +126,12 @@ exports.createRide = function (req, res) {
         return res.status(400).send({ message: "Missing Ride's Travel Time" });
     }
 
-    var session = neo4j.session();
-    session
-        .run('')
-        .then( data => {
-            res.json({ message: "Ride Saved Successfully" });
-            session.close();
-        })
-        .catch( error => {
-            // TODO log error
-            return res.status(500).send(error);
-        })
+
+    rideDB.saveRide(req)
+      .then(() => {
+        res.send({ message: "Ride Details Saved Successfully" });
+      })
+      .catch((err) => {
+        res.status(500).send({message: err});
+      });
 };

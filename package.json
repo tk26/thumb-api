@@ -36,6 +36,7 @@
     "morgan": "^1.9.0",
     "neo4j-driver": "^1.5.3",
     "nodemon": "^1.12.5",
+    "os": "^0.1.1",
     "randomstring": "^1.1.5",
     "stripe": "^5.4.0",
     "twilio": "^3.11.2"

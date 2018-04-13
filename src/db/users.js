@@ -5,11 +5,11 @@ exports.saveUser = function(user){
   return user.save()
       .then(user => {
         let session = neo4j.session();
-        return session.run('MATCH (user:User {userPublicId: {userId}}) RETURN user', {userId: user.id})
+        return session.run('MATCH (user:User {userId: {userId}}) RETURN user', {userId: user._id.toString()})
             .then(results => {
               //create
               if(results.records.length === 0){
-                return session.run('CREATE (user:User {userPublicId: {userId}, email: {email}}) RETURN user',{userId: user.id, email: user.email})
+                return session.run('CREATE (user:User {userId: {userId}, email: {email}}) RETURN user',{userId: user._id.toString(), email: user.email})
                   .then(() => {
                     return results.records;
                   });
@@ -24,6 +24,6 @@ exports.saveUser = function(user){
             })
       })
       .catch(err => {
-        throw error;
+        throw err;
       })
 }

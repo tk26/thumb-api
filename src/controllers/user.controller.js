@@ -121,7 +121,7 @@ exports.authenticateUser = function(req, res) {
         }
         else {
             const payload = {
-                userId: user._id,
+                userId: user._id.toString(),
                 userPublicId: user.userPublicId,
                 userFirstName: user.firstName,
                 userLastName: user.lastName

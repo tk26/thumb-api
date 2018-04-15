@@ -37,3 +37,21 @@ exports.createIndex = async function(description) {
     return neo4j.execute('CREATE ' + description);
   }
 }
+
+exports.dropConstraint = async function(description) {
+  let constraintExists = await exports.constraintExists(description);
+  if (constraintExists) {
+    return neo4j.execute('DROP ' + description);
+  } else {
+    return true;
+  }
+}
+
+exports.dropIndex = async function(description) {
+  let indexExists = await exports.indexExists(description);
+  if (indexExists) {
+    return neo4j.execute('DROP ' + description);
+  } else {
+    return true;
+  }
+}

@@ -9,7 +9,7 @@ exports.saveRide = function(ride){
   query += 'MERGE(d:Date{date:{travelDate}})' + endOfLine;
   query += 'MERGE(sa:Address{address:{startAddress}})' + endOfLine;
   query += 'MERGE(ea:Address{address:{endAddress}})' + endOfLine;
-  query += 'CREATE(user)-[:POSTS]->(r:Ride{rideId:{rideId},travelDate:{travelDate},travelTime:{travelTime}}),' + endOfLine;
+  query += 'CREATE(user)-[:POSTS]->(r:Ride{rideId:{rideId},travelDate:{travelDate},travelTime:{travelTime}},pickupNotes:{pickupNotes}),' + endOfLine;
   query += '(r)-[:SCHEDULED_ON]->(d),' + endOfLine;
   query += '(r)-[:STARTING_AT]->(sa),' + endOfLine;
   query += '(r)-[:ENDING_AT]->(ea) RETURN r';
@@ -21,7 +21,8 @@ exports.saveRide = function(ride){
         travelDate: ride.travelDate.toISOString(),
         travelTime: ride.travelTime,
         startAddress: ride.startAddress,
-        endAddress: ride.endAddress
+        endAddress: ride.endAddress,
+        pickupNotes: ride.pickupNotes
       }
     )
     .then((results) => {
@@ -34,3 +35,11 @@ exports.saveRide = function(ride){
       session.close();
     });
 }
+
+exports.ActiveConstraints = [
+    'CONSTRAINT ON ( ride:Ride ) ASSERT ride.rideId IS UNIQUE'
+];
+
+exports.ActiveIndexes = [
+    'INDEX ON :Ride(rideId)'
+];

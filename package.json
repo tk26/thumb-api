@@ -17,7 +17,10 @@
     "test": "cross-env NODE_ENV=test npm run checkcoverage mocha --exit",
     "test:watch": "npm run test -- --watch",
     "checkcoverage": "nyc --check-coverage --lines 80 --functions 80 --branches 70 --reporter=text",
-    "build": "npm-run-all --parallel security-check lint"
+    "build": "npm-run-all --parallel security-check lint",
+    "setup-dev-db": "cross-env NODE_ENV=dev node buildScripts/db.setup.js",
+    "setup-test-db": "cross-env NODE_ENV=test node buildScripts/db.setup.js",
+    "setup-db": "cross-env NODE_ENV=prod node buildScripts/db.setup.js"
   },
   "author": "tk",
   "license": "LICENSE.md",

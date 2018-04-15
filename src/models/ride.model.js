@@ -8,7 +8,7 @@ var RideSchema = mongoose.Schema({
     endAddress: String,
     travelDate: Date,
     travelTime: String,
-
+    pickupNotes: String
 }, {
     timestamps: true
 });
@@ -16,4 +16,5 @@ var RideSchema = mongoose.Schema({
 RideSchema.methods.saveRide = function(ride){
   return ridesDB.saveRide(ride);
 };
+
 module.exports = mongoose.model('ride', RideSchema);

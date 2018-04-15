@@ -27,3 +27,26 @@ exports.saveUser = function(user){
         throw err;
       })
 }
+
+exports.deleteUser = function(user){
+  let session = neo4j.session();
+
+  return session.run('MATCH(u:User{userId:{userId}})-[r]-() DELETE u,r',{userId: user._id.toString()})
+    .then(() =>{
+      User.deleteOne({'email': user.email});
+    })
+    .catch((err) => {
+      throw err;
+    })
+    .finally(() =>{
+      session.close();
+    });
+}
+
+exports.ActiveConstraints = [
+    'CONSTRAINT ON ( user:User ) ASSERT user.userId IS UNIQUE'
+];
+
+exports.ActiveIndexes = [
+    'INDEX ON :User(userId)'
+];

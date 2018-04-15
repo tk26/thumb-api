@@ -2,7 +2,7 @@ let mongoose = require('mongoose');
 let autoIncrement = require('mongoose-auto-increment');
 const bcrypt = require('bcrypt');
 let uniqueValidator = require('mongoose-unique-validator');
-const neo4j = require('extensions/neo4j.js');
+const neo4j = require('../extensions/neo4j.js');
 const usersDB = require('../db/users.js');
 
 var UserSchema = mongoose.Schema({
@@ -66,6 +66,10 @@ UserSchema.methods.validatePassword = function(password) {
 
 UserSchema.methods.saveUser = function(user){
   return usersDB.saveUser(user);
+};
+
+UserSchema.methods.deleteUser = function(user){
+  return usersDB.deleteUser(user);
 };
 
 autoIncrement.initialize(mongoose.connection);

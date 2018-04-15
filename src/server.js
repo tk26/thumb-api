@@ -24,7 +24,6 @@ require('routes/potential_user.routes.js')(app);
 require('routes/drive.routes.js')(app);
 require('routes/ride.routes.js')(app);
 require('routes/feedback.routes.js')(app);
-var dbSetup = require('./db/db.setup.js');
 var port = app.get('config').PORT;
 var project = app.get('config').APP;
 

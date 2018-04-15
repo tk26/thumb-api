@@ -76,16 +76,11 @@ describe('Users', () => {
     });
 
     after(async () => {
-      await dupeUser.deleteUser(dupeUser);
-      await resetUser.deleteUser(resetUser);
-      await testUser.deleteUser(testUser);
-      await phoneUser.deleteUser(phoneUser);
-      await unverifiedUser.deleteUser(unverifiedUser);
-      //await userUtility.deleteUserByEmail(dupeUserEmail);
-      //await userUtility.deleteUserByEmail(resetUserEmail);
-      //await userUtility.deleteUserByEmail(testUserEmail);
-      //await userUtility.deleteUserByEmail(phoneUserEmail);
-      //await userUtility.deleteUserByEmail(unverifiedUserEmail);
+      await userUtility.deleteUserByEmail(dupeUserEmail);
+      await userUtility.deleteUserByEmail(resetUserEmail);
+      await userUtility.deleteUserByEmail(testUserEmail);
+      await userUtility.deleteUserByEmail(phoneUserEmail);
+      await userUtility.deleteUserByEmail(unverifiedUserEmail);
     });
 
     /*

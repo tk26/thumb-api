@@ -9,7 +9,7 @@ exports.saveRide = function(ride){
   query += 'MERGE(d:Date{date:{travelDate}})' + endOfLine;
   query += 'MERGE(sa:Address{address:{startAddress}})' + endOfLine;
   query += 'MERGE(ea:Address{address:{endAddress}})' + endOfLine;
-  query += 'CREATE(user)-[:POSTS]->(r:Ride{rideId:{rideId},travelDate:{travelDate},travelTime:{travelTime}},pickupNotes:{pickupNotes}),' + endOfLine;
+  query += 'CREATE(user)-[:POSTS]->(r:Ride{rideId:{rideId},travelDate:{travelDate},travelTime:{travelTime},pickupNotes:{pickupNotes}}),' + endOfLine;
   query += '(r)-[:SCHEDULED_ON]->(d),' + endOfLine;
   query += '(r)-[:STARTING_AT]->(sa),' + endOfLine;
   query += '(r)-[:ENDING_AT]->(ea) RETURN r';
@@ -22,7 +22,7 @@ exports.saveRide = function(ride){
         travelTime: ride.travelTime,
         startAddress: ride.startAddress,
         endAddress: ride.endAddress,
-        pickupNotes: ride.pickupNotes
+        pickupNotes: ride.pickupNotes ? ride.pickupNotes : ""
       }
     )
     .then((results) => {

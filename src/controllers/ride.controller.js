@@ -11,12 +11,12 @@ exports.getRideInfo = function(req, res) {
 };*/
 
 exports.createRide = function (req, res) {
-    if(!req.body.startAddress) {
-        return res.status(400).send({ message: exceptions.ride.MISSING_START_ADDRESS});
+    if(!req.body.startLocation) {
+        return res.status(400).send({ message: exceptions.ride.MISSING_START_LOCATION});
     }
 
-    if(!req.body.endAddress) {
-        return res.status(400).send({ message: exceptions.ride.MISSING_END_ADDRESS});
+    if(!req.body.endLocation) {
+        return res.status(400).send({ message: exceptions.ride.MISSING_END_LOCATION});
     }
 
     if(!req.body.travelDate) {

@@ -1,11 +1,13 @@
-var mongoose = require('mongoose');
-const ridesDB = require('../db/rides.js');
+let mongoose = require('mongoose');
+let locationTypes = require('./types/location.type.js');
+let Location = mongoose.Schema.Types.Location;
+let ridesDB = require('../db/rides.js');
 
 var RideSchema = mongoose.Schema({
     /* Neo4j Properties */
     userId: String,
-    startAddress: String,
-    endAddress: String,
+    startLocation: Location,
+    endLocation: Location,
     travelDate: Date,
     travelTime: String,
     pickupNotes: String

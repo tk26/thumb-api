@@ -17,6 +17,8 @@ describe('Ride', () => {
     let email = "rideuser@email.com";
     let username = "rideuser";
     let birthday = "03/21/2001";
+    let startLocation = {latitude:60.1,longitude:15.2,address:"123 Main Street"};
+    let endLocation = {latitude:61.1,longitude:16.2,address:"123 Washington Street"};
 
     before(async () => {
       let userPassword = "Test123!";
@@ -58,34 +60,34 @@ describe('Ride', () => {
                 });
         });
 
-        it('it should not POST a ride without ride start address', (done) => {
+        it('it should not POST a ride without ride start location', (done) => {
             chai.request(server)
                 .post('/ride/create')
                 .send({
                     "token" : auth_token,
-                    "endAddress" : "123 Main Street",
+                    "endLocation" : endLocation,
                     "travelDate": "02/28/2018",
                     "travelTime" : "37"
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
-                    res.body.should.have.property("message").eql(exceptions.ride.MISSING_START_ADDRESS);
+                    res.body.should.have.property("message").eql(exceptions.ride.MISSING_START_LOCATION);
                     done();
                 });
         });
 
-        it('it should not POST a ride without ride end address', (done) => {
+        it('it should not POST a ride without ride end location', (done) => {
             chai.request(server)
                 .post('/ride/create')
                 .send({
                     "token" : auth_token,
-                    "startAddress" : "123 Main Street",
+                    "startLocation" : startLocation,
                     "travelDate": "02/28/2018",
                     "travelTime" : "37"
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
-                    res.body.should.have.property("message").eql(exceptions.ride.MISSING_END_ADDRESS);
+                    res.body.should.have.property("message").eql(exceptions.ride.MISSING_END_LOCATION);
                     done();
                 });
         });
@@ -95,8 +97,8 @@ describe('Ride', () => {
                 .post('/ride/create')
                 .send({
                   "token" : auth_token,
-                  "startAddress" : "123 Main Street",
-                  "endAddress" : "123 Main Street",
+                  "startLocation" : startLocation,
+                  "endLocation" : endLocation,
                   "travelTime" : "37"
                 })
                 .end((err, res) => {
@@ -111,8 +113,8 @@ describe('Ride', () => {
                 .post('/ride/create')
                 .send({
                   "token" : auth_token,
-                  "startAddress" : "123 Main Street",
-                  "endAddress" : "123 Main Street",
+                  "startLocation" : startLocation,
+                  "endLocation" : endLocation,
                   "travelDate": "02/28/2018"
                 })
                 .end((err, res) => {
@@ -127,8 +129,8 @@ describe('Ride', () => {
                 .post('/ride/create')
                 .send({
                   "token" : auth_token,
-                  "startAddress" : "123 Main Street",
-                  "endAddress" : "123 Main Street",
+                  "startLocation" : startLocation,
+                  "endLocation" : endLocation,
                   "travelDate": "02/28/2018",
                   "travelTime": "37"
                 })

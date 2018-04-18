@@ -1,116 +1,44 @@
-var Drive = require('models/drive.model.js');
-var User = require('models/user.model.js');
+const Drive = require('models/drive.model.js');
+const exceptions = require('../constants/exceptions.js');
+const successResponses = require('../constants/success_responses.js');
 
-exports.submitDrive = function(req, res) {
-    if(!req.decoded.userId) {
-        res.status(400).send({ message: "userId not decoded" });
-        next();
-    }
+/*exports.getDrivesByUser = function(req, res) {
 
-    if(!req.body.from_location) {
-        res.status(400).send({ message: "Missing Drive's From Location" });       
-        next();
-    }
-
-    if(!req.body.to_location) {
-        res.status(400).send({ message: "Missing Drive's To Location" });
-        next();
-    }
-
-    if(!req.body.travel_date) {
-        res.status(400).send({ message: "Missing Drive's Travel Date" });
-        next();
-    }
-
-    if(!req.body.travel_time) {
-        res.status(400).send({ message: "Missing Drive's Travel Times" });
-        next();
-    }
-
-    if(!req.body.seats_available) {
-        res.status(400).send({ message: "Missing Drive's Seats Available" });
-        next();
-    }
-
-    var drive = new Drive(req.body);
-    drive.user_id = req.decoded.userId;
-    drive.user_publicId = req.decoded.userPublicId;
-    drive.user_firstName = req.decoded.userFirstName;
-    drive.user_lastName = req.decoded.userLastName;
-    drive.comment = req.body.comment || "";
-
-    drive.save(function(err, drive) {
-        if(err) {
-            res.status(500).send(err);
-        } else {
-            User.findOne({ '_id': req.decoded.userId }, function(err, user) {
-                if(err || !user) {
-                    return next(err);
-                }
-            }).then( (user) => {
-                user.drives.push(drive._id);
-                User.findOneAndUpdate({ '_id': user._id }, user, function(err, result) {
-                    if(err) {
-                        return next(err);
-                    } else {
-                        res.send({ message: "Drive Details Saved Successfully" });
-                    }
-                });
-            });
-        }
-    });
-};
-
-exports.getDrivesByUser = function(req, res) {
-    User.findOne({
-        'userPublicId' : req.params.userPublicId,
-        'verified' : true
-    }, function(err, user) {
-        if(err || !user) {
-            res.status(500).send({ message: "Incorrect publicId of user" });
-        }
-        else{
-            Drive.find({ 'user_id': user._id }, function(err, drives) {
-                if(err) {
-                    res.status(500).send({ message: "Incorrect userId" });
-                }
-                else {
-                    res.send(drives.map(drive => {
-                        return {
-                            "drivePublicId" : drive.drivePublicId,
-                            "driveFrom": drive.from_location,
-                            "driveTo": drive.to_location,
-                            "driveDate": drive.travel_date,
-                            "driveTime": drive.travel_time,
-                            "driveComment" : drive.comment,
-                            "driveSeatsAvailable" : drive.seats_available
-                        }
-                    }));
-                }
-            });
-        }
-    });
 };
 
 exports.getDriveInfo = function(req, res) {
-    Drive.findOne({
-        'drivePublicId' : req.params.drivePublicId
-    }, function(err, drive) {
-        if(err || !drive) {
-            res.status(500).send({ message: "Incorrect publicId of drive" });
-        }
-        else {
-            res.send({
-                "driveFrom": drive.from_location,
-                "driveTo": drive.to_location,
-                "driveDate": drive.travel_date,
-                "driveTime": drive.travel_time,
-                "driveComment" : drive.comment,
-                "driveSeatsAvailable" : drive.seats_available,
-                "driveUserPublicId" : drive.user_publicId,
-                "driveUserFirstName" : drive.user_firstName,
-                "driveUserLastName": drive.user_lastName
-            });
-        }
-    });
+
+};*/
+
+exports.createDrive = function(req, res) {
+    if(!req.body.startLocation) {
+        return res.status(400).send({ message: exceptions.drive.MISSING_START_LOCATION});
+    }
+
+    if(!req.body.endLocation) {
+        return res.status(400).send({ message: exceptions.drive.MISSING_END_LOCATION});
+    }
+
+    if(!req.body.travelDate) {
+        return res.status(400).send({ message: exceptions.drive.MISSING_TRAVEL_DATE});
+    }
+
+    if(!req.body.travelTime || req.body.travelTime.length !== 2) {
+        return res.status(400).send({ message: exceptions.drive.MISSING_TRAVEL_TIME});
+    }
+
+    if(!req.body.availableSeats) {
+        return res.status(400).send({ message: exceptions.drive.MISSING_AVAILABLE_SEATS});
+    }
+
+    let drive = new Drive(req.body);
+    drive.userId = req.decoded.userId;
+
+    drive.saveDrive(drive)
+      .then((drive) => {
+        res.send({ message: successResponses.drive.DRIVE_CREATED, drive: drive});
+      })
+      .catch((err) => {
+        res.status(500).send({message: exceptions.drive.INTERNAL_ERROR});
+      });
 };

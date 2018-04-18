@@ -14,7 +14,7 @@ const sendVerificationEmail = (email, verificationId) => {
         to: email,
         subject: 'Verify your Thumb Account',
         html: '<p> Welcome to thumb! In order to get started, you need to confirm your email address. ' +
-        'When you confirm your email, we know that we will be able to update you on your travel plans.</p><br/>' +  
+        'When you confirm your email, we know that we will be able to update you on your travel plans.</p><br/>' +
         '<p>Please click <a href='+ config.BASE_URL_API +'/user/verify/'+ verificationId +'>HERE</a> ' +
         'to confirm your email address.</p><br/>' +
         '<p>Thanks,</p>' + '<p>The thumb Team</p>'
@@ -22,7 +22,7 @@ const sendVerificationEmail = (email, verificationId) => {
 
     if (process.env.NODE_ENV !== 'test') {
         sgMailer.send(mailOptions);
-    }    
+    }
 };
 
 var Twilio = require('twilio');
@@ -57,7 +57,7 @@ exports.submitUser = function(req, res) {
         return res.status(400).send({ message: "Missing User's Birthday" });
     }
 
-    const verificationId = crypto.randomBytes(20).toString('hex'); 
+    const verificationId = crypto.randomBytes(20).toString('hex');
     let user = new User(req.body);
     user.verified = false;
     user.verificationId = verificationId;
@@ -67,14 +67,14 @@ exports.submitUser = function(req, res) {
     user.phoneVerified = false;
     user.phoneVerificationId = '';
 
-    user.save((err, data) => {
-        if(err) {
-            return res.status(500).send(err);
-        } else {
-            sendVerificationEmail(req.body.email, verificationId);
-            res.json({ message: "User Details Saved Successfully" });
-        }
-    });
+    user.saveUser(user)
+      .then(() => {
+        sendVerificationEmail(req.body.email, verificationId);
+        return res.json({ message: "User Details Saved Successfully" });
+      })
+      .catch((err) => {
+        return res.status(500).send(err);
+      });
 };
 
 exports.verifyUser = function(req, res, next) {
@@ -121,7 +121,7 @@ exports.authenticateUser = function(req, res) {
         }
         else {
             const payload = {
-                userId: user._id,
+                userId: user._id.toString(),
                 userPublicId: user.userPublicId,
                 userFirstName: user.firstName,
                 userLastName: user.lastName
@@ -198,12 +198,12 @@ exports.submitResetPasswordUser = function(req, res) {
             html: '<p> Hello,</p><br/>' +
             '<p>You have successfully changed your password.</p>' +
             '<p>Please feel free to log in to thumb using the mobile app.</p><br/>' +
-            '<p>If this wasn\'t you or believe an unauthorized person has accessed your account,' + 
-            ' please immediately reset your password. Then, contact us by emailing support@thumbtravel.com so we' + 
+            '<p>If this wasn\'t you or believe an unauthorized person has accessed your account,' +
+            ' please immediately reset your password. Then, contact us by emailing support@thumbtravel.com so we' +
             ' can confirm your account is secure.</p><br/>' +
-            '<p>To reset your password tap "Forgot your password?" on the login screen in the mobile app or ' + 
-            'click <a href="'+ config.BASE_URL_WEBAPP +'/#/forgot">HERE</a>.</p><br/>' + 
-            '<p>We hope you enjoy traveling with thumb.</p><br/>' + 
+            '<p>To reset your password tap "Forgot your password?" on the login screen in the mobile app or ' +
+            'click <a href="'+ config.BASE_URL_WEBAPP +'/#/forgot">HERE</a>.</p><br/>' +
+            '<p>We hope you enjoy traveling with thumb.</p><br/>' +
             '<p>Thank you,</p>' + '<p>The thumb Team</p>'
         };
 
@@ -235,7 +235,7 @@ exports.getUserProfile = function(req, res) {
     if(!req.decoded.userId) {
         res.status(400).send({ message: "userId not decoded" });
     }
-    
+
     User.findOne({
         '_id' : req.decoded.userId,
         'verified' : true
@@ -542,7 +542,7 @@ exports.validateUsername = (req, res) => {
 exports.validateEmail = (req, res) => {
     let email = req.params.email.toLowerCase();
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/ ;
-    
+
     if (!regex.test(email)) {
         return res.status(422).send({ message: "Invalid email" });
     }

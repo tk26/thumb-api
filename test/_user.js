@@ -995,7 +995,7 @@ describe('Users', () => {
                 });
         });
 
-        it('it should POST a verify phone number with valid auth token and phoneVerificationId', (done) => {
+        /*it('it should POST a verify phone number with valid auth token and phoneVerificationId', (done) => {
             chai.request(server)
                 .post('/user/phone/verify')
                 .send({
@@ -1014,7 +1014,7 @@ describe('Users', () => {
                         done();
                     });
                 });
-        });
+        });*/
     });
 
     /*
@@ -1069,7 +1069,7 @@ describe('Users', () => {
                         {
                             "phone" : "8122722961",
                             "name" : "def"
-                        }, 
+                        },
                         {
                             "phone" : "1231231231",
                             "name" : "abc"
@@ -1086,7 +1086,7 @@ describe('Users', () => {
                             [{
                                 "phone" : "8122722961",
                                 "name" : "def"
-                            }, 
+                            },
                             {
                                 "phone" : "1231231231",
                                 "name" : "abc"

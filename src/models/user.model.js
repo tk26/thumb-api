@@ -1,7 +1,9 @@
-var mongoose = require('mongoose');
-var autoIncrement = require('mongoose-auto-increment');
+let mongoose = require('mongoose');
+let autoIncrement = require('mongoose-auto-increment');
 const bcrypt = require('bcrypt');
-var uniqueValidator = require('mongoose-unique-validator');
+let uniqueValidator = require('mongoose-unique-validator');
+const neo4j = require('../extensions/neo4j.js');
+const usersDB = require('../db/users.js');
 
 var UserSchema = mongoose.Schema({
     firstName: {
@@ -15,7 +17,7 @@ var UserSchema = mongoose.Schema({
     email: {
         type: String,
         required: true,
-        unique: true 
+        unique: true
     },
     school: {
         type: String,
@@ -60,6 +62,14 @@ UserSchema.methods.generateHash = function(password) {
 // checking if password is valid
 UserSchema.methods.validatePassword = function(password) {
   return bcrypt.compareSync(password, this.password);
+};
+
+UserSchema.methods.saveUser = function(user){
+  return usersDB.saveUser(user);
+};
+
+UserSchema.methods.deleteUser = function(user){
+  return usersDB.deleteUser(user);
 };
 
 autoIncrement.initialize(mongoose.connection);

@@ -16,8 +16,11 @@
     "pretest": "node buildScripts/test.js",
     "test": "cross-env NODE_ENV=test npm run checkcoverage mocha --exit",
     "test:watch": "npm run test -- --watch",
-    "checkcoverage": "nyc --check-coverage --lines 80 --functions 80 --branches 75 --reporter=text",
-    "build": "npm-run-all --parallel security-check lint"
+    "checkcoverage": "nyc --check-coverage --lines 80 --functions 80 --branches 70 --reporter=text",
+    "build": "npm-run-all --parallel security-check lint",
+    "setup-dev-db": "cross-env NODE_ENV=dev node buildScripts/db.setup.js",
+    "setup-test-db": "cross-env NODE_ENV=test node buildScripts/db.setup.js",
+    "setup-db": "cross-env NODE_ENV=prod node buildScripts/db.setup.js"
   },
   "author": "tk",
   "license": "LICENSE.md",
@@ -35,11 +38,14 @@
     "mongoose-auto-increment": "^5.0.1",
     "mongoose-unique-validator": "^2.0.0",
     "morgan": "^1.9.0",
+    "neo4j-driver": "^1.5.3",
     "nodemon": "^1.12.5",
+    "os": "^0.1.1",
     "randomstring": "^1.1.5",
     "stripe": "^5.4.0",
     "thumb-worker": "git+ssh://git@github.com:tk26/thumb-worker.git#master",
-    "twilio": "^3.11.2"
+    "twilio": "^3.11.2",
+    "uuid": "^3.2.1"
   },
   "devDependencies": {
     "chai": "^4.1.2",

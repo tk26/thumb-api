@@ -397,10 +397,6 @@ describe('Users', () => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql("Logged In Successfully");
                     res.body.should.have.property("token").length.not.eql(0);
-                    res.body.should.have.property("hasPaymentInformation");
-                    res.body.should.have.property("hasProfilePicture");
-                    res.body.should.have.property("bio");
-                    res.body.should.have.property("phone");
                     auth_token = res.body.token;
                     done();
                 });
@@ -589,44 +585,50 @@ describe('Users', () => {
     });
 
     /*
-    * Test the /GET /user/profile/:publicId route
+    * Test the /GET /user/profile route
     */
-    describe('/GET /user/profile/:publicId', () => {
-        it('it should not GET user profile without publicId', (done) => {
+    describe('/GET /user/profile', () => {
+        let userAuthToken;
+        before( async () => {
+            userAuthToken = await userUtility.getUserAuthToken(testUserEmail, testUserPassword);
+        });
+
+        it('it should not GET user profile without token', (done) => {
             chai.request(server)
-                .get('/user/profile/')
+                .get('/user/profile')
                 .send({})
                 .end((err, res) => {
-                    res.should.have.status(404);
-                    res.should.have.property("error");
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("No token provided");
+                    res.body.should.have.property("success").eql(false);
                     done();
                 });
         });
 
-        it('it should not GET user profile with incorrect publicId', (done) => {
+        it('it should not GET user profile with invalid token', (done) => {
             chai.request(server)
-                .get('/user/profile/' + 'random')
-                .send({})
+                .get('/user/profile')
+                .set('Authorization', 'Bearer' + ' ' + 'invalid.token.here')
                 .end((err, res) => {
-                    res.should.have.status(500);
-                    res.body.should.have.property("message").eql("Incorrect publicId of user");
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("Invalid token provided");
+                    res.body.should.have.property("success").eql(false);
                     done();
                 });
         });
 
-        it('it should GET user profile with correct publicId', async () => {
-          try{
-            const response = await chai.request(server)
-              .get('/user/profile/' + testUser.userPublicId)
-              .send({});
-
-            response.should.have.status(200);
-            response.body.should.have.property("firstName").eql(testUser.firstName);
-            response.body.should.have.property("lastName").eql(testUser.lastName);
-            response.body.should.have.property("school").eql(testUser.school);
-          } catch(error){
-            throw error;
-          }
+        it('it should GET user profile with valid token', async () => {
+            chai.request(server)
+                .get('/user/profile')
+                .set('Authorization', 'Bearer' + ' ' + userAuthToken)
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property("firstName").eql(testUser.firstName);
+                    res.body.should.have.property("lastName").eql(testUser.lastName);
+                    res.body.should.have.property("school").eql(testUser.school);
+                    res.body.should.have.property("username").eql(testUser.username);
+                    res.body.should.have.property("profilePicture").eql('');
+                });
         });
     });
 
@@ -649,9 +651,8 @@ describe('Users', () => {
         it('it should not PUT a user edit with invalid token', (done) => {
             chai.request(server)
                 .put('/user/edit')
-                .send({
-                    "token" : "random"
-                })
+                .set('Authorization', 'Bearer' + ' ' + 'invalid.token.here')
+                .send({})
                 .end((err, res) => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("Invalid token provided");
@@ -663,11 +664,10 @@ describe('Users', () => {
         it('it should PUT a user edit with valid token', (done) => {
             chai.request(server)
                 .put('/user/edit')
+                .set('Authorization', 'Bearer' + ' ' + testUserAuthToken)
                 .send({
-                    "token" : testUserAuthToken,
                     "firstName" : "Jane",
-                    "lastName" : "Foe",
-                    "school" : "harvard"
+                    "lastName" : "Foe"
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
@@ -677,7 +677,6 @@ describe('Users', () => {
                     }, (err, user) => {
                         chai.assert.equal("Jane", user.firstName);
                         chai.assert.equal("Foe", user.lastName);
-                        chai.assert.equal("harvard", user.school);
                     }).then(() => {
                         done();
                     });
@@ -996,7 +995,7 @@ describe('Users', () => {
                 });
         });
 
-        it('it should POST a verify phone number with valid auth token and phoneVerificationId', (done) => {
+        /*it('it should POST a verify phone number with valid auth token and phoneVerificationId', (done) => {
             chai.request(server)
                 .post('/user/phone/verify')
                 .send({
@@ -1015,7 +1014,7 @@ describe('Users', () => {
                         done();
                     });
                 });
-        });
+        });*/
     });
 
     /*
@@ -1070,7 +1069,7 @@ describe('Users', () => {
                         {
                             "phone" : "8122722961",
                             "name" : "def"
-                        }, 
+                        },
                         {
                             "phone" : "1231231231",
                             "name" : "abc"
@@ -1087,7 +1086,7 @@ describe('Users', () => {
                             [{
                                 "phone" : "8122722961",
                                 "name" : "def"
-                            }, 
+                            },
                             {
                                 "phone" : "1231231231",
                                 "name" : "abc"

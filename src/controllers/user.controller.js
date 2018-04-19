@@ -70,24 +70,18 @@ exports.submitUser = function(req, res) {
     user.phoneVerified = false;
     user.phoneVerificationId = '';
 
-    user.save((err, data) => {
-        if(err) {
-            return res.status(500).send(err);
-        } else {
-            sendVerificationEmail(req.body.email, verificationId);
+    user.saveUser(user)
+      .then(() => {
+        sendVerificationEmail(req.body.email, verificationId);
             let emailTime = moment(new Date().getTime()).add(1, 'm').toDate();
             worker.scheduleJob(emailTime, 'welcome email', {
               'emailAddress': user.email,
               'firstName': user.firstName
-            }).then(() => {
-                return res.status(200).send({message: 'User Details Saved Successfully'});
-              })
-              .catch((err) => {
-                //It would be better to simply log error here and still return 200 to the user.
-                return res.status(500).send("User created successfully, but the service was unable to schedule welcome email.");
-              });
-        }
-    });
+        return res.json({ message: "User Details Saved Successfully" });
+      })
+      .catch((err) => {
+        return res.status(500).send(err);
+      });
 };
 
 exports.verifyUser = function(req, res, next) {
@@ -134,7 +128,7 @@ exports.authenticateUser = function(req, res) {
         }
         else {
             const payload = {
-                userId: user._id,
+                userId: user._id.toString(),
                 userPublicId: user.userPublicId,
                 userFirstName: user.firstName,
                 userLastName: user.lastName
@@ -142,14 +136,7 @@ exports.authenticateUser = function(req, res) {
             const _token = jwt.sign(payload, config.AUTH_SECRET, {
                 expiresIn: 18000
             });
-            res.json({ message: "Logged In Successfully",
-                token: _token,
-                userPublicId: user.userPublicId,
-                hasPaymentInformation: user.stripeCustomerId ? true : false,
-                hasProfilePicture: user.profile_picture ? true : false,
-                bio: user.bio ? user.bio : '',
-                phone: user.phoneVerified ? user.phone : ''
-            });
+            res.json({ message: "Logged In Successfully", token: _token });
         }
     });
 };
@@ -251,19 +238,25 @@ exports.submitResetPasswordUser = function(req, res) {
     });
 };
 
-exports.getUserInfo = function(req, res) {
+exports.getUserProfile = function(req, res) {
+    if(!req.decoded.userId) {
+        res.status(400).send({ message: "userId not decoded" });
+    }
+
     User.findOne({
-        'userPublicId' : req.params.publicId,
+        '_id' : req.decoded.userId,
         'verified' : true
     }, function(err, user) {
         if(err || !user) {
-          return res.status(500).send({ message: "Incorrect publicId of user" });
+          return res.status(500).send({ message: "Incorrect userId" });
         }
         else {
             res.send({
                 "firstName" : user.firstName,
                 "lastName" : user.lastName,
-                "school": user.school
+                "school": user.school,
+                "username": user.username,
+                "profilePicture": user.profile_picture || ''
             });
         }
     });
@@ -279,7 +272,7 @@ exports.editUser = function(req, res) {
         'verified' : true
     }, function(err, user) {
         if(err || !user) {
-            res.status(400).send({ message: "Incorrect userId" });
+            res.status(500).send({ message: "Incorrect userId" });
         }
     }).then( (user) => {
         user.firstName = req.body.firstName || user.firstName;

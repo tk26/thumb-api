@@ -281,7 +281,6 @@ exports.editUser = function(req, res) {
     }).then( (user) => {
         user.firstName = req.body.firstName || user.firstName;
         user.lastName = req.body.lastName || user.lastName;
-        user.school = req.body.school || user.school;
         User.update({ '_id': user._id }, user, function(err, result) {
             if(err) {
                 return next(err);

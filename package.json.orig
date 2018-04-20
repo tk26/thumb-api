@@ -1,0 +1,76 @@
+{
+  "name": "thumb-api",
+  "version": "1.0.0",
+  "description": "Thumb API powers Thumb Web and Mobile Apps",
+  "main": "src/server.js",
+  "scripts": {
+    "prestart": "node buildScripts/dev.js",
+    "start": "npm-run-all --parallel security-check open:prodsrc lint:watch",
+    "open:prodsrc": "cross-env nodemon src/server.js",
+    "predev": "node buildScripts/dev.js",
+    "dev": "npm-run-all --parallel security-check open:src lint:watch",
+    "open:src": "cross-env NODE_ENV=dev nodemon src/server.js",
+    "lint": "esw src buildScripts test --color",
+    "lint:watch": "npm run lint -- --watch",
+    "security-check": "nsp check",
+    "pretest": "node buildScripts/test.js",
+    "test": "cross-env NODE_ENV=test npm run checkcoverage mocha --exit",
+    "test:watch": "npm run test -- --watch",
+    "checkcoverage": "nyc --check-coverage --lines 80 --functions 80 --branches 70 --reporter=text",
+    "build": "npm-run-all --parallel security-check lint",
+    "setup-dev-db": "cross-env NODE_ENV=dev node buildScripts/db.setup.js",
+    "setup-test-db": "cross-env NODE_ENV=test node buildScripts/db.setup.js",
+    "setup-db": "cross-env NODE_ENV=prod node buildScripts/db.setup.js"
+  },
+  "author": "tk",
+  "license": "LICENSE.md",
+  "dependencies": {
+    "@sendgrid/mail": "^6.1.4",
+    "app-module-path": "^2.2.0",
+    "bcrypt": "^1.0.3",
+    "body-parser": "^1.18.2",
+    "cors": "^2.8.4",
+    "express": "^4.16.2",
+    "hoek": "^5.0.3",
+    "jsonwebtoken": "^8.1.0",
+    "moment": "^2.22.0",
+    "mongoose": "^4.13.6",
+    "mongoose-auto-increment": "^5.0.1",
+    "mongoose-unique-validator": "^2.0.0",
+    "morgan": "^1.9.0",
+    "neo4j-driver": "^1.5.3",
+    "nodemon": "^1.12.5",
+    "os": "^0.1.1",
+    "randomstring": "^1.1.5",
+    "stripe": "^5.4.0",
+<<<<<<< HEAD
+    "thumb-worker": "git+ssh://git@github.com:tk26/thumb-worker.git#master",
+    "twilio": "^3.11.2"
+=======
+    "twilio": "^3.11.2",
+    "uuid": "^3.2.1"
+>>>>>>> develop
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "chai-http": "^3.0.0",
+    "chalk": "^2.3.0",
+    "cross-env": "^5.1.3",
+    "eslint": "^4.15.0",
+    "eslint-plugin-chai-friendly": "^0.4.1",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-watch": "^3.1.3",
+    "mocha": "^4.1.0",
+    "npm-run-all": "^4.1.2",
+    "nsp": "^3.1.0",
+    "nyc": "^11.4.1"
+  },
+  "nyc": {
+    "exclude": [
+      "src/config.js",
+      "src/extensions/",
+      "test/",
+      "src/server.js"
+    ]
+  }
+}

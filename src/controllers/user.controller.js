@@ -73,10 +73,14 @@ exports.submitUser = function(req, res) {
     user.saveUser(user)
       .then(() => {
         sendVerificationEmail(req.body.email, verificationId);
-            let emailTime = moment(new Date().getTime()).add(1, 'm').toDate();
-            worker.scheduleJob(emailTime, 'welcome email', {
-              'emailAddress': user.email,
-              'firstName': user.firstName
+        let emailTime = moment(new Date().getTime())
+                          .add(config.APP_SETTINGS.WELCOME_EMAIL_DELAY, 'm')
+                          .toDate();
+
+        worker.scheduleJob(emailTime, 'welcome email', {
+          'emailAddress': user.email,
+          'firstName': user.firstName
+        });
         return res.json({ message: "User Details Saved Successfully" });
       })
       .catch((err) => {

@@ -33,7 +33,7 @@ exports.saveRide = function(ride){
       return results.records[0]._fields[0].properties;
     })
     .catch(error => {
-      console.log(error);
+      console.log(error); // eslint-disable-line no-console
       throw error;
     })
     .finally(() => {

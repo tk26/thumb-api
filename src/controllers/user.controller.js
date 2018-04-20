@@ -1,7 +1,9 @@
 var User = require('models/user.model.js');
 var jwt = require('jsonwebtoken');
 var config = require('config.js');
-var sgMailer = require('extensions/mailer.js')
+var sgMailer = require('extensions/mailer.js');
+const worker = require('thumb-worker');
+const moment = require('moment');
 
 const crypto = require('crypto');
 var stripe = require('stripe')(config.STRIPE_SECRET);
@@ -24,6 +26,7 @@ const sendVerificationEmail = (email, verificationId) => {
         sgMailer.send(mailOptions);
     }
 };
+
 
 var Twilio = require('twilio');
 var twilio = new Twilio(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN);
@@ -70,6 +73,14 @@ exports.submitUser = function(req, res) {
     user.saveUser(user)
       .then(() => {
         sendVerificationEmail(req.body.email, verificationId);
+        let emailTime = moment(new Date().getTime())
+                          .add(config.APP_SETTINGS.WELCOME_EMAIL_DELAY, 'm')
+                          .toDate();
+
+        worker.scheduleJob(emailTime, 'welcome email', {
+          'emailAddress': user.email,
+          'firstName': user.firstName
+        });
         return res.json({ message: "User Details Saved Successfully" });
       })
       .catch((err) => {

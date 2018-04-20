@@ -18,6 +18,9 @@ function config(){
                 'NEO4J_DATABASE_URL': 'localhost',
                 'NEO4J_DATABASE_USER': 'thumb_dev',
                 'NEO4J_DATABASE_PASSWORD': 'thumb_dev',
+                'APP_SETTINGS': {
+                  'WELCOME_EMAIL_MINUTE_DELAY': 1
+                },
             };
 
         case 'test':
@@ -37,12 +40,15 @@ function config(){
                 'NEO4J_DATABASE_URL': 'localhost',
                 'NEO4J_DATABASE_USER': 'thumb_test',
                 'NEO4J_DATABASE_PASSWORD': 'thumb_test',
+                'APP_SETTINGS': {
+                  'WELCOME_EMAIL_MINUTE_DELAY': 1
+                },
             };
 
         case 'prod':
             var DB_USER = process.env.DB_USER;
             var DB_PASSWORD = process.env.DB_PASSWORD;
-            
+
             return {
                 'BASE_URL_API': 'https://vast-everglades-88283.herokuapp.com',
                 'BASE_URL_WEBAPP': 'https://thumb-webapp.herokuapp.com',
@@ -59,6 +65,9 @@ function config(){
                 'NEO4J_DATABASE_URL': process.env.NEO4J_DB_URL,
                 'NEO4J_DATABASE_USER': process.env.NEO4J_DB_USER,
                 'NEO4J_DATABASE_PASSWORD': process.env.NEO4J_DB_PASSWORD,
+                'APP_SETTINGS': {
+                  'WELCOME_EMAIL_MINUTE_DELAY': 1440
+                },
             };
 
         default:

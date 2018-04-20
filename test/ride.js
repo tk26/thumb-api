@@ -67,7 +67,7 @@ describe('Ride', () => {
                     "token" : auth_token,
                     "endLocation" : endLocation,
                     "travelDate": "02/28/2018",
-                    "travelTime" : "37"
+                    "travelTime" : [3, 7]
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -83,7 +83,7 @@ describe('Ride', () => {
                     "token" : auth_token,
                     "startLocation" : startLocation,
                     "travelDate": "02/28/2018",
-                    "travelTime" : "37"
+                    "travelTime" : [3, 7]
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -99,7 +99,7 @@ describe('Ride', () => {
                   "token" : auth_token,
                   "startLocation" : startLocation,
                   "endLocation" : endLocation,
-                  "travelTime" : "37"
+                  "travelTime" : [3, 7]
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -132,7 +132,7 @@ describe('Ride', () => {
                   "startLocation" : startLocation,
                   "endLocation" : endLocation,
                   "travelDate": "02/28/2018",
-                  "travelTime": "37"
+                  "travelTime": [3, 7]
                 })
                 .end((err, res) => {
                     res.should.have.status(200);

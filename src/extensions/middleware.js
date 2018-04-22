@@ -21,7 +21,6 @@ module.exports = function(type) {
         if (token) {
             // verifies secret and checks exp
             jwt.verify(token, map[type], function(err, decoded) {
-
                 if (err) {
                     //return res.json({ success: false, message: 'Failed to authenticate token' });
                     return res.status(403).send({ success: false, message: 'Invalid token provided' });

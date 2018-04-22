@@ -20,14 +20,14 @@ module.exports = function(type) {
         // decode token
         if (token) {
             // verifies secret and checks exp
-            jwt.verify(token, map[type], function(err, decoded) {      
-            
+            jwt.verify(token, map[type], function(err, decoded) {
+
                 if (err) {
                     //return res.json({ success: false, message: 'Failed to authenticate token' });
-                    return res.status(403).send({ success: false, message: 'Invalid token provided' });    
+                    return res.status(403).send({ success: false, message: 'Invalid token provided' });
                 } else {
                     // if everything is good, save to request for use in other routes
-                    req.decoded = decoded;    
+                    req.decoded = decoded;
                     next();
                 }
             });
@@ -35,9 +35,9 @@ module.exports = function(type) {
         } else {
             // if there is no token
             // return an error
-            return res.status(403).send({ 
-                success: false, 
-                message: 'No token provided' 
+            return res.status(403).send({
+                success: false,
+                message: 'No token provided'
             });
         }
     }

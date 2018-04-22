@@ -1,6 +1,8 @@
 const Ride = require('models/ride.model.js');
+const config = require('config');
 const exceptions = require('../constants/exceptions.js');
 const successResponses = require('../constants/success_responses.js');
+const logger = require('thumb-logger').getLogger(config.API_LOGGER_NAME);
 
 /*exports.getRidesByUser = function(req, res) {
 
@@ -35,6 +37,7 @@ exports.createRide = function (req, res) {
         res.send({ message: successResponses.ride.RIDE_CREATED, ride: ride});
       })
       .catch((err) => {
+        logger.error('Error saving ride: ' + err);
         res.status(500).send({message: exceptions.ride.INTERNAL_ERROR});
       });
 };

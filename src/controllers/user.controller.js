@@ -3,6 +3,7 @@ var jwt = require('jsonwebtoken');
 var config = require('config.js');
 var sgMailer = require('extensions/mailer.js');
 const worker = require('thumb-worker');
+const logger = require('thumb-logger').getLogger(config.API_LOGGER_NAME);
 const moment = require('moment');
 
 const crypto = require('crypto');
@@ -74,14 +75,22 @@ exports.submitUser = function(req, res) {
       .then(() => {
         sendVerificationEmail(req.body.email, verificationId);
         let emailTime = moment(new Date().getTime())
-                          .add(config.APP_SETTINGS.WELCOME_EMAIL_DELAY, 'm')
+                          .add(config.APP_SETTINGS.WELCOME_EMAIL_MINUTE_DELAY, 'm')
                           .toDate();
 
         worker.scheduleJob(emailTime, 'welcome email', {
           'emailAddress': user.email,
           'firstName': user.firstName
-        });
-        return res.json({ message: "User Details Saved Successfully" });
+        })
+          .then((job) => {
+            logger.info('Welcome email successfully scheduled!')
+          })
+          .catch((err) => {
+            logger.error('Error creating welcome email: ' + err);
+          })
+          .finally(() => {
+            return res.json({ message: "User Details Saved Successfully" });
+          });
       })
       .catch((err) => {
         return res.status(500).send(err);

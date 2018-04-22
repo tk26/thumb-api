@@ -1,6 +1,8 @@
 const Drive = require('models/drive.model.js');
+const config = require('config');
 const exceptions = require('../constants/exceptions.js');
 const successResponses = require('../constants/success_responses.js');
+const logger = require('thumb-logger').getLogger(config.API_LOGGER_NAME);
 
 /*exports.getDrivesByUser = function(req, res) {
 
@@ -39,6 +41,7 @@ exports.createDrive = function(req, res) {
         res.send({ message: successResponses.drive.DRIVE_CREATED, drive: drive});
       })
       .catch((err) => {
+        logger.error('Error creating drive: ' + err);
         res.status(500).send({message: exceptions.drive.INTERNAL_ERROR});
       });
 };

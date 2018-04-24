@@ -10,7 +10,8 @@ var DriveSchema = mongoose.Schema({
     endLocation: Location,
     travelDate: Date,
     travelTime: String,
-    availableSeats: Number
+    availableSeats: Number,
+    travelDescription: String
 }, {
     timestamps: true
 });

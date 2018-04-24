@@ -10,7 +10,8 @@ var RideSchema = mongoose.Schema({
     endLocation: Location,
     travelDate: Date,
     travelTime: String,
-    pickupNotes: String
+    pickupNotes: String,
+    travelDescription: String
 }, {
     timestamps: true
 });

@@ -31,6 +31,10 @@ exports.createDrive = function(req, res) {
         return res.status(400).send({ message: exceptions.drive.MISSING_AVAILABLE_SEATS});
     }
 
+    if(!req.body.travelDescription) {
+        return res.status(400).send({ message: exceptions.drive.MISSING_TRAVEL_DESCRIPTION});
+    }
+
     let drive = new Drive(req.body);
     drive.userId = req.decoded.userId;
 

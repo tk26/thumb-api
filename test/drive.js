@@ -204,13 +204,13 @@ describe('Drive', () => {
     //             });
     //     });
 
-    //     it('it should not GET drives of user with invalid publicId', (done) => {
+    //     it('it should not GET drive details with invalid drivePublicId', (done) => {
     //         chai.request(server)
-    //             .get('/drive/user/' + 'random')
+    //             .get('/drive/info/' + 'random')
     //             .send({})
     //             .end((err, res) => {
     //                 res.should.have.status(500);
-    //                 res.body.should.have.property("message").eql("Incorrect publicId of user");
+    //                 res.body.should.have.property("message").eql("Incorrect publicId of drive");
     //                 done();
     //             });
     //     });

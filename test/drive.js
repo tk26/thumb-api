@@ -19,6 +19,7 @@ describe('Drive', () => {
     let birthday = "03/21/2001";
     let startLocation = {latitude:60.2,longitude:15.2,address:"623 Main Street"};
     let endLocation = {latitude:61.2,longitude:16.2,address:"623 Washington Street"};
+    let travelDescription = "Going for the Little 500";
 
     before(async() => {
       let userPassword = "Test123!";
@@ -68,7 +69,8 @@ describe('Drive', () => {
                     "endLocation" : endLocation,
                     "travelDate": "02/28/2018",
                     "travelTime" : [3, 7],
-                    "availableSeats" : 3
+                    "availableSeats" : 3,
+                    "travelDescription" : travelDescription
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -85,7 +87,8 @@ describe('Drive', () => {
                     "startLocation" : startLocation,
                     "travelDate": "02/28/2018",
                     "travelTime" : [3, 7],
-                    "availableSeats" : 3
+                    "availableSeats" : 3,
+                    "travelDescription" : travelDescription
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -102,7 +105,8 @@ describe('Drive', () => {
                     "startLocation" : startLocation,
                     "endLocation" : endLocation,
                     "travelTime" : [3, 7],
-                    "availableSeats" : 3
+                    "availableSeats" : 3,
+                    "travelDescription" : travelDescription
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -119,7 +123,8 @@ describe('Drive', () => {
                     "startLocation" : startLocation,
                     "endLocation" : endLocation,
                     "travelDate": "02/28/2018",
-                    "availableSeats" : 3
+                    "availableSeats" : 3,
+                    "travelDescription" : travelDescription
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -136,11 +141,30 @@ describe('Drive', () => {
                     "startLocation" : startLocation,
                     "endLocation" : endLocation,
                     "travelDate": "02/28/2018",
-                    "travelTime" : [3, 7]
+                    "travelTime" : [3, 7],
+                    "travelDescription" : travelDescription
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql(exceptions.drive.MISSING_AVAILABLE_SEATS);
+                    done();
+                });
+        });
+
+        it('it should not POST a drive without drive travel description', (done) => {
+            chai.request(server)
+                .post('/drive/create')
+                .send({
+                    "token" : auth_token,
+                    "startLocation" : startLocation,
+                    "endLocation" : endLocation,
+                    "travelDate": "02/28/2018",
+                    "travelTime" : [3, 7],
+                    "availableSeats" : 3
+                })
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property("message").eql(exceptions.drive.MISSING_TRAVEL_DESCRIPTION);
                     done();
                 });
         });
@@ -154,7 +178,8 @@ describe('Drive', () => {
                     "endLocation" : endLocation,
                     "travelDate": "02/28/2018",
                     "travelTime": [3, 7],
-                    "availableSeats" : 3
+                    "availableSeats" : 3,
+                    "travelDescription" : travelDescription
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
@@ -179,13 +204,13 @@ describe('Drive', () => {
     //             });
     //     });
 
-    //     it('it should not GET drives of user with invalid publicId', (done) => {
+    //     it('it should not GET drive details with invalid drivePublicId', (done) => {
     //         chai.request(server)
-    //             .get('/drive/user/' + 'random')
+    //             .get('/drive/info/' + 'random')
     //             .send({})
     //             .end((err, res) => {
     //                 res.should.have.status(500);
-    //                 res.body.should.have.property("message").eql("Incorrect publicId of user");
+    //                 res.body.should.have.property("message").eql("Incorrect publicId of drive");
     //                 done();
     //             });
     //     });

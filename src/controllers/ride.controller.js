@@ -29,6 +29,10 @@ exports.createRide = function (req, res) {
         return res.status(400).send({ message: exceptions.ride.MISSING_TRAVEL_TIME});
     }
 
+    if(!req.body.travelDescription) {
+        return res.status(400).send({ message: exceptions.ride.MISSING_TRAVEL_DESCRIPTION});
+    }
+
     let ride = new Ride(req.body);
     ride.userId = req.decoded.userId;
 

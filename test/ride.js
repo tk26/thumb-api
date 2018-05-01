@@ -19,6 +19,7 @@ describe('Ride', () => {
     let birthday = "03/21/2001";
     let startLocation = {latitude:60.1,longitude:15.2,address:"123 Main Street"};
     let endLocation = {latitude:61.1,longitude:16.2,address:"123 Washington Street"};
+    let travelDescription = "Going for the Little 500";
 
     before(async () => {
       let userPassword = "Test123!";
@@ -67,7 +68,8 @@ describe('Ride', () => {
                     "token" : auth_token,
                     "endLocation" : endLocation,
                     "travelDate": "02/28/2018",
-                    "travelTime" : [3, 7]
+                    "travelTime" : [3, 7],
+                    "travelDescription" : travelDescription
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -83,7 +85,8 @@ describe('Ride', () => {
                     "token" : auth_token,
                     "startLocation" : startLocation,
                     "travelDate": "02/28/2018",
-                    "travelTime" : [3, 7]
+                    "travelTime" : [3, 7],
+                    "travelDescription" : travelDescription
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -99,7 +102,8 @@ describe('Ride', () => {
                   "token" : auth_token,
                   "startLocation" : startLocation,
                   "endLocation" : endLocation,
-                  "travelTime" : [3, 7]
+                  "travelTime" : [3, 7],
+                  "travelDescription" : travelDescription
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
@@ -115,11 +119,29 @@ describe('Ride', () => {
                   "token" : auth_token,
                   "startLocation" : startLocation,
                   "endLocation" : endLocation,
-                  "travelDate": "02/28/2018"
+                  "travelDate": "02/28/2018",
+                  "travelDescription" : travelDescription
                 })
                 .end((err, res) => {
                     res.should.have.status(400);
                     res.body.should.have.property("message").eql(exceptions.ride.MISSING_TRAVEL_TIME);
+                    done();
+                });
+        });
+
+        it('it should not POST a ride without ride travel description', (done) => {
+            chai.request(server)
+                .post('/ride/create')
+                .send({
+                  "token" : auth_token,
+                  "startLocation" : startLocation,
+                  "endLocation" : endLocation,
+                  "travelDate": "02/28/2018",
+                  "travelTime" : [3, 7]
+                })
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property("message").eql(exceptions.ride.MISSING_TRAVEL_DESCRIPTION);
                     done();
                 });
         });
@@ -132,7 +154,8 @@ describe('Ride', () => {
                   "startLocation" : startLocation,
                   "endLocation" : endLocation,
                   "travelDate": "02/28/2018",
-                  "travelTime": [3, 7]
+                  "travelTime": [3, 7],
+                  "travelDescription" : travelDescription
                 })
                 .end((err, res) => {
                     res.should.have.status(200);

@@ -9,7 +9,7 @@ exports.saveDrive = function(drive){
   query += 'MERGE(d:Date{date:{travelDate}})' + endOfLine;
   query += 'MERGE(sl:Location{latitude:{startLocationLatitude},longitude:{startLocationLongitude},address:{startLocationAddress}})' + endOfLine;
   query += 'MERGE(el:Location{latitude:{endLocationLatitude},longitude:{endLocationLongitude},address:{endLocationAddress}})' + endOfLine;
-  query += 'CREATE(user)-[:POSTS]->(dr:Drive{driveId:{driveId},travelDate:{travelDate},travelTime:{travelTime},availableSeats:{availableSeats}}),' + endOfLine;
+  query += 'CREATE(user)-[:POSTS]->(dr:Drive{driveId:{driveId},travelDate:{travelDate},travelTime:{travelTime},availableSeats:{availableSeats},travelDescription:{travelDescription}}),' + endOfLine;
   query += '(dr)-[:SCHEDULED_ON]->(d),' + endOfLine;
   query += '(dr)-[:STARTING_AT]->(sl),' + endOfLine;
   query += '(dr)-[:ENDING_AT]->(el) RETURN d';
@@ -26,7 +26,8 @@ exports.saveDrive = function(drive){
         endLocationAddress: drive.endLocation.address,
         endLocationLatitude: drive.endLocation.latitude,
         endLocationLongitude: drive.endLocation.longitude,
-        availableSeats: parseInt(drive.availableSeats)
+        availableSeats: parseInt(drive.availableSeats),
+        travelDescription: drive.travelDescription
       }
     )
     .then((results) => {

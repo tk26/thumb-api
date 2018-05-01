@@ -83,10 +83,10 @@ exports.submitUser = function(req, res) {
           'firstName': user.firstName
         })
           .then((job) => {
-            logger.info('Welcome email successfully scheduled!')
+            logger.info('Welcome email successfully scheduled for ' + user.email + '!')
           })
           .catch((err) => {
-            logger.error('Error creating welcome email: ' + err);
+            logger.error('Error creating welcome email for ' + user.email + ': ' + err);
           })
           .finally(() => {
             return res.json({ message: "User Details Saved Successfully" });

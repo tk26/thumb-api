@@ -149,7 +149,17 @@ exports.authenticateUser = function(req, res) {
             const _token = jwt.sign(payload, config.AUTH_SECRET, {
                 expiresIn: 18000
             });
-            res.json({ message: "Logged In Successfully", token: _token });
+            res.json({ 
+                message: "Logged In Successfully", 
+                token: _token,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                username: user.username,
+                school: user.school || "",
+                birthday: user.birthday,
+                profilePicture: user.profile_picture || "",
+                bio: user.bio || ""
+            });
         }
     });
 };

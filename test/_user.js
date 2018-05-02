@@ -673,8 +673,8 @@ describe('Users', () => {
                 .put('/user/edit')
                 .set('Authorization', 'Bearer' + ' ' + testUserAuthToken)
                 .send({
-                    "firstName" : "Jane",
-                    "lastName" : "Foe"
+                    "profilePicture" : "pp",
+                    "bio" : "I am an early thumb adopter"
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
@@ -682,26 +682,11 @@ describe('Users', () => {
                     User.findOne({
                         'email': testUserEmail
                     }, (err, user) => {
-                        chai.assert.equal("Jane", user.firstName);
-                        chai.assert.equal("Foe", user.lastName);
+                        chai.assert.equal("pp", user.profile_picture);
+                        chai.assert.equal("I am an early thumb adopter", user.bio);
                     }).then(() => {
                         done();
                     });
-                });
-        });
-
-        // update to old values
-        after((done) => {
-            chai.request(server)
-                .put('/user/edit')
-                .send({
-                    "token" : auth_token,
-                    "firstName" : "Test",
-                    "lastName" : "User",
-                    "school" : "hogwarts"
-                })
-                .end((err, res) => {
-                    done();
                 });
         });
     });

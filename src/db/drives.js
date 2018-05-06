@@ -4,15 +4,17 @@ const uuid = require('uuid/v1');
 
 exports.saveDrive = function(drive){
   const driveId = uuid();
+  const tripBoundary  = drive.tripBoundary.ToPolygonString();
   let session = neo4j.session();
   let query = 'MATCH(user:User{userId:{userId}})' + endOfLine;
   query += 'MERGE(d:Date{date:{travelDate}})' + endOfLine;
   query += 'MERGE(sl:Location{latitude:{startLocationLatitude},longitude:{startLocationLongitude},address:{startLocationAddress}})' + endOfLine;
   query += 'MERGE(el:Location{latitude:{endLocationLatitude},longitude:{endLocationLongitude},address:{endLocationAddress}})' + endOfLine;
-  query += 'CREATE(user)-[:POSTS]->(dr:Drive{driveId:{driveId},travelDate:{travelDate},travelTime:{travelTime},availableSeats:{availableSeats},travelDescription:{travelDescription}}),' + endOfLine;
+  query += 'CREATE(user)-[:POSTS]->(dr:Drive{driveId:{driveId},travelDate:{travelDate},travelTime:{travelTime},availableSeats:{availableSeats},travelDescription:{travelDescription}, wkt:{tripBoundary}}),' + endOfLine;
   query += '(dr)-[:SCHEDULED_ON]->(d),' + endOfLine;
   query += '(dr)-[:STARTING_AT]->(sl),' + endOfLine;
-  query += '(dr)-[:ENDING_AT]->(el) RETURN d';
+  query += '(dr)-[:ENDING_AT]->(el) WITH dr' + endOfLine;
+  query += 'CALL spatial.addNode(\'drives\', dr) YIELD node RETURN node';
 
   return session.run(query,
       {
@@ -27,7 +29,8 @@ exports.saveDrive = function(drive){
         endLocationLatitude: drive.endLocation.latitude,
         endLocationLongitude: drive.endLocation.longitude,
         availableSeats: parseInt(drive.availableSeats),
-        travelDescription: drive.travelDescription
+        travelDescription: drive.travelDescription,
+        tripBoundary: tripBoundary
       }
     )
     .then((results) => {

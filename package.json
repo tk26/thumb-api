@@ -46,6 +46,7 @@
     "stripe": "^5.4.0",
     "thumb-logger": "git+https://jdromine:6af3f3b09e490af5b770edf44e21faf997f4738a@github.com/tk26/thumb-logger.git#master",
     "thumb-worker": "git+https://jdromine:6af3f3b09e490af5b770edf44e21faf997f4738a@github.com/tk26/thumb-worker.git#master",
+    "thumb-utilities": "git+https://jdromine:6af3f3b09e490af5b770edf44e21faf997f4738a@github.com/tk26/thumb-utilities.git#master",
     "twilio": "^3.11.2",
     "uuid": "^3.2.1"
   },

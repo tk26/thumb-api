@@ -18,6 +18,7 @@ function config(){
                 'NEO4J_DATABASE_URL': 'localhost',
                 'NEO4J_DATABASE_USER': 'thumb_dev',
                 'NEO4J_DATABASE_PASSWORD': 'thumb_dev',
+                'API_LOGGER_NAME': 'APILog',
                 'APP_SETTINGS': {
                   'WELCOME_EMAIL_MINUTE_DELAY': 1
                 },
@@ -40,6 +41,7 @@ function config(){
                 'NEO4J_DATABASE_URL': 'localhost',
                 'NEO4J_DATABASE_USER': 'thumb_test',
                 'NEO4J_DATABASE_PASSWORD': 'thumb_test',
+                'API_LOGGER_NAME': 'APILog',
                 'APP_SETTINGS': {
                   'WELCOME_EMAIL_MINUTE_DELAY': 1
                 },
@@ -65,6 +67,7 @@ function config(){
                 'NEO4J_DATABASE_URL': process.env.NEO4J_DB_URL,
                 'NEO4J_DATABASE_USER': process.env.NEO4J_DB_USER,
                 'NEO4J_DATABASE_PASSWORD': process.env.NEO4J_DB_PASSWORD,
+                'API_LOGGER_NAME': 'APILog',
                 'APP_SETTINGS': {
                   'WELCOME_EMAIL_MINUTE_DELAY': 1440
                 },

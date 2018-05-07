@@ -4,10 +4,24 @@ var cors = require('cors');
 var bodyParser = require('body-parser');
 var config = require('config.js');
 var morgan = require('morgan');
+var logger = require('thumb-logger').getLogger(config.API_LOGGER_NAME);
+var expressWinston = require('express-winston');
+//removing headers so token isn't included in logs
+expressWinston.requestWhitelist = ['url', 'method', 'httpVersion', 'originalUrl', 'query', 'body'];
+expressWinston.bodyBlacklist.push('password', 'token');
 
 var app = express();
 
 app.set('config', config);
+
+app.use(expressWinston.logger({
+  winstonInstance: logger
+}));
+
+app.use(expressWinston.errorLogger({
+  winstonInstance: logger
+}));
+
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());

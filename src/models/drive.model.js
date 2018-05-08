@@ -21,8 +21,8 @@ var DriveSchema = mongoose.Schema({
 });
 
 DriveSchema.methods.addTripBoundary = function(drive){
-  const startPoint = new thumbUtil.GeoPoint(drive.startLocation.longitude, drive.startLocation.latitude);
-  const endPoint = new thumbUtil.GeoPoint(drive.endLocation.longitude, drive.endLocation.latitude);
+  const startPoint = drive.startLocation.coordinates;
+  const endPoint = drive.endLocation.coordinates;
   drive.tripBoundary = thumbUtil.TripBoundary.calculateBoundaryAroundPoints(startPoint, endPoint, 32186.9);
 }
 

@@ -1,4 +1,5 @@
 let mongoose = require('mongoose');
+let GeoPoint = require('thumb-utilities').GeoPoint;
 let Schema = mongoose.Schema;
 
 function Location(key, options) {
@@ -23,8 +24,7 @@ Location.prototype.cast = function(val) {
   }
   return {
     address: val.address,
-    latitude: val.latitude,
-    longitude: val.longitude
+    coordinates: new GeoPoint(Number(val.longitude), Number(val.latitude))
   }
 };
 

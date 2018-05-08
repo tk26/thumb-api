@@ -12,7 +12,7 @@ chai.use(chaiHttp);
 let User = require('../src/models/user.model.js');
 let userUtility = require('./utilities/user.utility.js');
 
-describe.only('Drive', () => {
+describe('Drive', () => {
     let auth_token, userPublicId, user;
     let email = "driveuser@email.com";
     let username = "driveuser";

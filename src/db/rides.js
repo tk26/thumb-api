@@ -21,11 +21,11 @@ exports.saveRide = function(ride){
         travelDate: ride.travelDate.toISOString(),
         travelTime: ride.travelTime,
         startLocationAddress: ride.startLocation.address,
-        startLocationLatitude: ride.startLocation.latitude,
-        startLocationLongitude: ride.startLocation.longitude,
+        startLocationLatitude: ride.startLocation.coordinates.latitude,
+        startLocationLongitude: ride.startLocation.coordinates.longitude,
         endLocationAddress: ride.endLocation.address,
-        endLocationLatitude: ride.endLocation.latitude,
-        endLocationLongitude: ride.endLocation.longitude,
+        endLocationLatitude: ride.endLocation.coordinates.latitude,
+        endLocationLongitude: ride.endLocation.coordinates.longitude,
         pickupNotes: ride.pickupNotes ? ride.pickupNotes : "",
         travelDescription: ride.travelDescription
       }

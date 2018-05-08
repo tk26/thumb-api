@@ -1,6 +1,8 @@
 const neo4j = require('../extensions/neo4j.js');
 const endOfLine = require('os').EOL;
 const uuid = require('uuid/v1');
+const config = require('../config.js');
+const logger = require('thumb-logger').getLogger(config.API_LOGGER_NAME);
 
 exports.saveDrive = function(drive){
   const driveId = uuid();
@@ -23,11 +25,11 @@ exports.saveDrive = function(drive){
         travelDate: drive.travelDate.toISOString(),
         travelTime: drive.travelTime,
         startLocationAddress: drive.startLocation.address,
-        startLocationLatitude: drive.startLocation.latitude,
-        startLocationLongitude: drive.startLocation.longitude,
+        startLocationLatitude: drive.startLocation.coordinates.latitude,
+        startLocationLongitude: drive.startLocation.coordinates.longitude,
         endLocationAddress: drive.endLocation.address,
-        endLocationLatitude: drive.endLocation.latitude,
-        endLocationLongitude: drive.endLocation.longitude,
+        endLocationLatitude: drive.endLocation.coordinates.latitude,
+        endLocationLongitude: drive.endLocation.coordinates.longitude,
         availableSeats: parseInt(drive.availableSeats),
         travelDescription: drive.travelDescription,
         tripBoundary: tripBoundary
@@ -37,7 +39,32 @@ exports.saveDrive = function(drive){
       return results.records[0]._fields[0].properties;
     })
     .catch(error => {
-      console.log(error); // eslint-disable-line no-console
+      logger.error(error);
+      throw error;
+    })
+    .finally(() => {
+      session.close();
+    });
+}
+
+exports.getDriveMatchesForTrip = function(startLocation, endLocation, travelDate) {
+  const startPoint = startLocation.coordinates.ToPointString();
+  const endPoint = endLocation.coordinates.ToPointString();
+
+  let cql = 'CALL spatial.intersects(\'drives\',"' + startPoint + '") YIELD node AS starts';
+  cql += 'CALL spatial.intersects(\'drives\',"' + endPoint + '") YIELD node AS ends';
+  cql += 'WITH starts, ends';
+  cql += 'MATCH (starts:Drive)-[:SCHEDULED_ON]->(d:Date{date:{travelDate}})';
+  cql += 'MATCH(ends:Drive)-[:SCHEDULED_ON]->(d:Date{date:{travelDate}})';
+  cql += 'WITH collect(starts) as s, collect(ends) as e';
+  cql += 'WITH apoc.coll.intersection(s,e) AS drives';
+  cql += 'RETURN drives';
+  return session.run(query,{travelDate: travelDate})
+    .then((results) => {
+      return results.records;
+    })
+    .catch(error => {
+      logger.error(error);
       throw error;
     })
     .finally(() => {

@@ -12,7 +12,7 @@
     "open:src": "cross-env NODE_ENV=dev nodemon src/server.js",
     "lint": "esw src buildScripts test --color",
     "lint:watch": "npm run lint -- --watch",
-    "security-check": "nsp check",
+    "security-check": "nsp check --filter 3",
     "pretest": "node buildScripts/test.js",
     "test": "cross-env NODE_ENV=test npm run checkcoverage mocha --exit",
     "test:watch": "npm run test -- --watch",
@@ -27,7 +27,7 @@
   "dependencies": {
     "@sendgrid/mail": "^6.1.4",
     "app-module-path": "^2.2.0",
-    "bcrypt": "^1.0.3",
+    "bcrypt": "^2.0.1",
     "body-parser": "^1.18.2",
     "cors": "^2.8.4",
     "express": "^4.16.2",
@@ -40,13 +40,13 @@
     "mongoose-unique-validator": "^2.0.0",
     "morgan": "^1.9.0",
     "neo4j-driver": "^1.5.3",
-    "nodemon": "^1.12.5",
+    "nodemon": "^1.17.4",
     "os": "^0.1.1",
     "randomstring": "^1.1.5",
     "stripe": "^5.4.0",
     "thumb-logger": "git+https://jdromine:6af3f3b09e490af5b770edf44e21faf997f4738a@github.com/tk26/thumb-logger.git#master",
     "thumb-worker": "git+https://jdromine:6af3f3b09e490af5b770edf44e21faf997f4738a@github.com/tk26/thumb-worker.git#master",
-    "twilio": "^3.11.2",
+    "twilio": "^3.16.0",
     "uuid": "^3.2.1"
   },
   "devDependencies": {

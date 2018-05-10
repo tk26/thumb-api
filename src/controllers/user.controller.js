@@ -149,7 +149,17 @@ exports.authenticateUser = function(req, res) {
             const _token = jwt.sign(payload, config.AUTH_SECRET, {
                 expiresIn: 18000
             });
-            res.json({ message: "Logged In Successfully", token: _token });
+            res.json({ 
+                message: "Logged In Successfully", 
+                token: _token,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                username: user.username,
+                school: user.school || "",
+                birthday: user.birthday,
+                profilePicture: user.profile_picture || "",
+                bio: user.bio || ""
+            });
         }
     });
 };
@@ -288,8 +298,8 @@ exports.editUser = function(req, res) {
             res.status(500).send({ message: "Incorrect userId" });
         }
     }).then( (user) => {
-        user.firstName = req.body.firstName || user.firstName;
-        user.lastName = req.body.lastName || user.lastName;
+        user.profile_picture = req.body.profilePicture || user.profile_picture;
+        user.bio = req.body.bio || user.bio;
         User.update({ '_id': user._id }, user, function(err, result) {
             if(err) {
                 return next(err);

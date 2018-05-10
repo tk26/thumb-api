@@ -32,12 +32,6 @@ exports.deleteUser = function(user){
   let session = neo4j.session();
 
   return session.run('MATCH(u:User{userId:{userId}})-[r]-() DELETE u,r',{userId: user._id.toString()})
-    .then(() =>{
-      User.deleteOne({'email': user.email});
-    })
-    .catch((err) => {
-      throw err;
-    })
     .finally(() =>{
       session.close();
     });

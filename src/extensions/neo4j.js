@@ -6,10 +6,10 @@ var config = require('../config.js');
 var driver = neo4j.driver("bolt://" + config.NEO4J_DATABASE_URL,
     neo4j.auth.basic(config.NEO4J_DATABASE_USER, config.NEO4J_DATABASE_PASSWORD));
 
-driver.execute = async function(script){
+driver.execute = async function(script, parameters){
   let session = this.session();
   try {
-    return await session.run(script)
+    return await session.run(script, parameters)
   } catch(err){
     throw err;
   } finally {

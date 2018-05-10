@@ -7,7 +7,6 @@ let drivesDB = require('../db/drives.js');
 let thumbUtil = require('thumb-utilities');
 
 var DriveSchema = mongoose.Schema({
-    /* Neo4j Properties */
     userId: String,
     startLocation: Location,
     endLocation: Location,
@@ -29,5 +28,9 @@ DriveSchema.methods.addTripBoundary = function(drive){
 DriveSchema.methods.saveDrive = function(drive){
   return drivesDB.saveDrive(drive);
 };
+
+DriveSchema.statics.findDriveMatchesForTrip = function(startPoint, endPoint, travelDate){
+  return drivesDB.getDriveMatchesForTrip(startPoint, endPoint, travelDate);
+}
 
 module.exports = mongoose.model('drive', DriveSchema);

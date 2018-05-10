@@ -4,7 +4,7 @@ const uuid = require('uuid/v1');
 const config = require('../config.js');
 const logger = require('thumb-logger').getLogger(config.API_LOGGER_NAME);
 
-exports.saveDrive = function(drive){
+exports.saveDrive = async function(drive){
   const driveId = uuid();
   const tripBoundary  = drive.tripBoundary.ToPolygonString();
   let session = neo4j.session();
@@ -18,7 +18,8 @@ exports.saveDrive = function(drive){
   query += '(dr)-[:ENDING_AT]->(el) WITH dr' + endOfLine;
   query += 'CALL spatial.addNode(\'drives\', dr) YIELD node RETURN node';
 
-  return session.run(query,
+  try {
+    let results = await neo4j.execute(query,
       {
         driveId: driveId,
         userId: drive.userId,
@@ -34,42 +35,31 @@ exports.saveDrive = function(drive){
         travelDescription: drive.travelDescription,
         tripBoundary: tripBoundary
       }
-    )
-    .then((results) => {
-      return results.records[0]._fields[0].properties;
-    })
-    .catch(error => {
-      logger.error(error);
-      throw error;
-    })
-    .finally(() => {
-      session.close();
-    });
+    );
+    return results.records[0]._fields[0].properties;
+  } catch(error){
+    logger.error(error);
+    throw error;
+  }
 }
 
-exports.getDriveMatchesForTrip = function(startLocation, endLocation, travelDate) {
-  const startPoint = startLocation.coordinates.ToPointString();
-  const endPoint = endLocation.coordinates.ToPointString();
+exports.getDriveMatchesForTrip = async function(startPoint, endPoint, travelDate) {
+  let query = 'CALL spatial.intersects(\'drives\',"' + startPoint.ToPointString() + '") YIELD node AS starts' + endOfLine;
+  query += 'CALL spatial.intersects(\'drives\',"' + endPoint.ToPointString() + '") YIELD node AS ends' + endOfLine;
+  query += 'WITH starts, ends' + endOfLine;
+  query += 'MATCH (starts:Drive)-[:SCHEDULED_ON]->(d:Date{date:{travelDate}})' + endOfLine;
+  query += 'MATCH(ends:Drive)-[:SCHEDULED_ON]->(d:Date{date:{travelDate}})' + endOfLine;
+  query += 'WITH collect(starts) as s, collect(ends) as e' + endOfLine;
+  query += 'WITH apoc.coll.intersection(s,e) AS drives' + endOfLine;
+  query += 'RETURN drives';
 
-  let cql = 'CALL spatial.intersects(\'drives\',"' + startPoint + '") YIELD node AS starts';
-  cql += 'CALL spatial.intersects(\'drives\',"' + endPoint + '") YIELD node AS ends';
-  cql += 'WITH starts, ends';
-  cql += 'MATCH (starts:Drive)-[:SCHEDULED_ON]->(d:Date{date:{travelDate}})';
-  cql += 'MATCH(ends:Drive)-[:SCHEDULED_ON]->(d:Date{date:{travelDate}})';
-  cql += 'WITH collect(starts) as s, collect(ends) as e';
-  cql += 'WITH apoc.coll.intersection(s,e) AS drives';
-  cql += 'RETURN drives';
-  return session.run(query,{travelDate: travelDate})
-    .then((results) => {
-      return results.records;
-    })
-    .catch(error => {
-      logger.error(error);
-      throw error;
-    })
-    .finally(() => {
-      session.close();
-    });
+  try{
+    let results = await neo4j.execute(query,{travelDate: new Date(travelDate).toISOString()});
+    return results.records[0]._fields[0];
+  } catch(error){
+    logger.error(error);
+    throw error;
+  }
 }
 
 exports.ActiveConstraints = [

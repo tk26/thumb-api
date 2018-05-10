@@ -3,6 +3,7 @@ let chai = require('chai');
 chai.use(chaiHttp);
 let User = require('../../src/models/user.model.js')
 let server = require('../../src/server.js');
+const uuid = require('uuid/v1');
 
 exports.createVerifiedUser = async function (firstName, lastName, email, school, password, username, birthday){
   let should = chai.should();
@@ -104,4 +105,16 @@ exports.savePhoneNumber = async function(email, authToken, number){
   let user = await User.findOne({'email': email});
 
   return user.phoneVerificationId;
+}
+
+exports.getFakeUser = function(){
+  return {
+    _id: {
+      toString: function(){return uuid();}
+    },
+    email: 'fakeuser@email.com',
+    firstName: 'Fake',
+    lastName: 'User',
+    school: 'The Indiana University'
+  }
 }

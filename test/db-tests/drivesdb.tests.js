@@ -20,7 +20,7 @@ let getDriveFromResults = function(nodes, driveId){
   return driveResult;
 }
 
-describe.only('Drives DB Tests', () => {
+describe('Drives DB Tests', () => {
 
   describe('getDriveMatchesForTrip', () => {
     let travelDate = new Date("3/31/2018");
@@ -63,13 +63,13 @@ describe.only('Drives DB Tests', () => {
 
     it('should return created drive when provided matching trip', async() => {
       let driveResult;
-      let nodes = await drivesDB.getDriveMatchesForTrip(drive.startLocation, drive.endLocation, drive.travelDate);
+      let nodes = await drivesDB.getDriveMatchesForTrip(drive.startLocation.coordinates, drive.endLocation.coordinates, drive.travelDate);
       driveResult = getDriveFromResults(nodes, driveId);
       driveResult.driveId.should.equal(driveId);
     });
 
     it('should not return created drive when provided trip on different date', async() => {
-      let nodes = await drivesDB.getDriveMatchesForTrip(drive.startLocation, drive.endLocation, new Date("2018-04-01"));
+      let nodes = await drivesDB.getDriveMatchesForTrip(drive.startLocation.coordinates, drive.endLocation.coordinates, new Date("2018-04-01"));
       let driveResult = getDriveFromResults(nodes, driveId);
       chai.expect(driveResult).to.be.null;
     });
@@ -80,7 +80,7 @@ describe.only('Drives DB Tests', () => {
         coordinates: new GeoPoint(-10, -10)
       };
 
-      let nodes = await drivesDB.getDriveMatchesForTrip(startLocation, drive.endLocation, drive.travelDate);
+      let nodes = await drivesDB.getDriveMatchesForTrip(startLocation.coordinates, drive.endLocation.coordinates, drive.travelDate);
       let driveResult = getDriveFromResults(nodes, driveId);
       chai.expect(driveResult).to.be.null;
     });
@@ -91,7 +91,7 @@ describe.only('Drives DB Tests', () => {
         coordinates: new GeoPoint(-10, -10)
       };
 
-      let nodes = await drivesDB.getDriveMatchesForTrip(drive.startLocation, endLocation, drive.travelDate);
+      let nodes = await drivesDB.getDriveMatchesForTrip(drive.startLocation.coordinates, endLocation.coordinates, drive.travelDate);
       let driveResult = getDriveFromResults(nodes, driveId);
       chai.expect(driveResult).to.be.null;
     });

@@ -189,6 +189,63 @@ describe('Drive', () => {
         });
     });
 
+    describe('/GET /drive/tripmatches', () => {
+      it('should not get drive matches without trip start location', () => {
+        chai.request(server)
+            .get('/drive/tripmatches')
+            .query({endLocation: {latitude :61.2, longitude :16.2, address:"623 Washington Street"}, travelDate: "2018-02-28"})
+            .send()
+            .end((err, res) => {
+                res.should.have.status(400);
+                res.should.have.property("message").eql(exceptions.MISSING_START_LOCATION);
+                done();
+            });
+      });
+
+      it('should not get drive matches without trip end location', () => {
+        chai.request(server)
+            .get('/drive/tripmatches')
+            .query({startLocation: {latitude :61.2, longitude :16.2, address:"623 Washington Street"}, travelDate: "2018-02-28"})
+            .send()
+            .end((err, res) => {
+                res.should.have.status(400);
+                res.should.have.property("message").eql(exceptions.MISSING_END_LOCATION);
+                done();
+            });
+      });
+
+      it('should not get drive matches without travel date', () => {
+        chai.request(server)
+            .get('/drive/tripmatches')
+            .query({
+              startLocation: {latitude :61.2, longitude :16.2, address:"623 Washington Street"},
+              endLocation: {latitude :61.2, longitude :16.2, address:"623 Washington Street"}
+            })
+            .send()
+            .end((err, res) => {
+                res.should.have.status(400);
+                res.should.have.property("error");
+                res.should.have.property("message").eql(exceptions.MISSING_TRAVEL_DATE);
+                done();
+            });
+      });
+
+      it('should return 200 when provided proper request', () => {
+        chai.request(server)
+            .get('/drive/tripmatches')
+            .query({
+              startLocation: {latitude :61.2, longitude :16.2, address:"623 Washington Street"},
+              endLocation: {latitude :61.2, longitude :16.2, address:"623 Washington Street"},
+              travelDate: "2018-02-28"
+            })
+            .send()
+            .end((err, res) => {
+                res.should.have.status(200);
+                done();
+            });
+      });
+    });
+
     /*
     * Test the /GET /drive/user/:userPublicId route
     */

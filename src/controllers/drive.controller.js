@@ -5,14 +5,6 @@ const exceptions = require('../constants/exceptions.js');
 const successResponses = require('../constants/success_responses.js');
 const logger = require('thumb-logger').getLogger(config.API_LOGGER_NAME);
 
-/*exports.getDrivesByUser = function(req, res) {
-
-};
-
-exports.getDriveInfo = function(req, res) {
-
-};*/
-
 exports.createDrive = function(req, res) {
     if(!req.body.startLocation) {
         return res.status(400).send({ message: exceptions.drive.MISSING_START_LOCATION});

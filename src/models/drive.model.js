@@ -1,38 +1,36 @@
-var mongoose = require('mongoose');
-var autoIncrement = require('mongoose-auto-increment');
+let mongoose = require('mongoose');
+let locationTypes = require('./types/location.type.js');
+let tripBoundaryType = require('./types/tripboundary.type.js');
+let Location = mongoose.Schema.Types.Location;
+let TripBoundarySchema = mongoose.Schema.Types.TripBoundarySchema;
+let drivesDB = require('../db/drives.js');
+let thumbUtil = require('thumb-utilities');
 
 var DriveSchema = mongoose.Schema({
-    user_id: String,
-    user_publicId: String,
-    user_firstName: String,
-    user_lastName: String,
-    from_location: {
-        type: String,
-        required: true
-    },
-    to_location: {
-        type: String,
-        required: true
-    },
-    travel_date: {
-        type: String,
-        required: true
-    },
-    travel_time: [{
-        type: String, 
-        required: true
-    }],
-    seats_available: {
-        type: Number,
-        required: true
-    },
-    comment: String
+    userId: String,
+    startLocation: Location,
+    endLocation: Location,
+    travelDate: Date,
+    travelTime: String,
+    availableSeats: Number,
+    travelDescription: String,
+    tripBoundary: TripBoundarySchema
 }, {
     timestamps: true
 });
 
-autoIncrement.initialize(mongoose.connection);
+DriveSchema.methods.addTripBoundary = function(drive){
+  const startPoint = drive.startLocation.coordinates;
+  const endPoint = drive.endLocation.coordinates;
+  drive.tripBoundary = thumbUtil.TripBoundary.calculateBoundaryAroundPoints(startPoint, endPoint, 32186.9);
+}
 
-DriveSchema.plugin(autoIncrement.plugin, { model: 'drive', field: 'drivePublicId', startAt: 1 });
+DriveSchema.methods.saveDrive = function(drive){
+  return drivesDB.saveDrive(drive);
+};
+
+DriveSchema.statics.findDriveMatchesForTrip = function(startPoint, endPoint, travelDate){
+  return drivesDB.getDriveMatchesForTrip(startPoint, endPoint, travelDate);
+}
 
 module.exports = mongoose.model('drive', DriveSchema);

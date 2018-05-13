@@ -14,7 +14,14 @@ function config(){
                 'APP': APP_NAME,
                 'PORT': 2611,
                 'SENDGRID_API_KEY': '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' ,
-                'DATABASE': 'mongodb://localhost/thumb'
+                'DATABASE': 'mongodb://localhost/thumb',
+                'NEO4J_DATABASE_URL': 'localhost',
+                'NEO4J_DATABASE_USER': 'thumb_dev',
+                'NEO4J_DATABASE_PASSWORD': 'thumb_dev',
+                'API_LOGGER_NAME': 'APILog',
+                'APP_SETTINGS': {
+                  'WELCOME_EMAIL_MINUTE_DELAY': 1
+                },
             };
 
         case 'test':
@@ -30,7 +37,14 @@ function config(){
                 'APP': APP_NAME,
                 'PORT': 2611,
                 'SENDGRID_API_KEY': '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' ,
-                'DATABASE': 'mongodb://localhost/thumb_test'
+                'DATABASE': 'mongodb://localhost/thumb_test',
+                'NEO4J_DATABASE_URL': 'localhost',
+                'NEO4J_DATABASE_USER': 'thumb_test',
+                'NEO4J_DATABASE_PASSWORD': 'thumb_test',
+                'API_LOGGER_NAME': 'APILog',
+                'APP_SETTINGS': {
+                  'WELCOME_EMAIL_MINUTE_DELAY': 1
+                },
             };
 
         case 'prod':
@@ -49,7 +63,14 @@ function config(){
                 'APP': APP_NAME,
                 'PORT' : process.env.PORT,
                 'SENDGRID_API_KEY': process.env.SENDGRID_API_KEY,
-                'DATABASE': 'mongodb://'+DB_USER+':'+DB_PASSWORD+'@ds151207.mlab.com:51207/thumb'
+                'DATABASE': 'mongodb://'+DB_USER+':'+DB_PASSWORD+'@ds151207.mlab.com:51207/thumb',
+                'NEO4J_DATABASE_URL': process.env.NEO4J_DB_URL,
+                'NEO4J_DATABASE_USER': process.env.NEO4J_DB_USER,
+                'NEO4J_DATABASE_PASSWORD': process.env.NEO4J_DB_PASSWORD,
+                'API_LOGGER_NAME': 'APILog',
+                'APP_SETTINGS': {
+                  'WELCOME_EMAIL_MINUTE_DELAY': 1440
+                },
             };
 
         default:

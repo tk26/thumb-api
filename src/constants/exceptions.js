@@ -14,6 +14,7 @@ module.exports = {
     MISSING_TRAVEL_TIME: "Missing Drive's Travel Time",
     MISSING_AVAILABLE_SEATS: "Missing Drive's Available Seats",
     MISSING_TRAVEL_DESCRIPTION: "Missing Drive's Travel Description",
-    INTERNAL_ERROR: "Error creating drive."
+    INTERNAL_CREATE_ERROR: "Error creating drive.",
+    INTERNAL_GETTRIPMATCHES_ERROR: "Error retrieving trip matches."
   }
 }

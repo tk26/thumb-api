@@ -11,9 +11,9 @@ let should = chai.should();
 let getDriveFromResults = function(nodes, driveId){
   let driveResult = null;
   for(let i=0; i<nodes.length; i++){
-    if(nodes[i].properties.driveId === driveId)
+    if(nodes[i].driveId === driveId)
     {
-      driveResult = nodes[i].properties;
+      driveResult = nodes[i];
       break;
     }
   }
@@ -33,19 +33,21 @@ describe('Drives DB Tests', () => {
       "travelDescription" : 'Drive DB Tests'
     });
     let driveId = uuid();
+    let userId = uuid();
     drive.addTripBoundary(drive);
 
     before(async() => {
       const tripBoundary  = drive.tripBoundary.ToPolygonString();
-      let session = neo4j.session();
       let query = 'MERGE(d:Date{date:{travelDate}})' + endOfLine;
       query += 'CREATE(dr:Drive{driveId:{driveId},travelDate:{travelDate},travelTime:{travelTime},availableSeats:{availableSeats},travelDescription:{travelDescription}, wkt:{tripBoundary}}),' + endOfLine;
+      query += '(u:User{userId:{userId}})-[:POSTS]->(dr),' + endOfLine;
       query += '(dr)-[:SCHEDULED_ON]->(d) WITH dr' + endOfLine;
       query += 'CALL spatial.addNode(\'drives\', dr) YIELD node RETURN node';
 
       await neo4j.execute(query,
           {
             driveId: driveId,
+            userId: userId,
             travelDate: drive.travelDate.toISOString(),
             travelTime: drive.travelTime,
             availableSeats: parseInt(drive.availableSeats),
@@ -59,6 +61,8 @@ describe('Drives DB Tests', () => {
       let query = 'MATCH (d:Drive{driveId:{driveId}})' + endOfLine;
       query += 'DETACH DELETE d';
       await neo4j.execute(query,{driveId: driveId});
+      query = 'MATCH(u:User{userId:{userId}}) DETACH DELETE u';
+      await neo4j.execute(query,{userId: userId});
     });
 
     it('should return created drive when provided matching trip', async() => {

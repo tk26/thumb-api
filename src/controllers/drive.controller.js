@@ -40,7 +40,7 @@ exports.createDrive = function(req, res) {
       })
       .catch((err) => {
         logger.error('Error creating drive: ' + err);
-        res.status(500).send({message: exceptions.drive.INTERNAL_ERROR});
+        res.status(500).send({message: exceptions.drive.INTERNAL_CREATE_ERROR});
       });
 };
 
@@ -69,6 +69,6 @@ exports.getTripMatches = function(req, res) {
     })
     .catch((err) => {
       logger.error('Error retrieving drives: ' + err);
-      res.status(500).send({message: exceptions.drive.INTERNAL_ERROR});
+      res.status(500).send({message: exceptions.drive.INTERNAL_GETTRIPMATCHES_ERROR});
     });
 }

@@ -63,7 +63,7 @@ exports.getTripMatches = function(req, res) {
   let startPoint = new GeoPoint(startLocation.longitude, startLocation.latitude);
   let endPoint = new GeoPoint(endLocation.longitude, endLocation.latitude);
 
-  Drive.findDriveMatchesForTrip(startPoint, endPoint, req.query.travelDate)
+  let drives = Drive.findDriveMatchesForTrip(startPoint, endPoint, req.query.travelDate)
     .then((drives) => {
       res.send(drives);
     })

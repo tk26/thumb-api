@@ -51,11 +51,21 @@ exports.getDriveMatchesForTrip = async function(startPoint, endPoint, travelDate
   query += 'MATCH(ends:Drive)-[:SCHEDULED_ON]->(d:Date{date:{travelDate}})' + endOfLine;
   query += 'WITH collect(starts) as s, collect(ends) as e' + endOfLine;
   query += 'WITH apoc.coll.intersection(s,e) AS drives' + endOfLine;
-  query += 'RETURN drives';
+  query += 'UNWIND drives AS d' + endOfLine;
+  query += 'MATCH(d:Drive)<-[:POSTS]-(u:User)' + endOfLine;
+  query += 'RETURN d, u LIMIT 25';
 
   try{
-    let results = await neo4j.execute(query,{travelDate: new Date(travelDate).toISOString()});
-    return results.records[0]._fields[0];
+    let rawResults = await neo4j.execute(query,{travelDate: new Date(travelDate).toISOString()});
+    let results = [];
+    if (rawResults.records.length > 0){
+      for(var i=0; i<rawResults.records.length; i++){
+        let drive = rawResults.records[i]._fields[0].properties;
+        drive.userId = rawResults.records[i]._fields[1].properties.userId;
+        results.push(drive);
+      }
+    }
+    return results;
   } catch(error){
     logger.error(error);
     throw error;

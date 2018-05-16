@@ -20,14 +20,12 @@ var DriveSchema = mongoose.Schema({
     timestamps: true
 });
 
-DriveSchema.methods.addTripBoundary = function(drive){
-  const startPoint = drive.startLocation.coordinates;
-  const endPoint = drive.endLocation.coordinates;
-  drive.tripBoundary = thumbUtil.TripBoundary.calculateBoundaryAroundPoints(startPoint, endPoint, 32186.9);
+DriveSchema.methods.addTripBoundary = function(){
+  this.tripBoundary = thumbUtil.TripBoundary.calculateBoundaryAroundPoints(this.startLocation.coordinates, this.endLocation.coordinates, 32186.9);
 }
 
-DriveSchema.methods.saveDrive = function(drive){
-  return drivesDB.saveDrive(drive);
+DriveSchema.methods.saveDrive = function(){
+  return drivesDB.saveDrive(this);
 };
 
 DriveSchema.statics.findDriveMatchesForTrip = async function(startPoint, endPoint, travelDate){

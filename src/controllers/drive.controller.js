@@ -32,9 +32,9 @@ exports.createDrive = function(req, res) {
 
     let drive = new Drive(req.body);
     drive.userId = req.decoded.userId;
-    drive.addTripBoundary(drive);
+    drive.addTripBoundary();
 
-    drive.saveDrive(drive)
+    drive.saveDrive()
       .then((drive) => {
         res.send({ message: successResponses.drive.DRIVE_CREATED, drive: drive});
       })

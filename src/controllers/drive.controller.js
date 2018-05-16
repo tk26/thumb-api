@@ -45,23 +45,22 @@ exports.createDrive = function(req, res) {
 };
 
 exports.getTripMatches = function(req, res) {
-  if(!req.query.startLocation) {
-      return res.status(400).send({ message: exceptions.drive.MISSING_START_LOCATION});
+  if(!req.query.startPoint) {
+      return res.status(400).send({ message: exceptions.drive.MISSING_START_POINT});
   }
 
-  if(!req.query.endLocation) {
-      return res.status(400).send({ message: exceptions.drive.MISSING_END_LOCATION});
+  if(!req.query.endPoint) {
+      return res.status(400).send({ message: exceptions.drive.MISSING_END_POINT});
   }
 
   if(!req.query.travelDate) {
     return res.status(400).send({ message: exceptions.drive.MISSING_TRAVEL_DATE});
   }
 
-  const startLocation = JSON.parse(req.query.startLocation);
-  const endLocation = JSON.parse(req.query.endLocation);
-
-  let startPoint = new GeoPoint(startLocation.longitude, startLocation.latitude);
-  let endPoint = new GeoPoint(endLocation.longitude, endLocation.latitude);
+  const rawStartPoint = JSON.parse(req.query.startPoint);
+  const rawEndPoint = JSON.parse(req.query.endPoint);
+  const startPoint = new GeoPoint(rawStartPoint.longitude, rawStartPoint.latitude);
+  const endPoint = new GeoPoint(rawEndPoint.longitude, rawEndPoint.latitude);
 
   let drives = Drive.findDriveMatchesForTrip(startPoint, endPoint, req.query.travelDate)
     .then((drives) => {

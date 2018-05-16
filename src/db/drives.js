@@ -61,6 +61,9 @@ exports.getDriveMatchesForTrip = async function(startPoint, endPoint, travelDate
     if (rawResults.records.length > 0){
       for(var i=0; i<rawResults.records.length; i++){
         let drive = rawResults.records[i]._fields[0].properties;
+        delete drive.bbox;
+        delete drive.wkt;
+        delete drive.gtype;
         drive.userId = rawResults.records[i]._fields[1].properties.userId;
         results.push(drive);
       }

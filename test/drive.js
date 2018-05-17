@@ -190,22 +190,22 @@ describe('Drive', () => {
     });
 
     describe('/GET /drive/tripmatches', () => {
-      it('should not get drive matches without trip start location', () => {
+      it('should not get drive matches without trip start point', () => {
         chai.request(server)
             .get('/drive/tripmatches')
-            .query({endLocation: {latitude :61.2, longitude :16.2, address:"623 Washington Street"}, travelDate: "2018-02-28"})
+            .query({endPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
             .send()
             .end((err, res) => {
                 res.should.have.status(400);
-                res.should.have.property("message").eql(exceptions.MISSING_START_LOCATION);
+                res.should.have.property("message").eql(exceptions.drive.MISSING_START_POINT);
                 done();
             });
       });
 
-      it('should not get drive matches without trip end location', () => {
+      it('should not get drive matches without trip end point', () => {
         chai.request(server)
             .get('/drive/tripmatches')
-            .query({startLocation: {latitude :61.2, longitude :16.2, address:"623 Washington Street"}, travelDate: "2018-02-28"})
+            .query({startPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
             .send()
             .end((err, res) => {
                 res.should.have.status(400);
@@ -218,8 +218,8 @@ describe('Drive', () => {
         chai.request(server)
             .get('/drive/tripmatches')
             .query({
-              startLocation: {latitude :61.2, longitude :16.2, address:"623 Washington Street"},
-              endLocation: {latitude :61.2, longitude :16.2, address:"623 Washington Street"}
+              startPoint: {latitude :61.2, longitude :16.2},
+              endPoint: {latitude :61.2, longitude :16.2}
             })
             .send()
             .end((err, res) => {
@@ -234,8 +234,8 @@ describe('Drive', () => {
         chai.request(server)
             .get('/drive/tripmatches')
             .query({
-              startLocation: {latitude :61.2, longitude :16.2, address:"623 Washington Street"},
-              endLocation: {latitude :61.2, longitude :16.2, address:"623 Washington Street"},
+              startPoint: {latitude :61.2, longitude :16.2},
+              endPoint: {latitude :61.2, longitude :16.2},
               travelDate: "2018-02-28"
             })
             .send()

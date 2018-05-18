@@ -12,7 +12,7 @@
     "open:src": "cross-env NODE_ENV=dev nodemon src/server.js",
     "lint": "esw src buildScripts test --color",
     "lint:watch": "npm run lint -- --watch",
-    "security-check": "nsp check --filter 3",
+    "security-check": "nsp check --filter 6",
     "pretest": "node buildScripts/test.js",
     "test": "cross-env NODE_ENV=test npm run checkcoverage mocha --exit",
     "test:watch": "npm run test -- --watch",
@@ -33,7 +33,7 @@
     "express": "^4.16.2",
     "express-winston": "^2.5.1",
     "hoek": "^5.0.3",
-    "jsonwebtoken": "^8.1.0",
+    "jsonwebtoken": "^8.2.1",
     "moment": "^2.22.0",
     "mongoose": "^4.13.6",
     "mongoose-auto-increment": "^5.0.1",
@@ -47,7 +47,7 @@
     "thumb-logger": "git+https://jdromine:6af3f3b09e490af5b770edf44e21faf997f4738a@github.com/tk26/thumb-logger.git#master",
     "thumb-utilities": "git+https://jdromine:6af3f3b09e490af5b770edf44e21faf997f4738a@github.com/tk26/thumb-utilities.git#master",
     "thumb-worker": "git+https://jdromine:6af3f3b09e490af5b770edf44e21faf997f4738a@github.com/tk26/thumb-worker.git#master",
-    "twilio": "^3.16.0",
+    "twilio": "^3.17.0",
     "uuid": "^3.2.1"
   },
   "devDependencies": {

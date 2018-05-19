@@ -20,7 +20,7 @@ let getDriveFromResults = function(nodes, driveId){
   return driveResult;
 }
 
-describe('Drives DB Tests', () => {
+describe('Drives DB', () => {
 
   describe('getDriveMatchesForTrip', () => {
     let travelDate = new Date("3/31/2018");

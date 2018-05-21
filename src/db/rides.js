@@ -39,14 +39,36 @@ exports.saveRide = async function(ride){
     return results.records[0]._fields[0].properties;
 };
 
-exports.getRideMatchesForTrip = async function(tripBoundary, travelDate){
-  let query = 'CALL spatial.intersects(\'locations\',"' + tripBoundary.ToPolygonString() + '") YIELD node AS l' + endOfLine;
-  query += 'WITH l AS loc MATCH (loc:Location)<-[:STARTING_AT]-(r:Ride)-[:ENDING_AT]->(loc:Location)' + endOfLine;
-  query += 'WITH r AS rides MATCH(rides:Ride)-[SCHEDULED_ON]->(:Date{date:{travelDate}})' + endOfLine;
-  query += 'RETURN rides';
+exports.getRideMatchesForTripBoundary = async function(tripBoundary, travelDate){
+  let query = 'CALL spatial.intersects(\'locations\',"' + tripBoundary.ToPolygonString() + '") YIELD node AS s' + endOfLine;
+  query += 'CALL spatial.intersects(\'locations\',"' + tripBoundary.ToPolygonString() + '") YIELD node AS e' + endOfLine;
+  query += 'WITH s, e' + endOfLine;
+  query += 'MATCH (s:Location)<-[:STARTING_AT]-(rs:Ride)-[:SCHEDULED_ON]->(d:Date{date:{travelDate}})' + endOfLine;
+  query += 'MATCH (e:Location)<-[:ENDING_AT]-(re:Ride)-[:SCHEDULED_ON]->(d:Date{date:{travelDate}})' + endOfLine;
+  query += 'WITH collect(rs) AS s, collect(re) AS e' + endOfLine;
+  query += 'WITH apoc.coll.intersection(s,e) AS rides' + endOfLine;
+  query += 'UNWIND rides AS r' + endOfLine;
+  query += 'MATCH(r:Ride)<-[:POSTS]-(u:User)' + endOfLine;
+  query += 'RETURN r, u LIMIT 25';
 
-  let results = await neo4j.execute(query, {travelDate: travelDate});
-  return results;
+  try{
+    let rawResults = await neo4j.execute(query,{travelDate: new Date(travelDate).toISOString()});
+    let results = [];
+    if (rawResults.records.length > 0){
+      for(var i=0; i<rawResults.records.length; i++){
+        let ride = rawResults.records[i]._fields[0].properties;
+        delete ride.bbox;
+        delete ride.wkt;
+        delete ride.gtype;
+        ride.userId = rawResults.records[i]._fields[1].properties.userId;
+        results.push(ride);
+      }
+    }
+    return results;
+  } catch(error){
+    logger.error(error);
+    throw error;
+  }
 }
 
 exports.ActiveConstraints = [

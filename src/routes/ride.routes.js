@@ -9,4 +9,5 @@ module.exports = function(app) {
     app.get('/ride/info/:ridePublicId', ride.getRideInfo);*/
 
     app.post('/ride/create', middleware('auth'), ride.createRide);
+    app.get('/ride/tripmatches', middleware('auth'), ride.getTripMatches);
 }

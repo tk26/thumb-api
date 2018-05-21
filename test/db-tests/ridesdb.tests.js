@@ -10,7 +10,7 @@ const chai = require('chai');
 const should = chai.should();
 
 describe('Rides DB', () => {
-  describe('getRideMatchesForTrip', () => {
+  describe('getRideMatchesForTripBoundary', () => {
     let travelDate = new Date("3/31/2018");
     let ride = new Ride({
       "userId": uuid(),
@@ -39,7 +39,7 @@ describe('Rides DB', () => {
       await neo4j.execute(query,{userId: ride.userId});*/
     });
     it('should return created ride when provided tripboundary including ride', async() => {
-      let results = await rideDB.getRideMatchesForTrip(rideTripBoundary, ride.travelDate);
+      let results = await rideDB.getRideMatchesForTripBoundary(rideTripBoundary, ride.travelDate);
       console.log(ride);
       console.log(results);
     });

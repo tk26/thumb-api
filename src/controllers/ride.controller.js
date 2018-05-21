@@ -3,6 +3,7 @@ const config = require('config');
 const exceptions = require('../constants/exceptions.js');
 const successResponses = require('../constants/success_responses.js');
 const logger = require('thumb-logger').getLogger(config.API_LOGGER_NAME);
+const GeoPoint = require('thumb-utilities').GeoPoint;
 
 /*exports.getRidesByUser = function(req, res) {
 
@@ -45,3 +46,31 @@ exports.createRide = function (req, res) {
         res.status(500).send({message: exceptions.ride.INTERNAL_ERROR});
       });
 };
+
+exports.getTripMatches = function(req, res) {
+  if(!req.query.startPoint) {
+      return res.status(400).send({ message: exceptions.ride.MISSING_START_POINT});
+  }
+
+  if(!req.query.endPoint) {
+      return res.status(400).send({ message: exceptions.ride.MISSING_END_POINT});
+  }
+
+  if(!req.query.travelDate) {
+    return res.status(400).send({ message: exceptions.ride.MISSING_TRAVEL_DATE});
+  }
+
+  const rawStartPoint = JSON.parse(req.query.startPoint);
+  const rawEndPoint = JSON.parse(req.query.endPoint);
+  const startPoint = new GeoPoint(rawStartPoint.longitude, rawStartPoint.latitude);
+  const endPoint = new GeoPoint(rawEndPoint.longitude, rawEndPoint.latitude);
+
+  let rides = Ride.findRideMatchesForTrip(startPoint, endPoint, req.query.travelDate)
+    .then((rides) => {
+      res.send(rides);
+    })
+    .catch((err) => {
+      logger.error('Error retrieving rides: ' + err);
+      res.status(500).send({message: exceptions.ride.INTERNAL_GETTRIPMATCHES_ERROR});
+    });
+}

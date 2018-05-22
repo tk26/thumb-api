@@ -27,21 +27,43 @@ describe('Rides DB', () => {
       let query = 'CREATE (u:User{userId:{userId}}) RETURN u';
       await neo4j.execute(query,{userId: ride.userId});
       let rideResult = await rideDB.saveRide(ride);
-      console.log(rideResult);
       ride.rideId = rideResult.rideId;
     });
 
     after(async() => {
-      /*let query = 'MATCH (d:Ride{rideId:{rideId}})' + endOfLine;
+      let query = 'MATCH (d:Ride{rideId:{rideId}})' + endOfLine;
       query += 'DETACH DELETE d';
       await neo4j.execute(query,{rideId: ride.rideId});
       query = 'MATCH(u:User{userId:{userId}}) DETACH DELETE u';
-      await neo4j.execute(query,{userId: ride.userId});*/
+      await neo4j.execute(query,{userId: ride.userId});
     });
+
     it('should return created ride when provided tripboundary including ride', async() => {
       let results = await rideDB.getRideMatchesForTripBoundary(rideTripBoundary, ride.travelDate);
-      console.log(ride);
-      console.log(results);
+      let rideResult = results.find((r) => {
+        return r.rideId === ride.rideId;
+      });
+      chai.expect(rideResult).to.not.be.null;
+      chai.expect(rideResult.userId).to.be.equal(ride.userId);
+    });
+
+    it('should not return created ride when provided trip boundary that does not include ride', async() => {
+      let startPoint = new GeoPoint(-10,-10);
+      let endPoint = new GeoPoint(-11,-11);
+      let tripBoundary = TripBoundary.calculateBoundaryAroundPoints(startPoint, endPoint, tripBoundaryDistance);
+      let results = await rideDB.getRideMatchesForTripBoundary(tripBoundary, ride.travelDate);
+      let rideResult = results.find((r) => {
+        return r.rideId === ride.rideId;
+      });
+      chai.expect(rideResult).to.be.undefined;
+    });
+
+    it('should not return created ride when provided different travel date', async() => {
+      let results = await rideDB.getRideMatchesForTripBoundary(rideTripBoundary, new Date('4/30/2018'));
+      let rideResult = results.find((r) => {
+        return r.rideId === ride.rideId;
+      });
+      chai.expect(rideResult).to.be.undefined;
     });
   });
 });

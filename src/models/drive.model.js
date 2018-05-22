@@ -1,4 +1,5 @@
 let mongoose = require('mongoose');
+let config = require('../config.js');
 let locationTypes = require('./types/location.type.js');
 let tripBoundaryType = require('./types/tripboundary.type.js');
 let Location = mongoose.Schema.Types.Location;
@@ -21,7 +22,7 @@ var DriveSchema = mongoose.Schema({
 });
 
 DriveSchema.methods.addTripBoundary = function(){
-  this.tripBoundary = thumbUtil.TripBoundary.calculateBoundaryAroundPoints(this.startLocation.coordinates, this.endLocation.coordinates, 32186.9);
+  this.tripBoundary = thumbUtil.TripBoundary.calculateBoundaryAroundPoints(this.startLocation.coordinates, this.endLocation.coordinates, config.APP_SETTINGS.TRIP_BOUNDARY_DISTANCE);
 }
 
 DriveSchema.methods.saveDrive = function(){

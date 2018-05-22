@@ -190,11 +190,37 @@ describe('Drive', () => {
     });
 
     describe('/GET /drive/tripmatches', () => {
+      it('should not get drive matches with invalid token', () => {
+        chai.request(server)
+            .get('/drive/tripmatches')
+            .query({endPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
+            .send({"token" : 'random'})
+            .end((err, res) => {
+              res.should.have.status(403);
+              res.body.should.have.property("message").eql("Invalid token provided");
+              res.body.should.have.property("success").eql(false);
+              done();
+          });
+      });
+
+      it('should not get drive matches without auth token', () => {
+        chai.request(server)
+            .get('/drive/tripmatches')
+            .query({endPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
+            .send({})
+            .end((err, res) => {
+              res.should.have.status(403);
+              res.body.should.have.property("message").eql("No token provided");
+              res.body.should.have.property("success").eql(false);
+              done();
+          });
+      });
+
       it('should not get drive matches without trip start point', () => {
         chai.request(server)
             .get('/drive/tripmatches')
             .query({endPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
-            .send()
+            .send({"token" : auth_token})
             .end((err, res) => {
                 res.should.have.status(400);
                 res.should.have.property("message").eql(exceptions.drive.MISSING_START_POINT);
@@ -206,10 +232,10 @@ describe('Drive', () => {
         chai.request(server)
             .get('/drive/tripmatches')
             .query({startPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
-            .send()
+            .send({"token" : auth_token})
             .end((err, res) => {
                 res.should.have.status(400);
-                res.should.have.property("message").eql(exceptions.MISSING_END_LOCATION);
+                res.should.have.property("message").eql(exceptions.drive.MISSING_END_POINT);
                 done();
             });
       });
@@ -221,11 +247,11 @@ describe('Drive', () => {
               startPoint: {latitude :61.2, longitude :16.2},
               endPoint: {latitude :61.2, longitude :16.2}
             })
-            .send()
+            .send({"token" : auth_token})
             .end((err, res) => {
                 res.should.have.status(400);
                 res.should.have.property("error");
-                res.should.have.property("message").eql(exceptions.MISSING_TRAVEL_DATE);
+                res.should.have.property("message").eql(exceptions.drive.MISSING_TRAVEL_DATE);
                 done();
             });
       });
@@ -238,7 +264,7 @@ describe('Drive', () => {
               endPoint: {latitude :61.2, longitude :16.2},
               travelDate: "2018-02-28"
             })
-            .send()
+            .send({"token" : auth_token})
             .end((err, res) => {
                 res.should.have.status(200);
                 done();

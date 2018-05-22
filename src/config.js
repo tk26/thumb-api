@@ -20,7 +20,8 @@ function config(){
                 'NEO4J_DATABASE_PASSWORD': 'thumb_dev',
                 'API_LOGGER_NAME': 'APILog',
                 'APP_SETTINGS': {
-                  'WELCOME_EMAIL_MINUTE_DELAY': 1
+                  'WELCOME_EMAIL_MINUTE_DELAY': 1,
+                  'TRIP_BOUNDARY_DISTANCE': 32186.9 //20 miles converted to meters
                 },
             };
 
@@ -43,7 +44,8 @@ function config(){
                 'NEO4J_DATABASE_PASSWORD': 'thumb_test',
                 'API_LOGGER_NAME': 'APILog',
                 'APP_SETTINGS': {
-                  'WELCOME_EMAIL_MINUTE_DELAY': 1
+                  'WELCOME_EMAIL_MINUTE_DELAY': 1,
+                  'TRIP_BOUNDARY_DISTANCE': 32186.9 //20 miles converted to meters
                 },
             };
 
@@ -69,7 +71,8 @@ function config(){
                 'NEO4J_DATABASE_PASSWORD': process.env.NEO4J_DB_PASSWORD,
                 'API_LOGGER_NAME': 'APILog',
                 'APP_SETTINGS': {
-                  'WELCOME_EMAIL_MINUTE_DELAY': 1440
+                  'WELCOME_EMAIL_MINUTE_DELAY': 1440,
+                  'TRIP_BOUNDARY_DISTANCE': 32186.9 //20 miles converted to meters
                 },
             };
 

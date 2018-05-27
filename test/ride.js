@@ -17,8 +17,8 @@ describe('Ride', () => {
     let email = "rideuser@email.com";
     let username = "rideuser";
     let birthday = "03/21/2001";
-    let startLocation = {latitude:60.1,longitude:15.2,address:"123 Main Street"};
-    let endLocation = {latitude:61.1,longitude:16.2,address:"123 Washington Street"};
+    let startLocation = {latitude:60.1,longitude:15.2,address:"123 Main Street",city:"Bloomington"};
+    let endLocation = {latitude:61.1,longitude:16.2,address:"123 Washington Street",city:"Bloomington"};
     let travelDescription = "Going for the Little 500";
 
     before(async () => {

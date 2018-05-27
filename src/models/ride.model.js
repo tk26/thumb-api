@@ -1,7 +1,7 @@
 let mongoose = require('mongoose');
 let config = require('../config.js');
 let locationTypes = require('./types/location.type.js');
-let Location = mongoose.Schema.Types.Location;
+let LocationSchema = mongoose.Schema.Types.LocationSchema;
 let User = require('./user.model.js');
 let TripBoundary = require('thumb-utilities').TripBoundary;
 let ridesDB = require('../db/rides.js');
@@ -9,8 +9,8 @@ let ridesDB = require('../db/rides.js');
 var RideSchema = mongoose.Schema({
     /* Neo4j Properties */
     userId: String,
-    startLocation: Location,
-    endLocation: Location,
+    startLocation: LocationSchema,
+    endLocation: LocationSchema,
     travelDate: Date,
     travelTime: String,
     pickupNotes: String,

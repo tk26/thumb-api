@@ -2,7 +2,7 @@ let mongoose = require('mongoose');
 let config = require('../config.js');
 let locationTypes = require('./types/location.type.js');
 let tripBoundaryType = require('./types/tripboundary.type.js');
-let Location = mongoose.Schema.Types.Location;
+let LocationSchema = mongoose.Schema.Types.LocationSchema;
 let TripBoundarySchema = mongoose.Schema.Types.TripBoundarySchema;
 let User = require('./user.model.js');
 let drivesDB = require('../db/drives.js');
@@ -10,8 +10,8 @@ let thumbUtil = require('thumb-utilities');
 
 var DriveSchema = mongoose.Schema({
     userId: String,
-    startLocation: Location,
-    endLocation: Location,
+    startLocation: LocationSchema,
+    endLocation: LocationSchema,
     travelDate: Date,
     travelTime: String,
     availableSeats: Number,

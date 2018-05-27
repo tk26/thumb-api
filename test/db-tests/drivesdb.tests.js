@@ -25,8 +25,8 @@ describe('Drives DB', () => {
   describe('getDriveMatchesForTrip', () => {
     let travelDate = new Date("3/31/2018");
     let drive = new Drive({
-      "startLocation" : {latitude:60.2,longitude:15.2,address:"623 Main Street"},
-      "endLocation" : {latitude:61.2,longitude:16.2,address:"623 Washington Street"},
+      "startLocation" : {latitude:60.2,longitude:15.2,address:"623 Main Street",city:"Bloomington"},
+      "endLocation" : {latitude:61.2,longitude:16.2,address:"623 Washington Street",city:"Bloomington"},
       "travelDate": travelDate,
       "travelTime": [3, 7],
       "availableSeats" : 3,
@@ -79,23 +79,17 @@ describe('Drives DB', () => {
     });
 
     it('should not return created drive when when provided trip with start location outside polygon', async() => {
-      let startLocation = {
-        address: "123 Main Street",
-        coordinates: new GeoPoint(-10, -10)
-      };
+      let startPoint = new GeoPoint(-10, -10);
 
-      let nodes = await drivesDB.getDriveMatchesForTrip(startLocation.coordinates, drive.endLocation.coordinates, drive.travelDate);
+      let nodes = await drivesDB.getDriveMatchesForTrip(startPoint, drive.endLocation.coordinates, drive.travelDate);
       let driveResult = getDriveFromResults(nodes, driveId);
       chai.expect(driveResult).to.be.null;
     });
 
     it('should not return created drive when when provided trip with end location outside polygon', async() => {
-      let endLocation = {
-        address: "123 Main Street",
-        coordinates: new GeoPoint(-10, -10)
-      };
+      let endPoint =  new GeoPoint(-10, -10);
 
-      let nodes = await drivesDB.getDriveMatchesForTrip(drive.startLocation.coordinates, endLocation.coordinates, drive.travelDate);
+      let nodes = await drivesDB.getDriveMatchesForTrip(drive.startLocation.coordinates, endPoint, drive.travelDate);
       let driveResult = getDriveFromResults(nodes, driveId);
       chai.expect(driveResult).to.be.null;
     });

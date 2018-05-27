@@ -17,8 +17,8 @@ describe('Drive', () => {
     let email = "driveuser@email.com";
     let username = "driveuser";
     let birthday = "03/21/2001";
-    let startLocation = {latitude:60.2,longitude:15.2,address:"623 Main Street"};
-    let endLocation = {latitude:61.2,longitude:16.2,address:"623 Washington Street"};
+    let startLocation = {latitude:60.2,longitude:15.2,address:"623 Main Street",city:"Bloomington"};
+    let endLocation = {latitude:61.2,longitude:16.2,address:"623 Washington Street",city:"Bloomington"};
     let travelDescription = "Going for the Little 500";
 
     before(async() => {

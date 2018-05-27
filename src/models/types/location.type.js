@@ -1,31 +1,33 @@
 let mongoose = require('mongoose');
-let GeoPoint = require('thumb-utilities').GeoPoint;
 let Schema = mongoose.Schema;
+let thumbUtil = require('thumb-utilities');
 
-function Location(key, options) {
-  mongoose.SchemaType.call(this, key, options, 'Location');
+function LocationSchema(key, options) {
+  mongoose.SchemaType.call(this, key, options, 'LocationSchema');
 }
-Location.prototype = Object.create(mongoose.SchemaType.prototype);
+LocationSchema.prototype = Object.create(mongoose.SchemaType.prototype);
 
 // `cast()` takes a parameter that can be anything. You need to
 // validate the provided `val` and throw a `CastError` if you
 // can't convert it.
-Location.prototype.cast = function(val) {
+LocationSchema.prototype.cast = function(val) {
   if (!val.address) {
-    throw new Error('Location: address is required for a location.');
+    throw new TypeError('Address is required for a location.');
+  }
+
+  if (!val.city) {
+    throw new TypeError('City is required for a location.');
   }
 
   if (!val.latitude) {
-    throw new Error('Location: latitude is required for a location.');
+    throw new TypeError('Latitude is required for a location.');
   }
 
   if (!val.longitude) {
-    throw new Error('Location: longitude is required for a location.');
+    throw new TypeError('Longitude is required for a location.');
   }
-  return {
-    address: val.address,
-    coordinates: new GeoPoint(Number(val.longitude), Number(val.latitude))
-  }
+
+  return new thumbUtil.Location(val.address, val.city, val.longitude, val.latitude);
 };
 
-mongoose.Schema.Types.Location = Location;
+mongoose.Schema.Types.LocationSchema = LocationSchema;

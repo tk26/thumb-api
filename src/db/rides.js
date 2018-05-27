@@ -6,8 +6,8 @@ exports.saveRide = async function(ride){
   const rideId = uuid();
   let query = 'MATCH(user:User{userId:{userId}})' + endOfLine;
   query += 'MERGE(d:Date{date:{travelDate}})' + endOfLine;
-  query += 'MERGE(sl:Location{latitude:{startLocationLatitude},longitude:{startLocationLongitude},address:{startLocationAddress},wkt:{startLocationPoint}})' + endOfLine;
-  query += 'MERGE(el:Location{latitude:{endLocationLatitude},longitude:{endLocationLongitude},address:{endLocationAddress},wkt:{endLocationPoint}})' + endOfLine;
+  query += 'MERGE(sl:Location{latitude:{startLocationLatitude},longitude:{startLocationLongitude},address:{startLocationAddress},city:{startLocationCity},wkt:{startLocationPoint}})' + endOfLine;
+  query += 'MERGE(el:Location{latitude:{endLocationLatitude},longitude:{endLocationLongitude},address:{endLocationAddress},city:{endLocationCity},wkt:{endLocationPoint}})' + endOfLine;
   query += 'CREATE(user)-[:POSTS]->(r:Ride{rideId:{rideId},travelDate:{travelDate},travelTime:{travelTime},pickupNotes:{pickupNotes},travelDescription:{travelDescription}}),' + endOfLine;
   query += '(r)-[:SCHEDULED_ON]->(d),' + endOfLine;
   query += '(r)-[:STARTING_AT]->(sl),' + endOfLine;
@@ -24,10 +24,12 @@ exports.saveRide = async function(ride){
         travelDate: ride.travelDate.toISOString(),
         travelTime: ride.travelTime,
         startLocationAddress: ride.startLocation.address,
+        startLocationCity: ride.startLocation.city,
         startLocationLatitude: ride.startLocation.coordinates.latitude,
         startLocationLongitude: ride.startLocation.coordinates.longitude,
         startLocationPoint: ride.startLocation.coordinates.ToPointString(),
         endLocationAddress: ride.endLocation.address,
+        endLocationCity: ride.endLocation.city,
         endLocationLatitude: ride.endLocation.coordinates.latitude,
         endLocationLongitude: ride.endLocation.coordinates.longitude,
         endLocationPoint: ride.endLocation.coordinates.ToPointString(),

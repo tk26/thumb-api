@@ -14,8 +14,8 @@ describe('Rides DB', () => {
     let travelDate = new Date("3/31/2018");
     let ride = new Ride({
       "userId": uuid(),
-      "startLocation" : {latitude:60.2,longitude:15.2,address:"623 Main Street"},
-      "endLocation" : {latitude:61.2,longitude:16.2,address:"623 Washington Street"},
+      "startLocation" : {latitude:60.2,longitude:15.2,address:"623 Main Street",city:"Bloomington"},
+      "endLocation" : {latitude:61.2,longitude:16.2,address:"623 Washington Street",city:"Bloomington"},
       "travelDate": travelDate,
       "travelTime": [3, 7],
       "travelDescription" : 'Ride DB Tests'

@@ -10,8 +10,8 @@ exports.saveDrive = async function(drive){
   let session = neo4j.session();
   let query = 'MATCH(user:User{userId:{userId}})' + endOfLine;
   query += 'MERGE(d:Date{date:{travelDate}})' + endOfLine;
-  query += 'MERGE(sl:Location{latitude:{startLocationLatitude},longitude:{startLocationLongitude},address:{startLocationAddress}})' + endOfLine;
-  query += 'MERGE(el:Location{latitude:{endLocationLatitude},longitude:{endLocationLongitude},address:{endLocationAddress}})' + endOfLine;
+  query += 'MERGE(sl:Location{latitude:{startLocationLatitude},longitude:{startLocationLongitude},address:{startLocationAddress},city:{startLocationCity}})' + endOfLine;
+  query += 'MERGE(el:Location{latitude:{endLocationLatitude},longitude:{endLocationLongitude},address:{endLocationAddress},city:{endLocationCity}})' + endOfLine;
   query += 'CREATE(user)-[:POSTS]->(dr:Drive{driveId:{driveId},travelDate:{travelDate},travelTime:{travelTime},availableSeats:{availableSeats},travelDescription:{travelDescription}, wkt:{tripBoundary}}),' + endOfLine;
   query += '(dr)-[:SCHEDULED_ON]->(d),' + endOfLine;
   query += '(dr)-[:STARTING_AT]->(sl),' + endOfLine;
@@ -26,9 +26,11 @@ exports.saveDrive = async function(drive){
         travelDate: drive.travelDate.toISOString(),
         travelTime: drive.travelTime,
         startLocationAddress: drive.startLocation.address,
+        startLocationCity: drive.startLocation.city,
         startLocationLatitude: drive.startLocation.coordinates.latitude,
         startLocationLongitude: drive.startLocation.coordinates.longitude,
         endLocationAddress: drive.endLocation.address,
+        endLocationCity: drive.endLocation.city,
         endLocationLatitude: drive.endLocation.coordinates.latitude,
         endLocationLongitude: drive.endLocation.coordinates.longitude,
         availableSeats: parseInt(drive.availableSeats),

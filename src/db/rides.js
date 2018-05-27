@@ -1,5 +1,7 @@
 const neo4j = require('../extensions/neo4j.js');
 const endOfLine = require('os').EOL;
+const config = require('../config.js');
+const logger = require('thumb-logger').getLogger(config.API_LOGGER_NAME);
 
 exports.saveRide = async function(ride){
   let query = 'MATCH(user:User{userId:{userId}})' + endOfLine;

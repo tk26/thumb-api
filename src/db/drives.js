@@ -1,6 +1,5 @@
 const neo4j = require('../extensions/neo4j.js');
 const endOfLine = require('os').EOL;
-const uuid = require('uuid/v1');
 const config = require('../config.js');
 const logger = require('thumb-logger').getLogger(config.API_LOGGER_NAME);
 

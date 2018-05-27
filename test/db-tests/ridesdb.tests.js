@@ -3,6 +3,7 @@ const rideDB = require('../../src/db/rides.js');
 const Ride = require('../../src/models/ride.model.js');
 const GeoPoint = require('thumb-utilities').GeoPoint;
 const TripBoundary = require('thumb-utilities').TripBoundary;
+const Location = require('thumb-utilities').Location;
 const uuid = require('uuid/v1');
 const endOfLine = require('os').EOL;
 
@@ -12,14 +13,10 @@ const should = chai.should();
 describe('Rides DB', () => {
   describe('getRideMatchesForTripBoundary', () => {
     let travelDate = new Date("3/31/2018");
-    let ride = new Ride({
-      "userId": uuid(),
-      "startLocation" : {latitude:60.2,longitude:15.2,address:"623 Main Street",city:"Bloomington"},
-      "endLocation" : {latitude:61.2,longitude:16.2,address:"623 Washington Street",city:"Bloomington"},
-      "travelDate": travelDate,
-      "travelTime": [3, 7],
-      "travelDescription" : 'Ride DB Tests'
-    });
+    let startLocation = new Location('623 Main Street', 'Bloomington',15.2, 60.2);
+    let endLocation = new Location('623 Washington Street', 'Bloomington', 16.2, 61.2);
+    let userId = uuid();
+    let ride = new Ride(userId, startLocation, endLocation, travelDate, '3,7', 3, 'Ride DB Tests');
     let tripBoundaryDistance = 32186.9;
     let rideTripBoundary = TripBoundary.calculateBoundaryAroundPoints(ride.startLocation.coordinates, ride.endLocation.coordinates, tripBoundaryDistance);
 
@@ -27,7 +24,6 @@ describe('Rides DB', () => {
       let query = 'CREATE (u:User{userId:{userId}}) RETURN u';
       await neo4j.execute(query,{userId: ride.userId});
       let rideResult = await rideDB.saveRide(ride);
-      ride.rideId = rideResult.rideId;
     });
 
     after(async() => {

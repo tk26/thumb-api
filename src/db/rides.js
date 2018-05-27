@@ -1,9 +1,7 @@
 const neo4j = require('../extensions/neo4j.js');
 const endOfLine = require('os').EOL;
-const uuid = require('uuid/v1');
 
 exports.saveRide = async function(ride){
-  const rideId = uuid();
   let query = 'MATCH(user:User{userId:{userId}})' + endOfLine;
   query += 'MERGE(d:Date{date:{travelDate}})' + endOfLine;
   query += 'MERGE(sl:Location{latitude:{startLocationLatitude},longitude:{startLocationLongitude},address:{startLocationAddress},city:{startLocationCity},wkt:{startLocationPoint}})' + endOfLine;
@@ -19,7 +17,7 @@ exports.saveRide = async function(ride){
 
   let results = await neo4j.execute(query,
       {
-        rideId: rideId,
+        rideId: ride.rideId,
         userId: ride.userId,
         travelDate: ride.travelDate.toISOString(),
         travelTime: ride.travelTime,

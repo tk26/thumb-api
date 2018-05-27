@@ -30,12 +30,10 @@ exports.createDrive = function(req, res) {
         return res.status(400).send({ message: exceptions.drive.MISSING_TRAVEL_DESCRIPTION});
     }
 
-    let drive = new Drive(req.body);
-    drive.userId = req.decoded.userId;
-    drive.addTripBoundary();
+    let drive = Drive.createDriveFromRequest(req);
 
-    drive.saveDrive()
-      .then((drive) => {
+    drive.save()
+      .then((driveResult) => {
         res.send({ message: successResponses.drive.DRIVE_CREATED, drive: drive});
       })
       .catch((err) => {

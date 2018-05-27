@@ -5,9 +5,7 @@ const config = require('../config.js');
 const logger = require('thumb-logger').getLogger(config.API_LOGGER_NAME);
 
 exports.saveDrive = async function(drive){
-  const driveId = uuid();
   const tripBoundary  = drive.tripBoundary.ToPolygonString();
-  let session = neo4j.session();
   let query = 'MATCH(user:User{userId:{userId}})' + endOfLine;
   query += 'MERGE(d:Date{date:{travelDate}})' + endOfLine;
   query += 'MERGE(sl:Location{latitude:{startLocationLatitude},longitude:{startLocationLongitude},address:{startLocationAddress},city:{startLocationCity}})' + endOfLine;
@@ -21,7 +19,7 @@ exports.saveDrive = async function(drive){
   try {
     let results = await neo4j.execute(query,
       {
-        driveId: driveId,
+        driveId: drive.driveId,
         userId: drive.userId,
         travelDate: drive.travelDate.toISOString(),
         travelTime: drive.travelTime,

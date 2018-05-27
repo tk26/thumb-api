@@ -5,14 +5,6 @@ const successResponses = require('../constants/success_responses.js');
 const logger = require('thumb-logger').getLogger(config.API_LOGGER_NAME);
 const GeoPoint = require('thumb-utilities').GeoPoint;
 
-/*exports.getRidesByUser = function(req, res) {
-
-};
-
-exports.getRideInfo = function(req, res) {
-
-};*/
-
 exports.createRide = function (req, res) {
     if(!req.body.startLocation) {
         return res.status(400).send({ message: exceptions.ride.MISSING_START_LOCATION});
@@ -34,11 +26,10 @@ exports.createRide = function (req, res) {
         return res.status(400).send({ message: exceptions.ride.MISSING_TRAVEL_DESCRIPTION});
     }
 
-    let ride = new Ride(req.body);
-    ride.userId = req.decoded.userId;
+    let ride = Ride.createRideFromRequest(req);
 
-    ride.saveRide(ride)
-      .then((ride) => {
+    ride.save()
+      .then((rideResult) => {
         res.send({ message: successResponses.ride.RIDE_CREATED, ride: ride});
       })
       .catch((err) => {

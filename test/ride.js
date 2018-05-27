@@ -17,8 +17,8 @@ describe('Ride', () => {
     let email = "rideuser@email.com";
     let username = "rideuser";
     let birthday = "03/21/2001";
-    let startLocation = {latitude:60.1,longitude:15.2,address:"123 Main Street"};
-    let endLocation = {latitude:61.1,longitude:16.2,address:"123 Washington Street"};
+    let startLocation = {latitude:60.1,longitude:15.2,address:"123 Main Street",city:"Bloomington"};
+    let endLocation = {latitude:61.1,longitude:16.2,address:"123 Washington Street",city:"Bloomington"};
     let travelDescription = "Going for the Little 500";
 
     before(async () => {
@@ -163,6 +163,89 @@ describe('Ride', () => {
                     done();
                 });
         });
+    });
+
+    describe('/GET /ride/tripmatches', () => {
+      it('should not get ride matches with invalid token', () => {
+        chai.request(server)
+            .get('/ride/tripmatches')
+            .query({endPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
+            .send({"token" : 'random'})
+            .end((err, res) => {
+              res.should.have.status(403);
+              res.body.should.have.property("message").eql("Invalid token provided");
+              res.body.should.have.property("success").eql(false);
+              done();
+          });
+      });
+
+      it('should not get ride matches without auth token', () => {
+        chai.request(server)
+            .get('/ride/tripmatches')
+            .query({endPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
+            .send({})
+            .end((err, res) => {
+              res.should.have.status(403);
+              res.body.should.have.property("message").eql("No token provided");
+              res.body.should.have.property("success").eql(false);
+              done();
+          });
+      });
+
+      it('should not get ride matches without trip start point', () => {
+        chai.request(server)
+            .get('/ride/tripmatches')
+            .query({endPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
+            .send({"token" : auth_token})
+            .end((err, res) => {
+                res.should.have.status(400);
+                res.should.have.property("message").eql(exceptions.ride.MISSING_START_POINT);
+                done();
+            });
+      });
+
+      it('should not get ride matches without trip end point', () => {
+        chai.request(server)
+            .get('/ride/tripmatches')
+            .query({startPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
+            .send({"token" : auth_token})
+            .end((err, res) => {
+                res.should.have.status(400);
+                res.should.have.property("message").eql(exceptions.ride.MISSING_END_POINT);
+                done();
+            });
+      });
+
+      it('should not get ride matches without travel date', () => {
+        chai.request(server)
+            .get('/ride/tripmatches')
+            .query({
+              startPoint: {latitude :61.2, longitude :16.2},
+              endPoint: {latitude :61.2, longitude :16.2}
+            })
+            .send({"token" : auth_token})
+            .end((err, res) => {
+                res.should.have.status(400);
+                res.should.have.property("error");
+                res.should.have.property("message").eql(exceptions.ride.MISSING_TRAVEL_DATE);
+                done();
+            });
+      });
+
+      it('should return 200 when provided proper request', () => {
+        chai.request(server)
+            .get('/ride/tripmatches')
+            .query({
+              startPoint: {latitude :61.2, longitude :16.2},
+              endPoint: {latitude :61.2, longitude :16.2},
+              travelDate: "2018-02-28"
+            })
+            .send({"token" : auth_token})
+            .end((err, res) => {
+                res.should.have.status(200);
+                done();
+            });
+      });
     });
 
     /*

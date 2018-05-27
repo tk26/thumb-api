@@ -17,8 +17,8 @@ describe('Drive', () => {
     let email = "driveuser@email.com";
     let username = "driveuser";
     let birthday = "03/21/2001";
-    let startLocation = {latitude:60.2,longitude:15.2,address:"623 Main Street"};
-    let endLocation = {latitude:61.2,longitude:16.2,address:"623 Washington Street"};
+    let startLocation = {latitude:60.2,longitude:15.2,address:"623 Main Street",city:"Bloomington"};
+    let endLocation = {latitude:61.2,longitude:16.2,address:"623 Washington Street",city:"Bloomington"};
     let travelDescription = "Going for the Little 500";
 
     before(async() => {
@@ -169,7 +169,7 @@ describe('Drive', () => {
                 });
         });
 
-        it('it should POST a drive with valid token and drive details', (done) => {
+        it('it should not POST a drive without drive travel description', (done) => {
             chai.request(server)
                 .post('/drive/create')
                 .send({
@@ -190,26 +190,52 @@ describe('Drive', () => {
     });
 
     describe('/GET /drive/tripmatches', () => {
-      it('should not get drive matches without trip start location', () => {
+      it('should not get drive matches with invalid token', () => {
         chai.request(server)
             .get('/drive/tripmatches')
-            .query({endLocation: {latitude :61.2, longitude :16.2, address:"623 Washington Street"}, travelDate: "2018-02-28"})
-            .send()
+            .query({endPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
+            .send({"token" : 'random'})
+            .end((err, res) => {
+              res.should.have.status(403);
+              res.body.should.have.property("message").eql("Invalid token provided");
+              res.body.should.have.property("success").eql(false);
+              done();
+          });
+      });
+
+      it('should not get drive matches without auth token', () => {
+        chai.request(server)
+            .get('/drive/tripmatches')
+            .query({endPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
+            .send({})
+            .end((err, res) => {
+              res.should.have.status(403);
+              res.body.should.have.property("message").eql("No token provided");
+              res.body.should.have.property("success").eql(false);
+              done();
+          });
+      });
+
+      it('should not get drive matches without trip start point', () => {
+        chai.request(server)
+            .get('/drive/tripmatches')
+            .query({endPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
+            .send({"token" : auth_token})
             .end((err, res) => {
                 res.should.have.status(400);
-                res.should.have.property("message").eql(exceptions.MISSING_START_LOCATION);
+                res.should.have.property("message").eql(exceptions.drive.MISSING_START_POINT);
                 done();
             });
       });
 
-      it('should not get drive matches without trip end location', () => {
+      it('should not get drive matches without trip end point', () => {
         chai.request(server)
             .get('/drive/tripmatches')
-            .query({startLocation: {latitude :61.2, longitude :16.2, address:"623 Washington Street"}, travelDate: "2018-02-28"})
-            .send()
+            .query({startPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
+            .send({"token" : auth_token})
             .end((err, res) => {
                 res.should.have.status(400);
-                res.should.have.property("message").eql(exceptions.MISSING_END_LOCATION);
+                res.should.have.property("message").eql(exceptions.drive.MISSING_END_POINT);
                 done();
             });
       });
@@ -218,14 +244,14 @@ describe('Drive', () => {
         chai.request(server)
             .get('/drive/tripmatches')
             .query({
-              startLocation: {latitude :61.2, longitude :16.2, address:"623 Washington Street"},
-              endLocation: {latitude :61.2, longitude :16.2, address:"623 Washington Street"}
+              startPoint: {latitude :61.2, longitude :16.2},
+              endPoint: {latitude :61.2, longitude :16.2}
             })
-            .send()
+            .send({"token" : auth_token})
             .end((err, res) => {
                 res.should.have.status(400);
                 res.should.have.property("error");
-                res.should.have.property("message").eql(exceptions.MISSING_TRAVEL_DATE);
+                res.should.have.property("message").eql(exceptions.drive.MISSING_TRAVEL_DATE);
                 done();
             });
       });
@@ -234,11 +260,11 @@ describe('Drive', () => {
         chai.request(server)
             .get('/drive/tripmatches')
             .query({
-              startLocation: {latitude :61.2, longitude :16.2, address:"623 Washington Street"},
-              endLocation: {latitude :61.2, longitude :16.2, address:"623 Washington Street"},
+              startPoint: {latitude :61.2, longitude :16.2},
+              endPoint: {latitude :61.2, longitude :16.2},
               travelDate: "2018-02-28"
             })
-            .send()
+            .send({"token" : auth_token})
             .end((err, res) => {
                 res.should.have.status(200);
                 done();

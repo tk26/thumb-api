@@ -31,4 +31,6 @@ module.exports = function(app) {
     app.get('/user/validate/username/:username', user.validateUsername);
 
     app.get('/user/validate/email/:email', user.validateEmail);
+
+    app.post('/user/expo/token/save', middleware('auth'), user.saveExpoToken);
 }

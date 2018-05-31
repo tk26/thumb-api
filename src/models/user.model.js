@@ -50,6 +50,7 @@ var UserSchema = mongoose.Schema({
     bio: String,
     profile_picture: String,
     contactsInvited: Array,
+    expoToken: String,
 }, {
     timestamps: true
 });

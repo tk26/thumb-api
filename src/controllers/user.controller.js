@@ -594,3 +594,31 @@ exports.validateEmail = (req, res) => {
         return res.json({ message: "Valid email" });
     });
 }
+
+exports.saveExpoToken = (req, res) => {
+    if(!req.decoded.userId) {
+        res.status(400).send({ message: "userId not decoded" });
+    }
+
+    if(!req.body.expoToken) {
+        res.status(400).send({ message: "expoToken not sent" });
+    }
+
+    User.findOne({
+        '_id' : req.decoded.userId,
+        'verified' : true
+    }, function(err, user) {
+        if(err || !user) {
+            return res.status(400).send({ message: "Incorrect userId" });
+        }
+    }).then( (user) => {
+        user.expoToken = req.body.expoToken;
+        User.update({ '_id': user._id }, user, function(err, result) {
+            if(err) {
+                return next(err);
+            } else {
+                return res.json({ message: "User expo token saved successfully" });
+            }
+        });
+    });
+}

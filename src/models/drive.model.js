@@ -94,4 +94,34 @@ module.exports = class Drive{
 
     return drives;
   }
+
+  /**
+   *
+   * @param {String} fromUserId
+   * @param {String} toUserId
+   * @param {String} driveId
+   * @param {Array} requestedTimes
+   * @param {String} rideId - Optional parameter
+   * @param {String} comment - Optional parameter
+   * @returns {object}
+   */
+  static async inviteRider(fromUserId, toUserId, driveId, requestedTime, rideId, comment){
+    let currentInvitation = await drivesDB.getRiderInvitation(driveId, toUserId);
+
+    if (currentInvitation.length !== 0){
+      throw Error('An invitation already exists for this user.');
+    }
+
+    let riderInv = new thumbUtil.RiderInvitation({
+      fromUserId : fromUserId,
+      toUserId : toUserId,
+      driveId : driveId,
+      requestedTime : requestedTime,
+      rideId : rideId,
+      comment : comment
+    });
+
+    let results = await drivesDB.inviteRider(riderInv);
+    return riderInv;
+  }
 }

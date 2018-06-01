@@ -74,6 +74,61 @@ exports.getDriveMatchesForTrip = async function(startPoint, endPoint, travelDate
   }
 }
 
+/**
+ * @param {String} driveId
+ * @param {String} toUserId
+ * @returns {Boolean}
+ */
+exports.getRiderInvitation = async function(driveId, toUserId){
+  let query = 'MATCH(d:Drive{driveId:{driveId}})<-[:TO_JOIN]-(i:Invitation)' + endOfLine;
+  query += 'MATCH(i)-[:TO]->(u:User{userId:{toUserId}})' + endOfLine;
+  query += 'RETURN i';
+
+  try {
+    let rawResults = await neo4j.execute(query,{
+      toUserId: toUserId,
+      driveId: driveId
+    });
+
+    return neo4j.deserializeResults(rawResults);
+  } catch(error){
+    throw error;
+  }
+}
+
+
+/**
+ * @param {RiderInvitation} riderInvite
+ * @returns {object}
+ */
+exports.inviteRider = async function(riderInvite){
+  let query = 'MATCH(fromUser:User{userId:{fromUserId}})' + endOfLine;
+  query += 'MATCH(toUser:User{userId:{toUserId}})' + endOfLine;
+  query += 'MATCH(d:Drive{driveId:{driveId}})' + endOfLine;
+  query += 'MATCH(r:Ride{rideId:{rideId}})' + endOfLine;
+  query += 'MERGE(fromUser)-[s:SENDS{sentOn:{sentOn}}]->(i:Invitation{invitationId:{invitationId}, requestedTime:{requestedTime}, comment:{comment}})-[:TO]->(toUser)' + endOfLine;
+  query += 'MERGE(i)-[:TO_JOIN]->(d)' + endOfLine;
+  query += 'MERGE(i)-[:FOR]->(r)' + endOfLine;
+  query += 'RETURN fromUser, toUser, d, r, i, s';
+
+  try {
+    let rawResults = await neo4j.execute(query,{
+      invitationId: riderInvite.invitationId,
+      fromUserId: riderInvite.fromUserId,
+      toUserId: riderInvite.toUserId,
+      driveId: riderInvite.driveId,
+      requestedTime: riderInvite.requestedTime,
+      rideId: riderInvite.rideId,
+      sentOn: riderInvite.sentOn.toISOString(),
+      comment: riderInvite.comment ? riderInvite.comment : ''
+    });
+
+    return neo4j.deserializeResults(rawResults);
+  } catch(error){
+    throw error;
+  }
+}
+
 exports.ActiveConstraints = [
     'CONSTRAINT ON ( drive:Drive ) ASSERT drive.driveId IS UNIQUE'
 ];

@@ -17,4 +17,34 @@ driver.execute = async function(script, parameters){
   }
 }
 
+driver.deserializeResults = function(rawResults){
+  let results = [];
+
+  for(let i=0; i<rawResults.records.length; i++){
+    let fields = rawResults.records[i]._fields;
+    let record = {};
+    for(let j=0; j<fields.length; j++){
+      let type;
+      let properties = fields[j].properties;
+      if('labels' in fields[j]){
+        type = fields[j].labels[0];
+      } else if('type' in fields[j]){
+        type = fields[j].type;
+      } else {
+        throw TypeError('Unknown record type.')
+      }
+
+      type = type.toLowerCase();
+
+      if(type in record){
+        record[type].push(properties);
+      } else {
+        record[type] = [properties];
+      }
+    }
+    results.push(record);
+  }
+  return results;
+}
+
 module.exports = driver;

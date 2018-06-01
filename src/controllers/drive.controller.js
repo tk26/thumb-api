@@ -69,3 +69,32 @@ exports.getTripMatches = function(req, res) {
       res.status(500).send({message: exceptions.drive.INTERNAL_GETTRIPMATCHES_ERROR});
     });
 }
+
+exports.inviteRider = function(req, res){
+  if(!req.body.fromUserId) {
+    return res.status(400).send({ message: 'Missing Invitation\'s fromUserId'});
+  }
+
+  if(!req.body.toUserId) {
+    return res.status(400).send({ message: 'Missing Invitation\'s toUserId'});
+  }
+
+  if(!req.body.driveId) {
+    return res.status(400).send({ message: 'Missing Invitation\'s driveId'});
+  }
+
+  if(!req.body.requestedTimes) {
+    return res.status(400).send({ message: 'Missing Invitation\'s requested times'});
+  }
+
+  let requestedTimes = req.body.requestedTimes.join();
+
+  let result = Drive.inviteRider(req.body.fromUserId, req.body.toUserId, req.body.driveId, requestedTimes, req.body.rideId, req.body.comment)
+    .then((result) => {
+      res.send({ message: 'Rider invitation sent successfully!', invitation: result});
+    })
+    .catch((error) => {
+      logger.error('Error sending invitation: ' + error);
+      res.status(500).send({message: 'Error sending invitation.'});
+    });
+}

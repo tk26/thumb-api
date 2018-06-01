@@ -2,6 +2,7 @@ const chai = require('chai');
 const should = chai.should();
 const sinon = require('sinon');
 const GeoPoint = require('thumb-utilities').GeoPoint;
+const uuid = require('uuid/v1');
 
 describe('drive.model', () => {
   describe('findDriveMatchesForTrip', () => {
@@ -109,6 +110,57 @@ describe('drive.model', () => {
       chai.expect(resultString).to.equal(driveString);
       User.find.restore();
       drivesDB.getDriveMatchesForTrip.restore();
+    });
+  });
+  describe('inviteRider', () => {
+    const fromUserId = uuid();
+    const toUserId = uuid();
+    const driveId = uuid();
+    const rideId = uuid();
+    const requestedTime = '4pm';
+    const comment = 'test';
+
+    it('should throw error when invitation already exists', async() => {
+      const drivesDB = require('../../src/db/drives.js');
+      sinon.stub(drivesDB, 'getRiderInvitation').callsFake(async() =>{
+        return [
+          {
+            invitation:{
+              invitationId: '123'
+            }
+          }];
+      });
+      const Drive = require('../../src/models/drive.model.js');
+      Drive.inviteRider(fromUserId, toUserId, driveId, '4pm', rideId, '')
+        .then(() => {throw Error('expected exception to be thrown when invitation exists!')
+        })
+        .catch((err) => {})
+        .finally(() => {
+          drivesDB.getRiderInvitation.restore();
+        });
+    });
+
+    it('should successfully invite rider and return invitation when no invitation exists', async() => {
+      const drivesDB = require('../../src/db/drives.js');
+      sinon.stub(drivesDB, 'getRiderInvitation').callsFake(async() =>{
+        return [];
+      });
+      sinon.stub(drivesDB, 'inviteRider').callsFake(async() =>{
+        return [{
+          invitation:{
+            invitationId: uuid()
+          }
+        }];
+      });
+      const Drive = require('../../src/models/drive.model.js');
+      let result = await Drive.inviteRider(fromUserId, toUserId, driveId, requestedTime, rideId, comment);
+      result.invitationId.should.not.be.null;
+      result.fromUserId.should.equal(fromUserId);
+      result.toUserId.should.equal(toUserId);
+      result.driveId.should.equal(driveId);
+      result.rideId.should.equal(rideId);
+      result.requestedTime.should.equal(requestedTime);
+      result.comment.should.equal(comment);
     });
   });
 });

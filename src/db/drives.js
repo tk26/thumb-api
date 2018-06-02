@@ -130,11 +130,12 @@ exports.inviteRider = async function(riderInvite){
   let query = 'MATCH(fromUser:User{userId:{fromUserId}})' + endOfLine;
   query += 'MATCH(toUser:User{userId:{toUserId}})' + endOfLine;
   query += 'MATCH(d:Drive{driveId:{driveId}})' + endOfLine;
-  query += 'MATCH(r:Ride{rideId:{rideId}})' + endOfLine;
+  query += riderInvite.rideId ? 'MATCH(r:Ride{rideId:{rideId}})' + endOfLine : '';
   query += 'MERGE(fromUser)-[s:SENDS{sentOn:{sentOn}}]->(i:Invitation{invitationId:{invitationId}, requestedTime:{requestedTime}, comment:{comment}})-[:TO]->(toUser)' + endOfLine;
   query += 'MERGE(i)-[:TO_JOIN]->(d)' + endOfLine;
-  query += 'MERGE(i)-[:FOR]->(r)' + endOfLine;
-  query += 'RETURN fromUser, toUser, d, r, i, s';
+  query += riderInvite.rideId ? 'MERGE(i)-[:FOR]->(r)' + endOfLine : '';
+  query += 'RETURN fromUser, toUser, d, i, s';
+  query += riderInvite.rideId ? ', r' : '';
 
   try {
     let rawResults = await neo4j.execute(query,{

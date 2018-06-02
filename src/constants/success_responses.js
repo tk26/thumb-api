@@ -1,4 +1,7 @@
 module.exports = {
+  common: {
+    INVITE_SENT: "Invitation send successfully!"
+  },
   ride: {
     RIDE_CREATED: "Ride Details Saved Successfully"
   },

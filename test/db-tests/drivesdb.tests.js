@@ -108,19 +108,32 @@ describe('Drives DB', () => {
     });
   });
   describe('inviteRider', () => {
-    let riderInvitation = new thumbUtil.RiderInvitation({
-      fromUserId: drive.userId,
-      toUserId: ride.userId,
-      driveId: drive.driveId,
-      requestedTime: '5pm',
-      rideId: ride.rideId
-    });
-
     it('should create invitation when provided Drive and Ride', async() => {
+      let riderInvitation = new thumbUtil.RiderInvitation({
+        fromUserId: drive.userId,
+        toUserId: ride.userId,
+        driveId: drive.driveId,
+        requestedTime: '5pm',
+        rideId: ride.rideId
+      });
       let results = await drivesDB.inviteRider(riderInvitation);
       results.length.should.equal(1);
       results[0].invitation[0].invitationId.should.equal(riderInvitation.invitationId);
       results[0].ride[0].rideId.should.equal(riderInvitation.rideId);
+      results[0].drive[0].driveId.should.equal(riderInvitation.driveId);
+      let query = 'MATCH(i:Invitation{invitationId:{invitationId}}) DETACH DELETE i';
+      await neo4j.execute(query,{invitationId: riderInvitation.invitationId});
+    });
+    it('should send invitation to user without a ride when provided Drive', async() => {
+      let riderInvitation = new thumbUtil.RiderInvitation({
+        fromUserId: drive.userId,
+        toUserId: ride.userId,
+        driveId: drive.driveId,
+        requestedTime: '5pm'
+      });
+      let results = await drivesDB.inviteRider(riderInvitation);
+      results.length.should.equal(1);
+      results[0].invitation[0].invitationId.should.equal(riderInvitation.invitationId);
       results[0].drive[0].driveId.should.equal(riderInvitation.driveId);
       let query = 'MATCH(i:Invitation{invitationId:{invitationId}}) DETACH DELETE i';
       await neo4j.execute(query,{invitationId: riderInvitation.invitationId});

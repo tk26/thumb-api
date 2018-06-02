@@ -1,8 +1,9 @@
-let config = require('../config.js');
-let User = require('./user.model.js');
-let thumbUtil = require('thumb-utilities');
-let ridesDB = require('../db/rides.js');
-let uuid = require('uuid/v1');
+const config = require('../config.js');
+const User = require('./user.model.js');
+const thumbUtil = require('thumb-utilities');
+const ridesDB = require('../db/rides.js');
+const uuid = require('uuid/v1');
+const exceptions = require('../constants/exceptions.js');
 
 module.exports = class Ride{
    /**
@@ -94,5 +95,35 @@ module.exports = class Ride{
     });
 
     return rides;
+  }
+
+/**
+   *
+   * @param {String} fromUserId
+   * @param {String} toUserId
+   * @param {String} rideId
+   * @param {Array} requestedTime
+   * @param {String} driveId - Optional parameter
+   * @param {String} comment - Optional parameter
+   * @returns {object}
+   */
+  static async inviteDriver(fromUserId, toUserId, rideId, requestedTime, driveId, comment){
+    let currentInvitation = await ridesDB.getDriverInvitation(rideId, toUserId);
+
+    if (currentInvitation.length !== 0){
+      throw Error(exceptions.ride.INVITATION_ALREADY_SENT);
+    }
+
+    let driverInv = new thumbUtil.DriverInvitation({
+      fromUserId : fromUserId,
+      toUserId : toUserId,
+      rideId : rideId,
+      requestedTime : requestedTime,
+      driveId : driveId,
+      comment : comment
+    });
+
+    let results = await ridesDB.inviteRider(driverInv);
+    return driverInv;
   }
 }

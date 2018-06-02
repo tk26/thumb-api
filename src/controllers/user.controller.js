@@ -266,22 +266,38 @@ exports.getUserProfile = function(req, res) {
         res.status(400).send({ message: "userId not decoded" });
     }
 
+    // check if lower and upper case letters, numbers, . and _
+    // check if [3,30] chars
+    const regex = /^[a-zA-Z0-9._]{3,30}$/;
+    if (!regex.test(req.params.username)) {
+        return res.status(422).send({ message: "Invalid username" });
+    }
+
     User.findOne({
-        '_id' : req.decoded.userId,
-        'verified' : true
+        'username' : req.params.username.toLowerCase(),
+        'verified': true
     }, function(err, user) {
-        if(err || !user) {
-          return res.status(500).send({ message: "Incorrect userId" });
+        if (err) {
+            return res.status(500).send({ message: "Some error occured"});
         }
-        else {
-            res.send({
-                "firstName" : user.firstName,
-                "lastName" : user.lastName,
-                "school": user.school,
-                "username": user.username,
-                "profilePicture": user.profile_picture || ''
+        if (user) {
+            return user._id.toString() === req.decoded.userId ? res.json({
+                message: "User profile retrieved successfully",
+                editable: true,
+                firstName : user.firstName,
+                lastName : user.lastName,
+                school: user.school,
+                profilePicture: user.profile_picture || ''
+            }) : res.json({
+                message: "User profile retrieved successfully",
+                editable: false,
+                firstName : user.firstName,
+                lastName : user.lastName,
+                school: user.school,
+                profilePicture: user.profile_picture || ''
             });
         }
+        return res.status(500).send({ message: "Some error occured" });
     });
 };
 

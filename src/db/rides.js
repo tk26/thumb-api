@@ -1,7 +1,7 @@
 const neo4j = require('../extensions/neo4j.js');
 const endOfLine = require('os').EOL;
 const config = require('../config.js');
-const logger = require('thumb-logger').getLogger(config.API_LOGGER_NAME);
+const logger = require('thumb-logger').getLogger(config.DB_LOGGER_NAME);
 
 exports.saveRide = async function(ride){
   let query = 'MATCH(user:User{userId:{userId}})' + endOfLine;
@@ -40,6 +40,17 @@ exports.saveRide = async function(ride){
 
     return results.records[0]._fields[0].properties;
 };
+
+exports.deleteRide = async function(ride){
+  let query = 'MATCH (r:Ride{rideId:{rideId}})' + endOfLine;
+  query += 'DETACH DELETE r';
+  try {
+    return await neo4j.execute(query,{rideId: ride.rideId});
+  } catch(err){
+    logger.error(err);
+    throw err;
+  }
+}
 
 exports.getRideMatchesForTripBoundary = async function(tripBoundary, travelDate){
   let query = 'CALL spatial.intersects(\'locations\',"' + tripBoundary.ToPolygonString() + '") YIELD node AS s' + endOfLine;

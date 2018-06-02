@@ -74,7 +74,8 @@ exports.getUserAuthToken = async function(email, password){
 }
 
 exports.deleteUserByEmail = async function(email){
-  await User.deleteOne({'email': email});
+  let user = await User.findOne({'email': email});
+  await user.delete();
 }
 
 exports.getResetAuthToken = async function(email){

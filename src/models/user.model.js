@@ -68,8 +68,8 @@ UserSchema.methods.saveUser = function(user){
   return usersDB.saveUser(user);
 };
 
-UserSchema.methods.deleteUser = function(user){
-  return usersDB.deleteUser(user);
+UserSchema.methods.delete = function(){
+  return usersDB.deleteUser(this);
 };
 
 autoIncrement.initialize(mongoose.connection);

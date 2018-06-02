@@ -27,9 +27,13 @@ module.exports = class Ride{
   /**
    *
    * @returns {Ride}
-   */
-  save(){
+  */
+  async save(){
     return ridesDB.saveRide(this);
+  }
+
+  async delete(){
+    return ridesDB.deleteRide(this);
   }
 
   /**

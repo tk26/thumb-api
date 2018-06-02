@@ -1,8 +1,12 @@
 const neo4j = require('../extensions/neo4j.js');
 const endOfLine = require('os').EOL;
 const config = require('../config.js');
-const logger = require('thumb-logger').getLogger(config.API_LOGGER_NAME);
+const logger = require('thumb-logger').getLogger(config.DB_LOGGER_NAME);
 
+/**
+ * @param {Drive} drive
+ * @returns {Array}
+*/
 exports.saveDrive = async function(drive){
   const tripBoundary  = drive.tripBoundary.ToPolygonString();
   let query = 'MATCH(user:User{userId:{userId}})' + endOfLine;
@@ -42,6 +46,27 @@ exports.saveDrive = async function(drive){
   }
 }
 
+/**
+ * @param {Drive} drive
+ * @returns {Array}
+*/
+exports.deleteDrive = async function(drive){
+  let query = 'MATCH (d:Drive{driveId:{driveId}})' + endOfLine;
+  query += 'DETACH DELETE d';
+  try {
+    return await neo4j.execute(query,{driveId: drive.driveId});
+  } catch (err){
+    logger.error(err);
+    throw err;
+  }
+}
+
+/**
+ * @param {GeoPoint} startPoint
+ * @param {GeoPoint} endPoint
+ * @param {Date} travelDate
+ * @returns {Array}
+ */
 exports.getDriveMatchesForTrip = async function(startPoint, endPoint, travelDate) {
   let query = 'CALL spatial.intersects(\'drives\',"' + startPoint.ToPointString() + '") YIELD node AS starts' + endOfLine;
   query += 'CALL spatial.intersects(\'drives\',"' + endPoint.ToPointString() + '") YIELD node AS ends' + endOfLine;
@@ -89,9 +114,9 @@ exports.getRiderInvitation = async function(driveId, toUserId){
       toUserId: toUserId,
       driveId: driveId
     });
-
     return neo4j.deserializeResults(rawResults);
   } catch(error){
+    logger.error(error);
     throw error;
   }
 }
@@ -125,6 +150,7 @@ exports.inviteRider = async function(riderInvite){
 
     return neo4j.deserializeResults(rawResults);
   } catch(error){
+    logger.error(error);
     throw error;
   }
 }

@@ -71,30 +71,31 @@ exports.getTripMatches = function(req, res) {
 }
 
 exports.inviteRider = function(req, res){
-  if(!req.body.fromUserId) {
-    return res.status(400).send({ message: 'Missing Invitation\'s fromUserId'});
-  }
-
   if(!req.body.toUserId) {
-    return res.status(400).send({ message: 'Missing Invitation\'s toUserId'});
+    return res.status(400).send({ message: exceptions.drive.MISSING_INVITE_TOUSER});
   }
 
   if(!req.body.driveId) {
-    return res.status(400).send({ message: 'Missing Invitation\'s driveId'});
+    return res.status(400).send({ message: exceptions.drive.MISSING_INVITE_DRIVE});
   }
 
   if(!req.body.requestedTimes) {
-    return res.status(400).send({ message: 'Missing Invitation\'s requested times'});
+    return res.status(400).send({ message: exceptions.drive.MISSING_INVITE_REQUESTEDTIME});
   }
 
+  let fromUserId = req.decoded.userId;
   let requestedTimes = req.body.requestedTimes.join();
 
-  let result = Drive.inviteRider(req.body.fromUserId, req.body.toUserId, req.body.driveId, requestedTimes, req.body.rideId, req.body.comment)
+  let result = Drive.inviteRider(fromUserId, req.body.toUserId, req.body.driveId, requestedTimes, req.body.rideId, req.body.comment)
     .then((result) => {
-      res.send({ message: 'Rider invitation sent successfully!', invitation: result});
+      res.send({ message: successResponses.drive.INVITE_SENT, invitation: result});
     })
     .catch((error) => {
       logger.error('Error sending invitation: ' + error);
-      res.status(500).send({message: 'Error sending invitation.'});
+      if (error.message === exceptions.drive.INVITATION_ALREADY_SENT){
+        res.status(400).send({message: error.message});
+      } else {
+        res.status(500).send({message: exceptions.drive.INTERNAL_INVITERIDER_ERROR});
+      }
     });
 }

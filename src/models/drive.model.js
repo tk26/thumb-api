@@ -1,8 +1,9 @@
-let thumbUtil = require('thumb-utilities');
-let config = require('../config.js');
-let User = require('./user.model.js');
-let drivesDB = require('../db/drives.js');
-let uuid = require('uuid/v1');
+const thumbUtil = require('thumb-utilities');
+const config = require('../config.js');
+const User = require('./user.model.js');
+const drivesDB = require('../db/drives.js');
+const uuid = require('uuid/v1');
+const exceptions = require('../constants/exceptions.js');
 
 module.exports = class Drive{
   /**
@@ -31,9 +32,17 @@ module.exports = class Drive{
   /**
    *
    * @returns {Drive}
-   */
-  save(){
-    return drivesDB.saveDrive(this);
+  */
+  async save(){
+    return await drivesDB.saveDrive(this);
+  }
+
+  /**
+   *
+   * @returns {Promise}
+  */
+  async delete(){
+    return await drivesDB.deleteDrive(this);
   }
 
   /**
@@ -109,7 +118,7 @@ module.exports = class Drive{
     let currentInvitation = await drivesDB.getRiderInvitation(driveId, toUserId);
 
     if (currentInvitation.length !== 0){
-      throw Error('An invitation already exists for this user.');
+      throw Error(exceptions.drive.INVITATION_ALREADY_SENT);
     }
 
     let riderInv = new thumbUtil.RiderInvitation({

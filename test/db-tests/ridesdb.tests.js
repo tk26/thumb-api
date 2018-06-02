@@ -10,7 +10,7 @@ const endOfLine = require('os').EOL;
 const chai = require('chai');
 const should = chai.should();
 
-describe.only('Rides DB', () => {
+describe('Rides DB', () => {
   let travelDate = new Date("3/31/2018");
   let startLocation = new thumbUtil.Location('623 Main Street', 'Bloomington',15.2, 60.2);
   let endLocation = new thumbUtil.Location('623 Washington Street', 'Bloomington', 16.2, 61.2);

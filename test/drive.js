@@ -251,7 +251,7 @@ describe('Drive', () => {
             })
             .end((err, res) => {
                 res.should.have.status(400);
-                res.body.should.have.property("message").eql(exceptions.drive.MISSING_INVITE_TOUSER);
+                res.body.should.have.property("message").eql(exceptions.common.MISSING_INVITE_TOUSER);
                 done();
             });
       });
@@ -283,7 +283,7 @@ describe('Drive', () => {
             })
             .end((err, res) => {
                 res.should.have.status(400);
-                res.body.should.have.property("message").eql(exceptions.drive.MISSING_INVITE_REQUESTEDTIME);
+                res.body.should.have.property("message").eql(exceptions.common.MISSING_INVITE_REQUESTEDTIME);
                 done();
             });
       });
@@ -304,7 +304,7 @@ describe('Drive', () => {
             })
             .end((err, res) => {
                 res.should.have.status(500);
-                res.body.should.have.property("message").eql(exceptions.drive.INTERNAL_INVITERIDER_ERROR);
+                res.body.should.have.property("message").eql(exceptions.common.INTERNAL_INVITE_ERROR);
                 Drive.inviteRider.restore();
                 done();
             });
@@ -344,7 +344,7 @@ describe('Drive', () => {
             })
             .end((err, res) => {
                 res.should.have.status(200);
-                res.body.should.have.property("message").eql(successResponses.drive.INVITE_SENT);
+                res.body.should.have.property("message").eql(successResponses.common.INVITE_SENT);
                 res.body.should.have.property("invitation");
                 done();
             });

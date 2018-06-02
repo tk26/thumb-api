@@ -123,7 +123,7 @@ module.exports = class Ride{
       comment : comment
     });
 
-    let results = await ridesDB.inviteRider(driverInv);
+    let results = await ridesDB.inviteDriver(driverInv);
     return driverInv;
   }
 }

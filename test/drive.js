@@ -1,11 +1,12 @@
 let mongoose = require("mongoose");
-let Drive = require('../src/models/drive.model.js');
 let exceptions = require('../src/constants/exceptions.js');
 let successResponses = require('../src/constants/success_responses.js');
 let chai = require('chai');
 let chaiHttp = require('chai-http');
 let server = require('../src/server.js');
 let should = chai.should();
+const sinon = require('sinon');
+const thumbUtil = require('thumb-utilities');
 
 chai.use(chaiHttp);
 
@@ -14,6 +15,7 @@ let userUtility = require('./utilities/user.utility.js');
 
 describe('Drive', () => {
     let auth_token, userPublicId, user;
+    let userPassword = "Test123!";
     let email = "driveuser@email.com";
     let username = "driveuser";
     let birthday = "03/21/2001";
@@ -22,7 +24,6 @@ describe('Drive', () => {
     let travelDescription = "Going for the Little 500";
 
     before(async() => {
-      let userPassword = "Test123!";
       user = await userUtility.createVerifiedUser("Joe", "Smith", email, "Hogwarts", userPassword, username, birthday);
       auth_token = await userUtility.getUserAuthToken(user.email, userPassword);
     });
@@ -189,6 +190,167 @@ describe('Drive', () => {
         });
     });
 
+    describe('/POST /drive/inviterider', () => {
+      const Drive = require('../src/models/drive.model.js');
+      const Ride = require('../src/models/ride.model.js');
+      const inviteRiderRoute = '/drive/inviterider';
+      let invitedUser;
+      const invitedUserEmail = 'inviteduser@test.edu';
+      const invitedUserName = 'inviteduser';
+      let driveForInvite, rideForInvite;
+      let start = new thumbUtil.Location("123 Main Street", "Bloomington", 10, 10);
+      let end = new thumbUtil.Location("123 Washington Street", "Bloomington", 11, 11);
+
+      before(async() => {
+        invitedUser = await userUtility.createVerifiedUser("Invited", "Rider", invitedUserEmail, "Hogwarts", userPassword, invitedUserName, birthday);
+        driveForInvite = new Drive(user._id.toString(),start,end,new Date("02/28/2018"),'3,7',3, travelDescription);
+        await driveForInvite.save();
+        rideForInvite = new Ride(invitedUser._id.toString(),start,end,new Date("02/28/2018"),'5,9',travelDescription);
+        await rideForInvite.save();
+      });
+
+      after(async() => {
+        await driveForInvite.delete();
+        await rideForInvite.delete();
+        await invitedUser.delete();
+      });
+
+      it('it should not POST a rider invite without auth token', (done) => {
+        chai.request(server)
+            .post(inviteRiderRoute)
+            .send({})
+            .end((err, res) => {
+                res.should.have.status(403);
+                res.body.should.have.property("message").eql("No token provided");
+                res.body.should.have.property("success").eql(false);
+                done();
+            });
+      });
+      it('it should not POST a rider invite with invalid token', (done) => {
+          chai.request(server)
+              .post(inviteRiderRoute)
+              .send({
+                  "token" : "random"
+              })
+              .end((err, res) => {
+                  res.should.have.status(403);
+                  res.body.should.have.property("message").eql("Invalid token provided");
+                  res.body.should.have.property("success").eql(false);
+                  done();
+              });
+      });
+      it('it should not POST a rider invite without a toUserId value', (done) => {
+        chai.request(server)
+            .post(inviteRiderRoute)
+            .send({
+                "token" : auth_token,
+                "driveId": "1242412",
+                "rideId": "1341354",
+                "requestedTimes": ["3pm"],
+                "comment": "Would you like to ride with me?"
+            })
+            .end((err, res) => {
+                res.should.have.status(400);
+                res.body.should.have.property("message").eql(exceptions.common.MISSING_INVITE_TOUSER);
+                done();
+            });
+      });
+      it('it should not POST a rider invite without a driveId value', (done) => {
+        chai.request(server)
+            .post(inviteRiderRoute)
+            .send({
+                "token" : auth_token,
+                "toUserId": "1242412",
+                "rideId": "1341354",
+                "requestedTimes": ["3pm"],
+                "comment": "Would you like to ride with me?"
+            })
+            .end((err, res) => {
+                res.should.have.status(400);
+                res.body.should.have.property("message").eql(exceptions.drive.MISSING_INVITE_DRIVE);
+                done();
+            });
+      });
+      it('it should not POST a rider invite without requested times', (done) => {
+        chai.request(server)
+            .post(inviteRiderRoute)
+            .send({
+                "token" : auth_token,
+                "toUserId": "1242412",
+                "driveId": "11424123",
+                "rideId": "1341354",
+                "comment": "Would you like to ride with me?"
+            })
+            .end((err, res) => {
+                res.should.have.status(400);
+                res.body.should.have.property("message").eql(exceptions.common.MISSING_INVITE_REQUESTEDTIME);
+                done();
+            });
+      });
+      it('it should return internal exception when internal server error is returned', () => {
+        sinon.stub(Drive, 'inviteRider').callsFake(async() =>{
+          throw Error('Database is down!');
+        });
+        chai.request(server)
+            .post(inviteRiderRoute)
+            .send({
+                "token" : auth_token,
+                "fromUserId": "1342133",
+                "toUserId": "1242412",
+                "driveId": "11424123",
+                "rideId": "1341354",
+                "requestedTimes": ["4pm"],
+                "comment": "Would you like to ride with me?"
+            })
+            .end((err, res) => {
+                res.should.have.status(500);
+                res.body.should.have.property("message").eql(exceptions.common.INTERNAL_INVITE_ERROR);
+                Drive.inviteRider.restore();
+                done();
+            });
+      });
+      it('it should return descriptive error message when invitation already exists', () => {
+        sinon.stub(Drive, 'inviteRider').callsFake(async() =>{
+          throw Error(exceptions.drive.INVITATION_ALREADY_SENT);
+        });
+        chai.request(server)
+            .post(inviteRiderRoute)
+            .send({
+                "token" : auth_token,
+                "fromUserId": "1342133",
+                "toUserId": "1242412",
+                "driveId": "11424123",
+                "rideId": "1341354",
+                "requestedTimes": ["4pm"],
+                "comment": "Would you like to ride with me?"
+            })
+            .end((err, res) => {
+                res.should.have.status(400);
+                res.body.should.have.property("message").eql(exceptions.drive.INVITATION_ALREADY_SENT);
+                Drive.inviteRider.restore();
+                done();
+            });
+      });
+      it('it should successfully create invitation when provided valid request', (done) => {
+        chai.request(server)
+            .post(inviteRiderRoute)
+            .send({
+                "token" : auth_token,
+                "toUserId": invitedUser._id.toString(),
+                "driveId": driveForInvite.driveId,
+                "rideId": rideForInvite.rideId,
+                "requestedTimes": ["4pm"],
+                "comment": "Would you like to ride with me?"
+            })
+            .end((err, res) => {
+                res.should.have.status(200);
+                res.body.should.have.property("message").eql(successResponses.common.INVITE_SENT);
+                res.body.should.have.property("invitation");
+                done();
+            });
+      });
+    });
+
     describe('/GET /drive/tripmatches', () => {
       it('should not get drive matches with invalid token', () => {
         chai.request(server)
@@ -272,112 +434,4 @@ describe('Drive', () => {
       });
     });
 
-    /*
-    * Test the /GET /drive/user/:userPublicId route
-    */
-    // describe('/GET /drive/user/:userPublicId', () => {
-    //     it('it should not GET drives of user without publicId', (done) => {
-    //         chai.request(server)
-    //             .get('/drive/user/')
-    //             .send({})
-    //             .end((err, res) => {
-    //                 res.should.have.status(404);
-    //                 res.should.have.property("error");
-    //                 done();
-    //             });
-    //     });
-
-    //     it('it should not GET drive details with invalid drivePublicId', (done) => {
-    //         chai.request(server)
-    //             .get('/drive/info/' + 'random')
-    //             .send({})
-    //             .end((err, res) => {
-    //                 res.should.have.status(500);
-    //                 res.body.should.have.property("message").eql("Incorrect publicId of drive");
-    //                 done();
-    //             });
-    //     });
-
-    //     it('it should GET drives of user with correct publicId', (done) => {
-    //         chai.request(server)
-    //             .get('/drive/user/' + user.userPublicId)
-    //             .send({})
-    //             .end((err, res) => {
-    //                 res.should.have.status(200);
-    //                 res.body.should.be.a('array');
-    //                 res.body.length.should.be.eql(1);
-    //                 res.body[0].driveFrom.should.be.eql("Bloomington");
-    //                 res.body[0].driveTo.should.be.eql("Indy");
-    //                 res.body[0].driveDate.should.be.eql("02/28/2018");
-    //                 chai.assert.deepEqual([
-    //                     "6am-9am", "12pm-3pm"
-    //                 ], res.body[0].driveTime);
-    //                 res.body[0].driveSeatsAvailable.should.be.eql(3);
-    //                 res.body[0].should.have.property("driveComment");
-    //                 done();
-    //             });
-    //     });
-    // });
-
-    // /*
-    // * Test the /GET /drive/info/:drivePublicId route
-    // */
-    // describe('/GET /drive/info/:drivePublicId', () => {
-    //     it('it should not GET drive details without drivePublicId', (done) => {
-    //         chai.request(server)
-    //             .get('/drive/info/')
-    //             .send({})
-    //             .end((err, res) => {
-    //                 res.should.have.status(404);
-    //                 res.should.have.property("error");
-    //                 done();
-    //             });
-    //     });
-
-    //     it('it should not GET drive details with invalid drivePublicId', (done) => {
-    //         chai.request(server)
-    //             .get('/drive/info/' + 'random')
-    //             .send({})
-    //             .end((err, res) => {
-    //                 res.should.have.status(500);
-    //                 res.body.should.have.property("message").eql("Incorrect publicId of drive");
-    //                 done();
-    //             });
-    //     });
-
-    //     it('it should GET drive details with correct drivePublicId', async () => {
-    //       try {
-    //         const drive = await Drive.create({
-    //           "user_firstName": user.firstName,
-    //           "user_lastName": user.lastName,
-    //           "user_publicId": user.userPublicId,
-    //           "user_id": user._id,
-    //           "from_location": "Bloomington",
-    //           "to_location": "Indy",
-    //           "travel_date": "02/28/2018",
-    //           "seats_available": "3",
-    //           "travel_time": ["6am-9am","12pm-3pm"],
-    //           "comment": ""
-    //         });
-
-    //         const res = await chai.request(server)
-    //           .get('/drive/info/' + drive.drivePublicId)
-    //           .send({auth_token});
-
-    //         res.should.have.status(200);
-    //         res.body.should.have.property("driveFrom").eql("Bloomington");
-    //         res.body.should.have.property("driveTo").eql("Indy");
-    //         res.body.should.have.property("driveDate").eql("02/28/2018");
-    //         chai.assert.deepEqual([
-    //             "6am-9am", "12pm-3pm"
-    //         ], res.body.driveTime);
-    //         res.body.should.have.property("driveComment");
-    //         chai.assert.equal(user.userPublicId, res.body.driveUserPublicId);
-    //         res.body.should.have.property("driveUserFirstName");
-    //         res.body.should.have.property("driveUserLastName");
-    //       } catch(error){
-    //         throw error;
-    //       }
-    //     });
-    // });
 });

@@ -4,6 +4,7 @@ var config = require('config.js');
 var sgMailer = require('extensions/mailer.js');
 const worker = require('thumb-worker');
 const logger = require('thumb-logger').getLogger(config.API_LOGGER_NAME);
+const thumbUtil = require('thumb-utilities');
 const moment = require('moment');
 
 const crypto = require('crypto');
@@ -266,10 +267,7 @@ exports.getUserProfile = function(req, res) {
         res.status(400).send({ message: "userId not decoded" });
     }
 
-    // check if lower and upper case letters, numbers, . and _
-    // check if [3,30] chars
-    const regex = /^[a-zA-Z0-9._]{3,30}$/;
-    if (!regex.test(req.params.username)) {
+    if (!thumbUtil.User.validateUsername(req.params.username)) {
         return res.status(422).send({ message: "Invalid username" });
     }
 
@@ -563,11 +561,7 @@ exports.inviteContacts = function(req, res) {
 }
 
 exports.validateUsername = (req, res) => {
-    // check if lower and upper case letters, numbers, . and _
-    // check if [3,30] chars
-    const regex = /^[a-zA-Z0-9._]{3,30}$/;
-
-    if (!regex.test(req.params.username)) {
+    if (!thumbUtil.User.validateUsername(req.params.username)) {
         return res.status(422).send({ message: "Invalid username" });
     }
 

@@ -1226,4 +1226,67 @@ describe('Users', () => {
                 });
         });
     });
+
+    /*
+    * Test the /POST /user/expo/token/save route
+    */
+    describe('/POST /user/expo/token/save', () => {
+        let userAuthToken;
+        before( async () => {
+            userAuthToken = await userUtility.getUserAuthToken(testUserEmail, testUserPassword);
+        });
+
+        it('it should not POST a user expo token without auth token', (done) => {
+            chai.request(server)
+                .post('/user/expo/token/save')
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("No token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();
+                });
+        });
+
+        it('it should not POST a user expo token with invalid auth token', (done) => {
+            chai.request(server)
+                .post('/user/expo/token/save')
+                .set('Authorization', 'Bearer' + ' ' + 'invalid.token.here')
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("Invalid token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();
+                });
+        });
+
+        it('it should not POST a user expo token without expoToken', (done) => {
+            chai.request(server)
+                .post('/user/expo/token/save')
+                .set('Authorization', 'Bearer' + ' ' + userAuthToken)
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property("message").eql("expoToken not sent");
+                    done();
+                });
+        });
+
+        it('it should POST a user expo token with valid auth token and expo Token', (done) => {
+            chai.request(server)
+                .post('/user/expo/token/save')
+                .set('Authorization', 'Bearer' + ' ' + userAuthToken)
+                .send({
+                    "expoToken" : "testExpoToken"
+                })
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property("message").eql("User expo token saved successfully");
+                    User.findOne({
+                        'email': testUserEmail
+                    }, (err, user) => {
+                        chai.assert.equal("testExpoToken", user.expoToken);
+                    });
+                });
+            done();
+        });
+    });
 });

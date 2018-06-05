@@ -594,7 +594,7 @@ describe('Users', () => {
     /*
     * Test the /GET /user/profile route
     */
-    describe('/GET /user/profile', () => {
+    describe('/GET /user/profile/:username', () => {
         let userAuthToken;
         before( async () => {
             userAuthToken = await userUtility.getUserAuthToken(testUserEmail, testUserPassword);
@@ -602,8 +602,7 @@ describe('Users', () => {
 
         it('it should not GET user profile without token', (done) => {
             chai.request(server)
-                .get('/user/profile')
-                .send({})
+                .get('/user/profile/' + 'randomuser')
                 .end((err, res) => {
                     res.should.have.status(403);
                     res.body.should.have.property("message").eql("No token provided");
@@ -614,7 +613,7 @@ describe('Users', () => {
 
         it('it should not GET user profile with invalid token', (done) => {
             chai.request(server)
-                .get('/user/profile')
+                .get('/user/profile/' + 'randomuser')
                 .set('Authorization', 'Bearer' + ' ' + 'invalid.token.here')
                 .end((err, res) => {
                     res.should.have.status(403);
@@ -624,17 +623,39 @@ describe('Users', () => {
                 });
         });
 
-        it('it should GET user profile with valid token', async () => {
+        it('it should not GET user profile with invalid username', (done) => {
             chai.request(server)
-                .get('/user/profile')
+                .get('/user/profile/' + 'ABC$123')
+                .set('Authorization', 'Bearer' + ' ' + userAuthToken)
+                .end((err, res) => {
+                    res.should.have.status(422);
+                    res.body.should.have.property("message").eql("Invalid username");
+                    done();
+                });
+        });
+
+        it('it should not GET user profile with unidentified username', (done) => {
+            chai.request(server)
+                .get('/user/profile/' + 'idontexist')
+                .set('Authorization', 'Bearer' + ' ' + userAuthToken)
+                .end((err, res) => {
+                    res.should.have.status(500);
+                    res.body.should.have.property("message").eql("Some error occured");
+                    done();
+                });
+        });
+
+        it('it should GET user profile with valid token and username', (done) => {
+            chai.request(server)
+                .get('/user/profile/' + testUserUsername)
                 .set('Authorization', 'Bearer' + ' ' + userAuthToken)
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.have.property("firstName").eql(testUser.firstName);
                     res.body.should.have.property("lastName").eql(testUser.lastName);
                     res.body.should.have.property("school").eql(testUser.school);
-                    res.body.should.have.property("username").eql(testUser.username);
                     res.body.should.have.property("profilePicture").eql('');
+                    done();
                 });
         });
     });
@@ -1145,17 +1166,6 @@ describe('Users', () => {
                 });
         });
 
-        it('should return valid for alphanumeric and . and _ characters', (done) => {
-            chai.request(server)
-                .get('/user/validate/username/' + 'Ab.cd_eF.12')
-                .send({})
-                .end((err, res) => {
-                    res.should.have.status(200);
-                    res.body.should.have.property('message').eql('Valid username');
-                    done();
-                });
-        });
-
         it('should return duplicate for a duplicate username', (done) => {
             chai.request(server)
                 .get('/user/validate/username/' + 'jdoe') //username 'jdoe' exists already
@@ -1214,6 +1224,69 @@ describe('Users', () => {
                     res.body.should.have.property('message').eql('Valid email');
                     done();
                 });
+        });
+    });
+
+    /*
+    * Test the /POST /user/expo/token/save route
+    */
+    describe('/POST /user/expo/token/save', () => {
+        let userAuthToken;
+        before( async () => {
+            userAuthToken = await userUtility.getUserAuthToken(testUserEmail, testUserPassword);
+        });
+
+        it('it should not POST a user expo token without auth token', (done) => {
+            chai.request(server)
+                .post('/user/expo/token/save')
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("No token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();
+                });
+        });
+
+        it('it should not POST a user expo token with invalid auth token', (done) => {
+            chai.request(server)
+                .post('/user/expo/token/save')
+                .set('Authorization', 'Bearer' + ' ' + 'invalid.token.here')
+                .end((err, res) => {
+                    res.should.have.status(403);
+                    res.body.should.have.property("message").eql("Invalid token provided");
+                    res.body.should.have.property("success").eql(false);
+                    done();
+                });
+        });
+
+        it('it should not POST a user expo token without expoToken', (done) => {
+            chai.request(server)
+                .post('/user/expo/token/save')
+                .set('Authorization', 'Bearer' + ' ' + userAuthToken)
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property("message").eql("expoToken not sent");
+                    done();
+                });
+        });
+
+        it('it should POST a user expo token with valid auth token and expo Token', (done) => {
+            chai.request(server)
+                .post('/user/expo/token/save')
+                .set('Authorization', 'Bearer' + ' ' + userAuthToken)
+                .send({
+                    "expoToken" : "testExpoToken"
+                })
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property("message").eql("User expo token saved successfully");
+                    User.findOne({
+                        'email': testUserEmail
+                    }, (err, user) => {
+                        chai.assert.equal("testExpoToken", user.expoToken);
+                    });
+                });
+            done();
         });
     });
 });

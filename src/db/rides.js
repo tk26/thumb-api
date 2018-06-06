@@ -2,6 +2,7 @@ const neo4j = require('../extensions/neo4j.js');
 const endOfLine = require('os').EOL;
 const config = require('../config.js');
 const logger = require('thumb-logger').getLogger(config.DB_LOGGER_NAME);
+const notifier = require('../extensions/neo4j.js');
 
 exports.saveRide = async function(ride){
   let query = 'MATCH(user:User{userId:{userId}})' + endOfLine;
@@ -68,7 +69,7 @@ exports.inviteDriver = async function(driverInvite){
       sentOn: driverInvite.sentOn.toISOString(),
       comment: driverInvite.comment ? driverInvite.comment : ''
     });
-
+    // TODO notify using notifier
     return neo4j.deserializeResults(rawResults);
   } catch(error){
     logger.error(error);

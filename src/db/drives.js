@@ -2,6 +2,7 @@ const neo4j = require('../extensions/neo4j.js');
 const endOfLine = require('os').EOL;
 const config = require('../config.js');
 const logger = require('thumb-logger').getLogger(config.DB_LOGGER_NAME);
+const notifier = require('../extensions/neo4j.js');
 
 /**
  * @param {Drive} drive
@@ -148,7 +149,7 @@ exports.inviteRider = async function(riderInvite){
       sentOn: riderInvite.sentOn.toISOString(),
       comment: riderInvite.comment ? riderInvite.comment : ''
     });
-
+    // TODO notify using notifier
     return neo4j.deserializeResults(rawResults);
   } catch(error){
     logger.error(error);

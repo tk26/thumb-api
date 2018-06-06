@@ -32,6 +32,17 @@ exports.deleteUser = async function(user){
   }
 }
 
+exports.saveExpoToken = async (userId, expoToken) => {
+  try {
+    let query = 'MERGE(u:User{userId:{userId}})' + endOfLine;
+    query += 'SET u.expoToken = {expoToken} RETURN u';
+    return await neo4j.execute(query,{ userId, expoToken });
+  } catch(err){
+    logger.error(err);
+    throw err;
+  }
+}
+
 exports.ActiveConstraints = [
     'CONSTRAINT ON ( user:User ) ASSERT user.userId IS UNIQUE'
 ];

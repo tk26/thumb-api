@@ -1,4 +1,5 @@
 var User = require('models/user.model.js');
+const usersDB = require('../db/users.js');
 var jwt = require('jsonwebtoken');
 var config = require('config.js');
 var sgMailer = require('extensions/mailer.js');
@@ -606,11 +607,13 @@ exports.validateEmail = (req, res) => {
 }
 
 exports.saveExpoToken = (req, res) => {
+    const expoToken = req.body.expoToken;
+
     if(!req.decoded.userId) {
         res.status(400).send({ message: "userId not decoded" });
     }
 
-    if(!req.body.expoToken) {
+    if(!expoToken) {
         res.status(400).send({ message: "expoToken not sent" });
     }
 
@@ -622,11 +625,12 @@ exports.saveExpoToken = (req, res) => {
             return res.status(400).send({ message: "Incorrect userId" });
         }
     }).then( (user) => {
-        user.expoToken = req.body.expoToken;
+        user.expoToken = expoToken;
         User.update({ '_id': user._id }, user, function(err, result) {
             if(err) {
                 return next(err);
             } else {
+                usersDB.saveExpoToken(user._id.toString(), expoToken);
                 return res.json({ message: "User expo token saved successfully" });
             }
         });

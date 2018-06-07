@@ -1,7 +1,10 @@
 var User = require('models/user.model.js');
+const User2 = require('models/user2.model.js');
 var jwt = require('jsonwebtoken');
 var config = require('config.js');
 var sgMailer = require('extensions/mailer.js');
+const exceptions = require('../constants/exceptions.js');
+const successResponses = require('../constants/success_responses.js');
 const worker = require('thumb-worker');
 const logger = require('thumb-logger').getLogger(config.API_LOGGER_NAME);
 const thumbUtil = require('thumb-utilities');
@@ -35,190 +38,187 @@ var twilio = new Twilio(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN);
 
 exports.submitUser = function(req, res) {
     if(!req.body.firstName){
-        return res.status(400).send({ message: "Missing User's First Name" });
+        return res.status(400).send({ message: exceptions.user.MISSING_FIRST_NAME });
     }
 
     if(!req.body.lastName){
-        return res.status(400).send({ message: "Missing User's Last Name" });
+        return res.status(400).send({ message: exceptions.user.MISSING_LAST_NAME });
     }
 
     if(!req.body.email){
-        return res.status(400).send({ message: "Missing User's Email" });
+        return res.status(400).send({ message: exceptions.user.MISSING_EMAIL });
     }
 
     if(!req.body.school){
-        return res.status(400).send({ message: "Missing User's School" });
+        return res.status(400).send({ message: exceptions.user.MISSING_SCHOOL });
     }
 
     if(!req.body.password){
-        return res.status(400).send({ message: "Missing User's Password"});
+        return res.status(400).send({ message: exceptions.user.MISSING_PASSWORD });
     }
 
     if(!req.body.username){
-        return res.status(400).send({ message: "Missing User's Username" });
+        return res.status(400).send({ message: exceptions.user.MISSING_USERNAME });
     }
 
     if(!req.body.birthday){
-        return res.status(400).send({ message: "Missing User's Birthday" });
+        return res.status(400).send({ message: exceptions.user.MISSING_BIRTHDAY });
     }
 
-    const verificationId = crypto.randomBytes(20).toString('hex');
-    let user = new User(req.body);
-    user.verified = false;
-    user.verificationId = verificationId;
-    user.password = user.generateHash(req.body.password);
-
-    user.phone = '';
-    user.phoneVerified = false;
-    user.phoneVerificationId = '';
-
-    user.saveUser(user)
-      .then(() => {
-        sendVerificationEmail(req.body.email, verificationId);
+    let user = User2.createUserFromRequest(req);
+    user.verificationId = crypto.randomBytes(20).toString('hex');
+    user.password = User2.generateHash(req.body.password);
+    
+    user.save()
+    .then(() => {
+        sendVerificationEmail(req.body.email, user.verificationId);
         let emailTime = moment(new Date().getTime())
-                          .add(config.APP_SETTINGS.WELCOME_EMAIL_MINUTE_DELAY, 'm')
-                          .toDate();
+            .add(config.APP_SETTINGS.WELCOME_EMAIL_MINUTE_DELAY, 'm')
+            .toDate();
 
         worker.scheduleJob(emailTime, 'welcome email', {
-          'emailAddress': user.email,
-          'firstName': user.firstName
+            'emailAddress': user.email,
+            'firstName': user.firstName
         })
-          .then((job) => {
+        .then((job) => {
             logger.info('Welcome email successfully scheduled for ' + user.email + '!')
-          })
-          .catch((err) => {
+        })
+        .catch((err) => {
             logger.error('Error creating welcome email for ' + user.email + ': ' + err);
-          })
-          .finally(() => {
-            return res.json({ message: "User Details Saved Successfully" });
-          });
-      })
-      .catch((err) => {
-        return res.status(500).send(err);
-      });
+        })
+        .finally(() => {
+            return res.json({ message: successResponses.user.USER_CREATED });
+        });
+    })
+    .catch((err) => {
+        return res.status(500).send({ message: exceptions.user.INTERNAL_ERROR });
+    });
 };
 
 exports.verifyUser = function(req, res, next) {
-    User.findOne({ 'verificationId': req.params.verificationId }, function(err, user) {
-        if(err || !user) {
-            return next(err);
-        }
-    }).then( (user) => {
-        user.verificationId = '';
-        user.verified = true;
-        User.findOneAndUpdate({ '_id': user._id }, user, function(err, result) {
-            if(err) {
-                return next(err);
-            } else {
-                res.redirect(config.BASE_URL_WEBAPP);
-            }
-        });
+    User2.verifyUser(req.params.verificationId)
+    .then(() => {
+        res.redirect(config.BASE_URL_WEBAPP);
+    })
+    .catch((err) => {
+        return next(err);
     });
 };
 
 exports.authenticateUser = function(req, res) {
     if(!req.body.email){
-        return res.status(400).send({ message: "Missing User's Email"});
+        return res.status(400).send({ message: exceptions.user.MISSING_EMAIL });
     }
 
     if(!req.body.password){
-        return res.status(400).send({ message: "Missing User's Password"});
+        return res.status(400).send({ message: exceptions.user.MISSING_PASSWORD });
     }
 
-    User.findOne({
-        'email' : req.body.email
-    }, function(err, user) {
-        if(err || !user) {
-            return res.status(400).send({ message: "Incorrect email" });
-        }
-    }).then( (user) => {
-        if(!user.validatePassword(req.body.password)) {
-            return res.status(400).send({ message: "Incorrect password" });
-        }
-        else if(!user.verified) {
+    User2.findUser(req.body.email)
+    .then(user => {
+        if (!User2.validatePassword(req.body.password, user.password)) {
+            return res.status(400).send({ message: exceptions.user.INVALID_PASSWORD });
+        } else if (!user.verified) {
             // resend user verification email
             sendVerificationEmail(req.body.email, user.verificationId);
-            return res.status(403).send({ message: "Unverified user" });
-        }
-        else {
+            return res.status(403).send({ message: exceptions.user.UNVERIFIED_USER });
+        } else {
             const payload = {
-                userId: user._id.toString(),
-                userPublicId: user.userPublicId,
-                userFirstName: user.firstName,
-                userLastName: user.lastName
+                userId: user.userId,
+                email: user.email,
+                username: user.username,
             };
             const _token = jwt.sign(payload, config.AUTH_SECRET, {
                 expiresIn: 18000
             });
             res.json({ 
-                message: "Logged In Successfully", 
+                message: successResponses.user.USER_AUTHENTICATED,
                 token: _token,
                 firstName: user.firstName,
                 lastName: user.lastName,
                 username: user.username,
                 school: user.school || "",
                 birthday: user.birthday,
-                profilePicture: user.profile_picture || "",
+                profilePicture: user.profilePicture || "",
                 bio: user.bio || ""
             });
         }
+    })
+    .catch((err) => {
+        logger.error('Error retrieving user:' + err);
+        return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
     });
 };
 
 exports.submitForgotPasswordUser = function(req, res) {
     if(!req.body.email){
-        return res.status(400).send({ message: "Missing User's Email"});
+        return res.status(400).send({ message: exceptions.user.MISSING_EMAIL });
     }
 
-    const sendPasswordResetEmail = (_token) => {
+    let email = req.body.email.toLowerCase();
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/ ;
+
+    if (!regex.test(email)) {
+        return res.status(422).send({ message: exceptions.user.INVALID_EMAIL });
+    }
+    
+    // check if ends in .edu
+    if (email.substr(email.length - 4) !== '.edu') {
+        return res.status(422).send({ message: exceptions.user.NON_STUDENT_EMAIL });
+    }
+
+    const sendPasswordResetEmail = (resetToken) => {
         const mailOptions = {
             from: 'accounts@thumbtravel.com',
-            to: req.body.email,
+            to: email,
             subject: 'Reset your Thumb Password',
             // TODO draft a better email
-            html: '<p>Please click <a href="'+ config.BASE_URL_WEBAPP +'/#/reset/'+ _token +'">HERE</a> ' +
+            html: '<p>Please click <a href="'+ config.BASE_URL_WEBAPP +'/#/reset/'+ resetToken +'">HERE</a> ' +
             'to reset your account password </p>'
         };
 
         sgMailer.send(mailOptions);
     };
 
-    User.findOne({
-        'email' : req.body.email,
-        'verified': true //only verified users can reset password
-    }, function(err, user) {
-        if(err || !user) {
-            res.status(400).send({ message: "Incorrect or unverified email" });
-        }
-    }).then( (user) => {
-        const payload = { userId: user._id };
-        const _token = jwt.sign(payload, config.RESET_SECRET, {
-            expiresIn: 300
-        });
+    User2.findUser(email)
+    .then(user => {
+        if (!user.verified) {
+            return res.status(403).send({ message: exceptions.user.UNVERIFIED_USER });
+        } else {
+            const payload = { 
+                userId: user.userId,
+                email: user.email,
+                username: user.username,
+            };
+            const resetToken = jwt.sign(payload, config.RESET_SECRET, {
+                expiresIn: 300
+            });
 
-        if (process.env.NODE_ENV !== 'test') {
-            sendPasswordResetEmail(_token);
-        }
-
-        user.password_reset_token = _token;
-
-        User.update({ '_id': user._id }, user, function(err, result) {
-            if(err) {
+            User2.updatePasswordResetToken(user.userId, resetToken)
+            .then(() => {
+                if (process.env.NODE_ENV !== 'test') {
+                    sendPasswordResetEmail(resetToken);
+                }
+                res.json({ message: successResponses.user.USER_PASSWORD_RESET_EMAIL_SENT });
+            })
+            .catch((err) => {
                 return next(err);
-            } else {
-                res.json({ message: "Password Reset Email Sent" });
-            }
-        });
+            });
+        }
+    })
+    .catch((err) => {
+        logger.error('Error retrieving user:' + err);
+        return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
     });
 };
 
 exports.submitResetPasswordUser = function(req, res) {
     if(!req.decoded.userId) {
-        res.status(400).send({ message: "userId not decoded" });
+        res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
     }
 
     if(!req.body.password) {
-        res.status(400).send({ message: "Missing User's Password" });
+        res.status(400).send({ message: exceptions.user.MISSING_PASSWORD });
     }
 
     const sendPasswordResetConfirmationEmail = (email) => {
@@ -240,87 +240,56 @@ exports.submitResetPasswordUser = function(req, res) {
 
         sgMailer.send(mailOptions);
     };
-
-    User.findOne({
-        '_id' : req.decoded.userId
-    }, function(err, user) {
-        if(err || !user) {
-            res.status(400).send({ message: "Incorrect userId" });
+    User2.updatePassword(req.decoded.userId, User2.generateHash(req.body.password))
+    .then(() => {
+        if (process.env.NODE_ENV !== 'test') {
+            sendPasswordResetConfirmationEmail(req.decoded.email);
         }
-    }).then( (user) => {
-        user.password = user.generateHash(req.body.password);
-        User.update({ '_id': user._id }, user, function(err, result) {
-            if(err) {
-                return next(err);
-            } else {
-                if (process.env.NODE_ENV !== 'test') {
-                    sendPasswordResetConfirmationEmail(user.email);
-                }
-                res.json({ message: "Password reset successfully" });
-            }
-        });
+        res.json({ message: successResponses.user.USER_PASSWORD_RESET });
+    })
+    .catch((err) => {
+        return next(err);
     });
 };
 
 exports.getUserProfile = function(req, res) {
     if(!req.decoded.userId) {
-        res.status(400).send({ message: "userId not decoded" });
+        res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
     }
 
     if (!thumbUtil.User.validateUsername(req.params.username)) {
-        return res.status(422).send({ message: "Invalid username" });
+        return res.status(422).send({ message: exceptions.user.INVALID_USERNAME });
     }
 
-    User.findOne({
-        'username' : req.params.username.toLowerCase(),
-        'verified': true
-    }, function(err, user) {
-        if (err) {
-            return res.status(500).send({ message: "Some error occured"});
-        }
-        if (user) {
-            return user._id.toString() === req.decoded.userId ? res.json({
-                message: "User profile retrieved successfully",
-                editable: true,
-                firstName : user.firstName,
-                lastName : user.lastName,
-                school: user.school,
-                profilePicture: user.profile_picture || ''
-            }) : res.json({
-                message: "User profile retrieved successfully",
-                editable: false,
-                firstName : user.firstName,
-                lastName : user.lastName,
-                school: user.school,
-                profilePicture: user.profile_picture || ''
-            });
-        }
-        return res.status(500).send({ message: "Some error occured" });
+    User2.retrieveUser(req.params.username.toLowerCase())
+    .then(user => {
+        return res.json({
+            message: successResponses.user.USER_PROFILE_RETRIEVED,
+            editable: user.userId === req.decoded.userId,
+            firstName : user.firstName,
+            lastName : user.lastName,
+            school: user.school,
+            profilePicture: user.profilePicture || '',
+            bio: user.bio || '',
+        });
+    })
+    .catch((err) => {
+        logger.error('Error retrieving user:' + err);
+        return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
     });
 };
 
 exports.editUser = function(req, res) {
     if(!req.decoded.userId) {
-        res.status(400).send({ message: "userId not decoded" });
+        res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
     }
 
-    User.findOne({
-        '_id' : req.decoded.userId,
-        'verified' : true
-    }, function(err, user) {
-        if(err || !user) {
-            res.status(500).send({ message: "Incorrect userId" });
-        }
-    }).then( (user) => {
-        user.profile_picture = req.body.profilePicture || user.profile_picture;
-        user.bio = req.body.bio || user.bio;
-        User.update({ '_id': user._id }, user, function(err, result) {
-            if(err) {
-                return next(err);
-            } else {
-                res.json({ message: "User details updated successfully" });
-            }
-        });
+    User2.updateUser(req.decoded.userId, req.body.profilePicture || '', req.body.bio || '')
+    .then(() => {
+        res.json({ message: successResponses.user.USER_UPDATED });
+    })
+    .catch((err) => {
+        return next(err);
     });
 };
 
@@ -363,49 +332,29 @@ exports.savePaymentInformation = function(req, res) {
 
 exports.editBio = function(req, res) {
     if(!req.decoded.userId) {
-        res.status(400).send({ message: "userId not decoded" });
+        res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
     }
 
-    User.findOne({
-        '_id' : req.decoded.userId,
-        'verified' : true
-    }, function(err, user) {
-        if(err || !user) {
-            res.status(400).send({ message: "Incorrect userId" });
-        }
-    }).then( (user) => {
-        user.bio = req.body.bio || user.bio;
-        User.update({ '_id': user._id }, user, function(err, result) {
-            if(err) {
-                return next(err);
-            } else {
-                res.json({ message: "User bio updated successfully" });
-            }
-        });
+    User2.updateUser(req.decoded.userId, '', req.body.bio || '')
+    .then(() => {
+        res.json({ message: successResponses.user.USER_BIO_UPDATED });
+    })
+    .catch((err) => {
+        return next(err);
     });
 }
 
 exports.editProfilePicture = function(req, res) {
     if(!req.decoded.userId) {
-        res.status(400).send({ message: "userId not decoded" });
+        res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
     }
 
-    User.findOne({
-        '_id' : req.decoded.userId,
-        'verified' : true
-    }, function(err, user) {
-        if(err || !user) {
-            res.status(400).send({ message: "Incorrect userId" });
-        }
-    }).then( (user) => {
-        user.profile_picture = req.body.profile_picture || user.profile_picture;
-        User.update({ '_id': user._id }, user, function(err, result) {
-            if(err) {
-                return next(err);
-            } else {
-                res.json({ message: "User profile picture updated successfully" });
-            }
-        });
+    User2.updateUser(req.decoded.userId, req.body.profilePicture || '', '')
+    .then(() => {
+        res.json({ message: successResponses.user.USER_PROFILE_PICTURE_UPDATED });
+    })
+    .catch((err) => {
+        return next(err);
     });
 }
 
@@ -562,20 +511,16 @@ exports.inviteContacts = function(req, res) {
 
 exports.validateUsername = (req, res) => {
     if (!thumbUtil.User.validateUsername(req.params.username)) {
-        return res.status(422).send({ message: "Invalid username" });
+        return res.status(422).send({ message: exceptions.user.INVALID_USERNAME });
     }
 
-    User.findOne({
-        'username' : req.params.username.toLowerCase(),
-        'verified': true
-    }, function(err, user) {
-        if (err) {
-            return res.status(500).send({ message: "Some error occured"});
-        }
-        if (user) {
-            return res.status(409).send({ message: "Duplicate username"});
-        }
-        return res.json({ message: "Valid username" });
+    User2.validateUsername(req.params.username)
+    .then(isValid => {
+        return isValid ? res.json({ message: successResponses.user.VALID_USERNAME })
+            : res.status(409).send({ message: exceptions.user.DUPLICATE_USERNAME });
+    })
+    .catch((err) => {
+        return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
     });
 }
 
@@ -584,51 +529,37 @@ exports.validateEmail = (req, res) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/ ;
 
     if (!regex.test(email)) {
-        return res.status(422).send({ message: "Invalid email" });
+        return res.status(422).send({ message: exceptions.user.INVALID_EMAIL });
     }
     // check if ends in .edu
     if (email.substr(email.length - 4) !== '.edu') {
-        return res.status(422).send({ message: "Non-student email" });
+        return res.status(422).send({ message: exceptions.user.NON_STUDENT_EMAIL });
     }
 
-    User.findOne({
-        'email' : email,
-        'verified': true
-    }, function(err, user) {
-        if (err) {
-            return res.status(500).send({ message: "Some error occured"});
-        }
-        if (user) {
-            return res.status(409).send({ message: "Duplicate email"});
-        }
-        return res.json({ message: "Valid email" });
+    User2.validateEmail(email)
+    .then(isValid => {
+        return isValid ? res.json({ message: successResponses.user.VALID_EMAIL })
+            : res.status(409).send({ message: exceptions.user.DUPLICATE_EMAIL });
+    })
+    .catch((err) => {
+        return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
     });
 }
 
 exports.saveExpoToken = (req, res) => {
     if(!req.decoded.userId) {
-        res.status(400).send({ message: "userId not decoded" });
+        res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
     }
 
     if(!req.body.expoToken) {
-        res.status(400).send({ message: "expoToken not sent" });
+        res.status(400).send({ message: exceptions.user.MISSING_EXPO_TOKEN });
     }
 
-    User.findOne({
-        '_id' : req.decoded.userId,
-        'verified' : true
-    }, function(err, user) {
-        if(err || !user) {
-            return res.status(400).send({ message: "Incorrect userId" });
-        }
-    }).then( (user) => {
-        user.expoToken = req.body.expoToken;
-        User.update({ '_id': user._id }, user, function(err, result) {
-            if(err) {
-                return next(err);
-            } else {
-                return res.json({ message: "User expo token saved successfully" });
-            }
-        });
+    User2.attachExpoToken(req.decoded.userId, req.body.expoToken)
+    .then(() => {
+        res.json({ message: successResponses.user.USER_EXPO_TOKEN_ATTACHED });
+    })
+    .catch((err) => {
+        return next(err);
     });
 }

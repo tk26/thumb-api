@@ -12,7 +12,7 @@ module.exports = function(app) {
 
     app.post('/user/reset', middleware('reset'), user.submitResetPasswordUser);
 
-    app.get('/user/profile', middleware('auth'), user.getUserProfile);
+    app.get('/user/profile/:username', middleware('auth'), user.getUserProfile);
 
     app.put('/user/edit', middleware('auth'), user.editUser);
 

@@ -38,6 +38,36 @@ exports.createRide = function (req, res) {
       });
 };
 
+exports.inviteDriver = function(req, res){
+  if(!req.body.toUserId) {
+    return res.status(400).send({ message: exceptions.common.MISSING_INVITE_TOUSER});
+  }
+
+  if(!req.body.rideId) {
+    return res.status(400).send({ message: exceptions.ride.MISSING_INVITE_RIDE});
+  }
+
+  if(!req.body.requestedTimes) {
+    return res.status(400).send({ message: exceptions.common.MISSING_INVITE_REQUESTEDTIME});
+  }
+
+  let fromUserId = req.decoded.userId;
+  let requestedTimes = req.body.requestedTimes.join();
+
+  let result = Ride.inviteDriver(fromUserId, req.body.toUserId, req.body.rideId, requestedTimes, req.body.driveId, req.body.comment)
+    .then((result) => {
+      res.send({ message: successResponses.common.INVITE_SENT, invitation: result});
+    })
+    .catch((error) => {
+      logger.error('Error sending invitation: ' + error);
+      if (error.message === exceptions.ride.INVITATION_ALREADY_SENT){
+        res.status(400).send({message: error.message});
+      } else {
+        res.status(500).send({message: exceptions.common.INTERNAL_INVITE_ERROR});
+      }
+    });
+}
+
 exports.getTripMatches = function(req, res) {
   if(!req.query.startPoint) {
       return res.status(400).send({ message: exceptions.ride.MISSING_START_POINT});

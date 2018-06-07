@@ -2,6 +2,8 @@ const thumbUtil = require('thumb-utilities');
 const neo4j = require('../../src/extensions/neo4j.js');
 const drivesDB = require('../../src/db/drives.js');
 const Drive = require('../../src/models/drive.model.js');
+const Ride = require('../../src/models/ride.model.js');
+const ridesDB = require('../../src/db/rides.js');
 const GeoPoint = require('thumb-utilities').GeoPoint;
 const uuid = require('uuid/v1');
 const endOfLine = require('os').EOL;
@@ -22,42 +24,60 @@ let getDriveFromResults = function(nodes, driveId){
 }
 
 describe('Drives DB', () => {
+  let travelDate = new Date("3/31/2018");
+  let startLocation = new thumbUtil.Location('623 Main Street', 'Bloomington',15.2, 60.2);
+  let endLocation = new thumbUtil.Location('623 Washington Street', 'Bloomington', 16.2, 61.2);
+  let userId = uuid();
+  let rideUserId = uuid();
+  let drive = new Drive(userId, startLocation, endLocation, travelDate, '3,7', 3, 'Drive DB Tests');
+  let ride = new Ride(rideUserId, startLocation, endLocation, travelDate, '4,8', 'Drive DB Tests');
+
+  before(async() => {
+    //Create Drive
+    let query = 'MERGE(d:Date{date:{travelDate}})' + endOfLine;
+    query += 'CREATE(dr:Drive{driveId:{driveId},travelDate:{travelDate},travelTime:{travelTime},availableSeats:{availableSeats},travelDescription:{travelDescription}, wkt:{tripBoundary}}),' + endOfLine;
+    query += '(u:User{userId:{userId}})-[:POSTS]->(dr),' + endOfLine;
+    query += '(dr)-[:SCHEDULED_ON]->(d) WITH dr' + endOfLine;
+    query += 'CALL spatial.addNode(\'drives\', dr) YIELD node RETURN node';
+    await neo4j.execute(query,
+        {
+          driveId: drive.driveId,
+          userId: drive.userId,
+          travelDate: drive.travelDate.toISOString(),
+          travelTime: drive.travelTime,
+          availableSeats: parseInt(drive.availableSeats),
+          travelDescription: drive.travelDescription,
+          tripBoundary: drive.tripBoundary.ToPolygonString()
+        }
+      );
+
+    //Create Ride
+    query = 'CREATE (u:User{userId:{userId}})';
+    await neo4j.execute(query,
+      {
+        userId: ride.userId
+      }
+    );
+    await ridesDB.saveRide(ride);
+  });
+
+  after(async() => {
+    let query = 'MATCH (d:Drive{driveId:{driveId}})' + endOfLine;
+    query += 'DETACH DELETE d';
+    await neo4j.execute(query,{driveId: drive.driveId});
+
+    query = 'MATCH (r:Ride{rideId:{rideId}})' + endOfLine;
+    query += 'DETACH DELETE r';
+    await neo4j.execute(query,{rideId: ride.rideId});
+
+    query = 'MATCH(u:User{userId:{userId}}) DETACH DELETE u';
+    await neo4j.execute(query,{userId: drive.userId});
+
+    query = 'MATCH(u:User{userId:{userId}}) DETACH DELETE u';
+    await neo4j.execute(query,{userId: ride.userId});
+  });
 
   describe('getDriveMatchesForTrip', () => {
-    let travelDate = new Date("3/31/2018");
-    let startLocation = new thumbUtil.Location('623 Main Street', 'Bloomington',15.2, 60.2);
-    let endLocation = new thumbUtil.Location('623 Washington Street', 'Bloomington', 16.2, 61.2);
-    let userId = uuid();
-    let drive = new Drive(userId, startLocation, endLocation, travelDate, '3,7', 3, 'Drive DB Tests');
-
-    before(async() => {
-      let query = 'MERGE(d:Date{date:{travelDate}})' + endOfLine;
-      query += 'CREATE(dr:Drive{driveId:{driveId},travelDate:{travelDate},travelTime:{travelTime},availableSeats:{availableSeats},travelDescription:{travelDescription}, wkt:{tripBoundary}}),' + endOfLine;
-      query += '(u:User{userId:{userId}})-[:POSTS]->(dr),' + endOfLine;
-      query += '(dr)-[:SCHEDULED_ON]->(d) WITH dr' + endOfLine;
-      query += 'CALL spatial.addNode(\'drives\', dr) YIELD node RETURN node';
-
-      await neo4j.execute(query,
-          {
-            driveId: drive.driveId,
-            userId: drive.userId,
-            travelDate: drive.travelDate.toISOString(),
-            travelTime: drive.travelTime,
-            availableSeats: parseInt(drive.availableSeats),
-            travelDescription: drive.travelDescription,
-            tripBoundary: drive.tripBoundary.ToPolygonString()
-          }
-        );
-    });
-
-    after(async() => {
-      let query = 'MATCH (d:Drive{driveId:{driveId}})' + endOfLine;
-      query += 'DETACH DELETE d';
-      await neo4j.execute(query,{driveId: drive.driveId});
-      query = 'MATCH(u:User{userId:{userId}}) DETACH DELETE u';
-      await neo4j.execute(query,{userId: drive.userId});
-    });
-
     it('should return created drive when provided matching trip', async() => {
       let driveResult;
       let nodes = await drivesDB.getDriveMatchesForTrip(drive.startLocation.coordinates, drive.endLocation.coordinates, drive.travelDate);
@@ -85,6 +105,53 @@ describe('Drives DB', () => {
       let nodes = await drivesDB.getDriveMatchesForTrip(drive.startLocation.coordinates, endPoint, drive.travelDate);
       let driveResult = getDriveFromResults(nodes, drive.driveId);
       chai.expect(driveResult).to.be.null;
+    });
+  });
+  describe('inviteRider', () => {
+    it('should create invitation when provided Drive and Ride', async() => {
+      let riderInvitation = new thumbUtil.RiderInvitation({
+        fromUserId: drive.userId,
+        toUserId: ride.userId,
+        driveId: drive.driveId,
+        requestedTime: '5pm',
+        rideId: ride.rideId
+      });
+      let results = await drivesDB.inviteRider(riderInvitation);
+      results.length.should.equal(1);
+      results[0].invitation[0].invitationId.should.equal(riderInvitation.invitationId);
+      results[0].ride[0].rideId.should.equal(riderInvitation.rideId);
+      results[0].drive[0].driveId.should.equal(riderInvitation.driveId);
+      let query = 'MATCH(i:Invitation{invitationId:{invitationId}}) DETACH DELETE i';
+      await neo4j.execute(query,{invitationId: riderInvitation.invitationId});
+    });
+    it('should send invitation to user without a ride when provided Drive', async() => {
+      let riderInvitation = new thumbUtil.RiderInvitation({
+        fromUserId: drive.userId,
+        toUserId: ride.userId,
+        driveId: drive.driveId,
+        requestedTime: '5pm'
+      });
+      let results = await drivesDB.inviteRider(riderInvitation);
+      results.length.should.equal(1);
+      results[0].invitation[0].invitationId.should.equal(riderInvitation.invitationId);
+      results[0].drive[0].driveId.should.equal(riderInvitation.driveId);
+      let query = 'MATCH(i:Invitation{invitationId:{invitationId}}) DETACH DELETE i';
+      await neo4j.execute(query,{invitationId: riderInvitation.invitationId});
+    });
+  });
+  describe('getRiderInvitation', () => {
+    it('should get created invitation', async() => {
+      let riderInvitation = new thumbUtil.RiderInvitation({
+        fromUserId: drive.userId,
+        toUserId: ride.userId,
+        driveId: drive.driveId,
+        requestedTime: '5pm',
+        rideId: ride.rideId
+      });
+      let results = await drivesDB.inviteRider(riderInvitation);
+      results.length.should.equal(1);
+      let invResults = await drivesDB.getRiderInvitation(riderInvitation.driveId, riderInvitation.toUserId);
+      invResults.length.should.not.equal(0);
     });
   });
 });

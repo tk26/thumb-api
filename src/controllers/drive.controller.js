@@ -69,3 +69,33 @@ exports.getTripMatches = function(req, res) {
       res.status(500).send({message: exceptions.drive.INTERNAL_GETTRIPMATCHES_ERROR});
     });
 }
+
+exports.inviteRider = function(req, res){
+  if(!req.body.toUserId) {
+    return res.status(400).send({ message: exceptions.common.MISSING_INVITE_TOUSER});
+  }
+
+  if(!req.body.driveId) {
+    return res.status(400).send({ message: exceptions.drive.MISSING_INVITE_DRIVE});
+  }
+
+  if(!req.body.requestedTimes) {
+    return res.status(400).send({ message: exceptions.common.MISSING_INVITE_REQUESTEDTIME});
+  }
+
+  let fromUserId = req.decoded.userId;
+  let requestedTimes = req.body.requestedTimes.join();
+
+  let result = Drive.inviteRider(fromUserId, req.body.toUserId, req.body.driveId, requestedTimes, req.body.rideId, req.body.comment)
+    .then((result) => {
+      res.send({ message: successResponses.common.INVITE_SENT, invitation: result});
+    })
+    .catch((error) => {
+      logger.error('Error sending invitation: ' + error);
+      if (error.message === exceptions.drive.INVITATION_ALREADY_SENT){
+        res.status(400).send({message: error.message});
+      } else {
+        res.status(500).send({message: exceptions.common.INTERNAL_INVITE_ERROR});
+      }
+    });
+}

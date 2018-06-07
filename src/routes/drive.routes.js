@@ -10,4 +10,6 @@ module.exports = function(app) {
     app.get('/drive/tripmatches', middleware('auth'), drive.getTripMatches);
 
     app.post('/drive/create', middleware('auth'), drive.createDrive);
+
+    app.post('/drive/inviterider', middleware('auth'), drive.inviteRider);
 }

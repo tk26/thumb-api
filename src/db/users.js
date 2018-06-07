@@ -1,40 +1,35 @@
-const User = require('../models/user.model.js');
+const config = require('../config.js');
 const neo4j = require('../extensions/neo4j.js');
+const endOfLine = require('os').EOL;
+const logger = require('thumb-logger').getLogger(config.DB_LOGGER_NAME);
 
-exports.saveUser = function(user){
-  return user.save()
-      .then(user => {
-        let session = neo4j.session();
-        return session.run('MATCH (user:User {userId: {userId}}) RETURN user', {userId: user._id.toString()})
-            .then(results => {
-              //create
-              if(results.records.length === 0){
-                return session.run('CREATE (user:User {userId: {userId}, email: {email}}) RETURN user',{userId: user._id.toString(), email: user.email})
-                  .then(() => {
-                    return results.records;
-                  });
-              } else {
-                throw "User already exists!";              }
-            })
-            .catch(error => {
-              throw error;
-            })
-            .finally(() => {
-              session.close();
-            })
-      })
-      .catch(err => {
-        throw err;
-      })
+exports.saveUser = async function(user){
+  try {
+    let mongoResult = await user.save();
+    let query = 'MERGE(u:User{userId:{userId}})' + endOfLine;
+    query += 'SET u.email = {email} RETURN u';
+    let neoResult = await neo4j.execute(query,{
+      userId: mongoResult._id.toString(),
+      email: mongoResult.email
+    });
+    return neoResult.records;
+  } catch(err){
+    logger.error(err);
+    throw err;
+  }
 }
 
-exports.deleteUser = function(user){
-  let session = neo4j.session();
+exports.deleteUser = async function(user){
+  let query = 'MATCH(u:User{userId:{userId}})-[r]-()' + endOfLine;
+  query += 'DELETE u,r';
 
-  return session.run('MATCH(u:User{userId:{userId}})-[r]-() DELETE u,r',{userId: user._id.toString()})
-    .finally(() =>{
-      session.close();
-    });
+  try{
+    await neo4j.execute(query, {userId: user._id.toString()});
+    return await user.constructor.deleteOne({'email': this.email});
+  } catch (err){
+    logger.error(err);
+    throw err;
+  }
 }
 
 exports.ActiveConstraints = [

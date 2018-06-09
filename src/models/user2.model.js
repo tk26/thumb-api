@@ -1,4 +1,3 @@
-const thumbUtil = require('thumb-utilities');
 const usersDB = require('../db/users.js');
 const uuid = require('uuid/v1');
 const bcrypt = require('bcrypt');

@@ -52,5 +52,10 @@ module.exports = {
     MISSING_USER_TOKEN: "No token provided",
     INVALID_USER_TOKEN: "Invalid token provided",
     MISSING_EXPO_TOKEN: "expoToken not sent",
+  },
+  feedback: {
+    MISSING_TYPE: "Missing feedback type",
+    MISSING_DESCRIPTION: "Missing feedback description",
+    INTERNAL_ERROR: "Error creating feedback",
   }
 }

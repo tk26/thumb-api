@@ -35,8 +35,8 @@ exports.saveUser = async function(user){
 }
 
 exports.deleteUser = async function(user){
-  let query = 'MATCH(u:User{userId:{userId}})-[r]-()' + endOfLine;
-  query += 'DELETE u,r';
+  let query = 'MATCH(u:User{userId:{userId}})' + endOfLine;
+  query += 'DETACH DELETE u';
 
   try{
     await neo4j.execute(query, {userId: user.userId});

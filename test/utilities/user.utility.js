@@ -1,13 +1,16 @@
-let chaiHttp = require('chai-http');
-let chai = require('chai');
-chai.use(chaiHttp);
-let User = require('../../src/models/user.model.js')
-let server = require('../../src/server.js');
+const neo4j = require('../../src/extensions/neo4j.js');
+const User2 = require('../../src/models/user2.model.js');
+const server = require('../../src/server.js');
+const exceptions = require('../../src/constants/exceptions.js');
+const successResponses = require('../../src/constants/success_responses.js');
 const uuid = require('uuid/v1');
+const chaiHttp = require('chai-http');
+const chai = require('chai');
+chai.use(chaiHttp);
 
 exports.createVerifiedUser = async function (firstName, lastName, email, school, password, username, birthday){
   let should = chai.should();
-  await User.deleteOne({'email': email});
+  await User2.deleteUserByEmail(email);
 
   res = await chai.request(server)
     .post('/user/create')
@@ -22,17 +25,17 @@ exports.createVerifiedUser = async function (firstName, lastName, email, school,
     });
 
   res.should.have.status(200);
-  res.body.should.have.property("message").eql("User Details Saved Successfully");
+  res.body.should.have.property("message").eql(successResponses.user.USER_CREATED);
 
-  let createdUser = await User.findOne({'email': email});
+  let createdUser = await User2.findUser(email);
   try {
-     let verifyResponse = await chai.request(server)
+    let verifyResponse = await chai.request(server)
       .get('/user/verify/' + createdUser.verificationId)
       .send({});
   } catch(error) {
     console.log("UserUtility:  Ignored redirect after verifying user..."); // eslint-disable-line no-console
   }
-  createdUser = await User.findOne({'email': email});
+  createdUser = await User2.findUser(email);
   chai.assert.equal(0, createdUser.verificationId.length);
   chai.assert.equal(true, createdUser.verified);
 
@@ -41,7 +44,7 @@ exports.createVerifiedUser = async function (firstName, lastName, email, school,
 
 exports.createUnverifiedUser = async function (firstName, lastName, email, school, password, username, birthday){
   let should = chai.should();
-  await User.deleteOne({'email': email});
+  await User2.deleteUserByEmail(email);
 
   res = await chai.request(server)
     .post('/user/create')
@@ -56,9 +59,9 @@ exports.createUnverifiedUser = async function (firstName, lastName, email, schoo
     });
 
   res.should.have.status(200);
-  res.body.should.have.property("message").eql("User Details Saved Successfully");
+  res.body.should.have.property("message").eql(successResponses.user.USER_CREATED);
 
-  let createdUser = await User.findOne({'email': email});
+  let createdUser = await User2.findUser(email);
   return createdUser;
 }
 
@@ -74,38 +77,7 @@ exports.getUserAuthToken = async function(email, password){
 }
 
 exports.deleteUserByEmail = async function(email){
-  let user = await User.findOne({'email': email});
-  await user.delete();
-}
-
-exports.getResetAuthToken = async function(email){
-  let res = await chai.request(server)
-    .post('/user/forgot')
-    .send({
-        "email" : email
-  });
-
-  res.should.have.status(200);
-  res.body.should.have.property("message").eql("Password Reset Email Sent");
-
-  let user = await User.findOne({'email': email});
-  chai.assert.notEqual(0, user.password_reset_token.length);
-  return user.password_reset_token;
-}
-
-exports.savePhoneNumber = async function(email, authToken, number){
-  let res = await chai.request(server)
-    .post('/user/phone/save')
-    .send({
-        "token" : authToken,
-        "phone":  number
-    });
-
-  res.should.have.status(200);
-  res.body.should.have.property("message").eql("User phone saved successfully");
-  let user = await User.findOne({'email': email});
-
-  return user.phoneVerificationId;
+  await User2.deleteUserByEmail(email);
 }
 
 exports.getFakeUser = function(){

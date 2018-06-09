@@ -35,6 +35,17 @@ module.exports = class User2 {
     return usersDB.deleteUser(this);
   }
 
+  static async deleteAll() {
+    return usersDB.deleteAll();
+  }
+
+  /**
+   * @param {String} email
+   */
+  static async deleteUserByEmail(email) {
+    return usersDB.deleteUserByEmail(email);
+  }
+
   /**
    * @param {object} req
    */

@@ -58,18 +58,6 @@ exports.deleteUserByEmail = async function(email){
   }
 }
 
-exports.deleteAll = async function(){
-  let query = 'MATCH(u:User)' + endOfLine;
-  query += 'DETACH DELETE u';
-
-  try{
-    await neo4j.execute(query, {});
-  } catch (err){
-    logger.error(err);
-    throw err;
-  }
-}
-
 exports.verifyUser = async function (verificationId) {
   let query = 'MATCH(u:User{verificationId:{verificationId}})' + endOfLine;
   query += 'SET u.verificationId = \'\'' + endOfLine
@@ -115,6 +103,19 @@ exports.findUser = async function (email) {
 
   try{
     let neoResult = await neo4j.execute(query,{ email });
+    return neoResult.records[0]._fields[0].properties;
+  } catch (err){
+    logger.error(err);
+    throw err;
+  }
+}
+
+exports.findUserById = async function (userId) {
+  let query = 'MATCH(u:User{userId:{userId}})' + endOfLine;
+  query += 'RETURN u';
+
+  try{
+    let neoResult = await neo4j.execute(query,{ userId });
     return neoResult.records[0]._fields[0].properties;
   } catch (err){
     logger.error(err);

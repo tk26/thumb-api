@@ -10,24 +10,19 @@ describe('ride.model', () => {
     let endPoint = new GeoPoint(61.2,16.2);
 
     it('should return empty array when no rides exist', async() => {
-      const User = require('../../src/models/user.model.js');
       const ridesDB = require('../../src/db/rides.js');
       sinon.stub(ridesDB, 'getRideMatchesForTripBoundary').callsFake(async() =>{
         return [];
       });
-      sinon.stub(User, 'find').callsFake(async() => {
-        return [];
-      });
-
+      
       const Ride = require('../../src/models/ride.model.js');
       let results = await Ride.findRideMatchesForTrip(startPoint, endPoint, "2018-03-31");
       results.length.should.equal(0);
-      User.find.restore();
       ridesDB.getRideMatchesForTripBoundary.restore();
     });
 
     it('should return ride with no user details if user does not exist', async() => {
-      const User = require('../../src/models/user.model.js');
+      const User2 = require('../../src/models/user2.model.js');
       const ridesDB = require('../../src/db/rides.js');
       sinon.stub(ridesDB, 'getRideMatchesForTripBoundary').callsFake(async() =>{
         return [{
@@ -38,14 +33,11 @@ describe('ride.model', () => {
           "userId": "5aef443fa52e0f5404a705f6"
         }];
       });
-      sinon.stub(User, 'find').callsFake(async() => {
-        return [{
-          "_id": {
-            toString: function(){
-              return '';
-            }
-          }
-        }];
+      sinon.stub(User2, 'findUserById').callsFake(async() => {
+        // return {
+        //   "userId": ''
+        // };
+        return undefined;
       });
 
       const Ride = require('../../src/models/ride.model.js');
@@ -56,12 +48,12 @@ describe('ride.model', () => {
       results[0].userName.should.equal('');
       results[0].userFirstName.should.equal('');
       results[0].userLastName.should.equal('');
-      User.find.restore();
+      User2.findUserById.restore();
       ridesDB.getRideMatchesForTripBoundary.restore();
     });
 
     it('should return ride match when ride exists for params', async() => {
-      const User = require('../../src/models/user.model.js');
+      const User2 = require('../../src/models/user2.model.js');
       const ridesDB = require('../../src/db/rides.js');
       const ride = {
         travelTime: "3,7",
@@ -86,18 +78,14 @@ describe('ride.model', () => {
           "userId": ride.userId
         }];
       });
-      sinon.stub(User, 'find').callsFake(async() => {
-        return [{
-          "_id": {
-            toString: function(){
-              return ride.userId;
-            }
-          },
-          "profile_picture": ride.userProfilePicture,
+      sinon.stub(User, 'findUserById').callsFake(async() => {
+        return {
+          "userId": ride.userId,
+          "profilePicture": ride.userProfilePicture,
           "username": ride.userName,
           "firstName": ride.userFirstName,
           "lastName": ride.userLastName
-        }];
+        };
       });
 
       const Ride = require('../../src/models/ride.model.js');
@@ -107,7 +95,7 @@ describe('ride.model', () => {
       let resultString = JSON.stringify(results[0]);
       let rideString = JSON.stringify(ride);
       chai.expect(resultString).to.equal(rideString);
-      User.find.restore();
+      User2.findUserById.restore();
       ridesDB.getRideMatchesForTripBoundary.restore();
     });
   });

@@ -35,10 +35,6 @@ module.exports = class User2 {
     return usersDB.deleteUser(this);
   }
 
-  static async deleteAll() {
-    return usersDB.deleteAll();
-  }
-
   /**
    * @param {String} email
    */
@@ -88,6 +84,13 @@ module.exports = class User2 {
    */
   static async findUser(email) {
     return usersDB.findUser(email);
+  }
+
+  /**
+   * @param {String} userId
+   */
+  static async findUserById(userId) {
+    return usersDB.findUserById(userId);
   }
 
   /**

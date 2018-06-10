@@ -1,6 +1,6 @@
 const thumbUtil = require('thumb-utilities');
 const config = require('../config.js');
-const User = require('./user.model.js');
+const User2 = require('./user2.model.js');
 const drivesDB = require('../db/drives.js');
 const uuid = require('uuid/v1');
 const exceptions = require('../constants/exceptions.js');
@@ -46,6 +46,13 @@ module.exports = class Drive{
   }
 
   /**
+   * @param {String} driveId
+   */
+  static async deleteDriveById(driveId) {
+    return await drivesDB.deleteDrive({ driveId });
+  }
+  
+  /**
    *
    * @param {object} req
    */
@@ -80,16 +87,12 @@ module.exports = class Drive{
    */
   static async findDriveMatchesForTrip(startPoint, endPoint, travelDate){
     let drives = await drivesDB.getDriveMatchesForTrip(startPoint, endPoint, travelDate);
-    let obj_ids = drives.map(d => d.userId);
-    let users = await User.find({_id: {$in: obj_ids}});
-    drives.forEach((d) =>{
-      let user = users.find((u) => {
-        return u._id.toString() === d.userId;
-      });
+    drives.forEach(async (d) =>{
+      let user = await User2.findUserById(d.userId);
       let userProfilePicture, userName, firstName, lastName;
 
       if(user){
-        userProfilePicture = user.profile_picture;
+        userProfilePicture = user.profilePicture;
         userName = user.username;
         firstName = user.firstName;
         lastName = user.lastName;

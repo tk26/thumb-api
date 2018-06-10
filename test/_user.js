@@ -43,7 +43,6 @@ describe('Users', () => {
     const unverifiedUserBirthday = "03/21/2001";
 
     before(async () => {
-      await User2.deleteAll();
       dupeUser = await userUtility.createVerifiedUser("Jane", "Doe", dupeUserEmail, "hogwarts", dupeUserPassword, dupeUserUsername, dupeUserBirthday);
       dupeUser2 = await userUtility.createVerifiedUser("Jane", "Doe", dupeUser2Email1, "hogwarts", dupeUser2Password, dupeUser2Username, dupeUser2Birthday);
       testUser = await userUtility.createVerifiedUser("Test", "User", testUserEmail, "Hogwarts", testUserPassword, testUserUsername, testUserBirthday);
@@ -53,7 +52,14 @@ describe('Users', () => {
     });
 
     after(async () => {
-      await User2.deleteAll();
+      await userUtility.deleteUserByEmail(dupeUserEmail);
+      await userUtility.deleteUserByEmail(dupeUser2Email1);
+      await userUtility.deleteUserByEmail(testUserEmail);
+      await userUtility.deleteUserByEmail(unverifiedUserEmail);
+
+      // delete other users created through the tests
+      await userUtility.deleteUserByEmail("jdoe@email.edu");
+      await userUtility.deleteUserByEmail("jdoe_temp@email.edu");
     });
 
     /*

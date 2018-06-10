@@ -16,14 +16,12 @@ describe('Feedback', () => {
 
     before(async() => {
       let userPassword = "Test123!";
-      await Feedback.deleteAll();
       user = await userUtility.createVerifiedUser("Joe", "Smith", email, "Hogwarts", userPassword, username, birthday);
       auth_token = await userUtility.getUserAuthToken(user.email, userPassword);
     });
 
     after(async () => {
       await userUtility.deleteUserByEmail(email);
-      await Feedback.deleteAll();
     });
 
     /*

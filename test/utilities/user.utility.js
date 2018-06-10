@@ -82,9 +82,7 @@ exports.deleteUserByEmail = async function(email){
 
 exports.getFakeUser = function(){
   return {
-    _id: {
-      toString: function(){return uuid();}
-    },
+    userId: uuid(),
     email: 'fakeuser@email.com',
     firstName: 'Fake',
     lastName: 'User',

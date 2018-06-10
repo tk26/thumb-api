@@ -1,17 +1,18 @@
-let mongoose = require("mongoose");
-let exceptions = require('../src/constants/exceptions.js');
-let successResponses = require('../src/constants/success_responses.js');
-let chai = require('chai');
-let chaiHttp = require('chai-http');
-let server = require('../src/server.js');
-let should = chai.should();
+const Drive = require('../src/models/drive.model.js');
+const Ride = require('../src/models/ride.model.js');
+const exceptions = require('../src/constants/exceptions.js');
+const successResponses = require('../src/constants/success_responses.js');
+const chai = require('chai');
+const chaiHttp = require('chai-http');
+const server = require('../src/server.js');
+const should = chai.should();
 const sinon = require('sinon');
 const thumbUtil = require('thumb-utilities');
 
 chai.use(chaiHttp);
 
-let User = require('../src/models/user.model.js');
-let userUtility = require('./utilities/user.utility.js');
+const User2 = require('../src/models/user2.model.js');
+const userUtility = require('./utilities/user.utility.js');
 
 describe('Drive', () => {
     let auth_token, userPublicId, user;
@@ -23,6 +24,8 @@ describe('Drive', () => {
     let endLocation = {latitude:61.2,longitude:16.2,address:"623 Washington Street",city:"Bloomington"};
     let travelDescription = "Going for the Little 500";
 
+    let createdDriveId;
+
     before(async() => {
       user = await userUtility.createVerifiedUser("Joe", "Smith", email, "Hogwarts", userPassword, username, birthday);
       auth_token = await userUtility.getUserAuthToken(user.email, userPassword);
@@ -30,6 +33,7 @@ describe('Drive', () => {
 
     after(async () => {
       await userUtility.deleteUserByEmail(email);
+      await Drive.deleteDriveById(createdDriveId);
     });
 
     /*
@@ -42,7 +46,7 @@ describe('Drive', () => {
                 .send({})
                 .end((err, res) => {
                     res.should.have.status(403);
-                    res.body.should.have.property("message").eql("No token provided");
+                    res.body.should.have.property("message").eql(exceptions.user.MISSING_USER_TOKEN);
                     res.body.should.have.property("success").eql(false);
                     done();
                 });
@@ -51,12 +55,11 @@ describe('Drive', () => {
         it('it should not POST a drive with invalid token', (done) => {
             chai.request(server)
                 .post('/drive/create')
-                .send({
-                    "token" : "random"
-                })
+                .set('Authorization', 'Bearer' + ' ' + 'invalid.token.here')
+                .send({})
                 .end((err, res) => {
                     res.should.have.status(403);
-                    res.body.should.have.property("message").eql("Invalid token provided");
+                    res.body.should.have.property("message").eql(exceptions.user.INVALID_USER_TOKEN);
                     res.body.should.have.property("success").eql(false);
                     done();
                 });
@@ -65,8 +68,8 @@ describe('Drive', () => {
         it('it should not POST a drive without drive start location', (done) => {
             chai.request(server)
                 .post('/drive/create')
+                .set('Authorization', 'Bearer' + ' ' + auth_token)
                 .send({
-                    "token" : auth_token,
                     "endLocation" : endLocation,
                     "travelDate": "02/28/2018",
                     "travelTime" : [3, 7],
@@ -83,8 +86,8 @@ describe('Drive', () => {
         it('it should not POST a drive without drive end location', (done) => {
             chai.request(server)
                 .post('/drive/create')
+                .set('Authorization', 'Bearer' + ' ' + auth_token)
                 .send({
-                    "token" : auth_token,
                     "startLocation" : startLocation,
                     "travelDate": "02/28/2018",
                     "travelTime" : [3, 7],
@@ -101,8 +104,8 @@ describe('Drive', () => {
         it('it should not POST a drive without drive travel date', (done) => {
             chai.request(server)
                 .post('/drive/create')
+                .set('Authorization', 'Bearer' + ' ' + auth_token)
                 .send({
-                    "token" : auth_token,
                     "startLocation" : startLocation,
                     "endLocation" : endLocation,
                     "travelTime" : [3, 7],
@@ -119,8 +122,8 @@ describe('Drive', () => {
         it('it should not POST a drive without drive travel times', (done) => {
             chai.request(server)
                 .post('/drive/create')
+                .set('Authorization', 'Bearer' + ' ' + auth_token)
                 .send({
-                    "token" : auth_token,
                     "startLocation" : startLocation,
                     "endLocation" : endLocation,
                     "travelDate": "02/28/2018",
@@ -137,8 +140,8 @@ describe('Drive', () => {
         it('it should not POST a drive without drive seats available', (done) => {
             chai.request(server)
                 .post('/drive/create')
+                .set('Authorization', 'Bearer' + ' ' + auth_token)
                 .send({
-                    "token" : auth_token,
                     "startLocation" : startLocation,
                     "endLocation" : endLocation,
                     "travelDate": "02/28/2018",
@@ -155,8 +158,8 @@ describe('Drive', () => {
         it('it should not POST a drive without drive travel description', (done) => {
             chai.request(server)
                 .post('/drive/create')
+                .set('Authorization', 'Bearer' + ' ' + auth_token)
                 .send({
-                    "token" : auth_token,
                     "startLocation" : startLocation,
                     "endLocation" : endLocation,
                     "travelDate": "02/28/2018",
@@ -173,8 +176,8 @@ describe('Drive', () => {
         it('it should POST a drive with valid token and drive details', (done) => {
             chai.request(server)
                 .post('/drive/create')
+                .set('Authorization', 'Bearer' + ' ' + auth_token)
                 .send({
-                    "token" : auth_token,
                     "startLocation" : startLocation,
                     "endLocation" : endLocation,
                     "travelDate": "02/28/2018",
@@ -185,14 +188,13 @@ describe('Drive', () => {
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql(successResponses.drive.DRIVE_CREATED);
+                    createdDriveId = res.body.drive.driveId;
                     done();
                 });
         });
     });
 
     describe('/POST /drive/inviterider', () => {
-      const Drive = require('../src/models/drive.model.js');
-      const Ride = require('../src/models/ride.model.js');
       const inviteRiderRoute = '/drive/inviterider';
       let invitedUser;
       const invitedUserEmail = 'inviteduser@test.edu';
@@ -203,16 +205,16 @@ describe('Drive', () => {
 
       before(async() => {
         invitedUser = await userUtility.createVerifiedUser("Invited", "Rider", invitedUserEmail, "Hogwarts", userPassword, invitedUserName, birthday);
-        driveForInvite = new Drive(user._id.toString(),start,end,new Date("02/28/2018"),'3,7',3, travelDescription);
+        driveForInvite = new Drive(user.userId,start,end,new Date("02/28/2018"),'3,7',3, travelDescription);
         await driveForInvite.save();
-        rideForInvite = new Ride(invitedUser._id.toString(),start,end,new Date("02/28/2018"),'5,9',travelDescription);
+        rideForInvite = new Ride(invitedUser.userId,start,end,new Date("02/28/2018"),'5,9',travelDescription);
         await rideForInvite.save();
       });
 
       after(async() => {
         await driveForInvite.delete();
         await rideForInvite.delete();
-        await invitedUser.delete();
+        await userUtility.deleteUserByEmail(invitedUserEmail);
       });
 
       it('it should not POST a rider invite without auth token', (done) => {
@@ -221,20 +223,19 @@ describe('Drive', () => {
             .send({})
             .end((err, res) => {
                 res.should.have.status(403);
-                res.body.should.have.property("message").eql("No token provided");
+                res.body.should.have.property("message").eql(exceptions.user.MISSING_USER_TOKEN);
                 res.body.should.have.property("success").eql(false);
                 done();
             });
-      });
+    });
       it('it should not POST a rider invite with invalid token', (done) => {
           chai.request(server)
               .post(inviteRiderRoute)
-              .send({
-                  "token" : "random"
-              })
+              .set('Authorization', 'Bearer' + ' ' + 'invalid.token.here')
+              .send({})
               .end((err, res) => {
                   res.should.have.status(403);
-                  res.body.should.have.property("message").eql("Invalid token provided");
+                  res.body.should.have.property("message").eql(exceptions.user.INVALID_USER_TOKEN);
                   res.body.should.have.property("success").eql(false);
                   done();
               });
@@ -242,8 +243,8 @@ describe('Drive', () => {
       it('it should not POST a rider invite without a toUserId value', (done) => {
         chai.request(server)
             .post(inviteRiderRoute)
+            .set('Authorization', 'Bearer' + ' ' + auth_token)
             .send({
-                "token" : auth_token,
                 "driveId": "1242412",
                 "rideId": "1341354",
                 "requestedTimes": ["3pm"],
@@ -258,8 +259,8 @@ describe('Drive', () => {
       it('it should not POST a rider invite without a driveId value', (done) => {
         chai.request(server)
             .post(inviteRiderRoute)
+            .set('Authorization', 'Bearer' + ' ' + auth_token)
             .send({
-                "token" : auth_token,
                 "toUserId": "1242412",
                 "rideId": "1341354",
                 "requestedTimes": ["3pm"],
@@ -274,8 +275,8 @@ describe('Drive', () => {
       it('it should not POST a rider invite without requested times', (done) => {
         chai.request(server)
             .post(inviteRiderRoute)
+            .set('Authorization', 'Bearer' + ' ' + auth_token)
             .send({
-                "token" : auth_token,
                 "toUserId": "1242412",
                 "driveId": "11424123",
                 "rideId": "1341354",
@@ -293,8 +294,8 @@ describe('Drive', () => {
         });
         chai.request(server)
             .post(inviteRiderRoute)
+            .set('Authorization', 'Bearer' + ' ' + auth_token)
             .send({
-                "token" : auth_token,
                 "fromUserId": "1342133",
                 "toUserId": "1242412",
                 "driveId": "11424123",
@@ -315,8 +316,8 @@ describe('Drive', () => {
         });
         chai.request(server)
             .post(inviteRiderRoute)
+            .set('Authorization', 'Bearer' + ' ' + auth_token)
             .send({
-                "token" : auth_token,
                 "fromUserId": "1342133",
                 "toUserId": "1242412",
                 "driveId": "11424123",
@@ -336,7 +337,7 @@ describe('Drive', () => {
             .post(inviteRiderRoute)
             .send({
                 "token" : auth_token,
-                "toUserId": invitedUser._id.toString(),
+                "toUserId": invitedUser.userId,
                 "driveId": driveForInvite.driveId,
                 "rideId": rideForInvite.rideId,
                 "requestedTimes": ["4pm"],
@@ -356,10 +357,11 @@ describe('Drive', () => {
         chai.request(server)
             .get('/drive/tripmatches')
             .query({endPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
-            .send({"token" : 'random'})
+            .set('Authorization', 'Bearer' + ' ' + 'invalid.token.here')
+            .send({})
             .end((err, res) => {
               res.should.have.status(403);
-              res.body.should.have.property("message").eql("Invalid token provided");
+              res.body.should.have.property("message").eql(exceptions.user.INVALID_USER_TOKEN);
               res.body.should.have.property("success").eql(false);
               done();
           });
@@ -372,7 +374,7 @@ describe('Drive', () => {
             .send({})
             .end((err, res) => {
               res.should.have.status(403);
-              res.body.should.have.property("message").eql("No token provided");
+              res.body.should.have.property("message").eql(exceptions.user.MISSING_EXPO_TOKEN);
               res.body.should.have.property("success").eql(false);
               done();
           });
@@ -382,7 +384,8 @@ describe('Drive', () => {
         chai.request(server)
             .get('/drive/tripmatches')
             .query({endPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
-            .send({"token" : auth_token})
+            .set('Authorization', 'Bearer' + ' ' + auth_token)
+            .send({})
             .end((err, res) => {
                 res.should.have.status(400);
                 res.should.have.property("message").eql(exceptions.drive.MISSING_START_POINT);
@@ -394,7 +397,8 @@ describe('Drive', () => {
         chai.request(server)
             .get('/drive/tripmatches')
             .query({startPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
-            .send({"token" : auth_token})
+            .set('Authorization', 'Bearer' + ' ' + auth_token)
+            .send({})
             .end((err, res) => {
                 res.should.have.status(400);
                 res.should.have.property("message").eql(exceptions.drive.MISSING_END_POINT);
@@ -409,7 +413,8 @@ describe('Drive', () => {
               startPoint: {latitude :61.2, longitude :16.2},
               endPoint: {latitude :61.2, longitude :16.2}
             })
-            .send({"token" : auth_token})
+            .set('Authorization', 'Bearer' + ' ' + auth_token)
+            .send({})
             .end((err, res) => {
                 res.should.have.status(400);
                 res.should.have.property("error");
@@ -426,7 +431,8 @@ describe('Drive', () => {
               endPoint: {latitude :61.2, longitude :16.2},
               travelDate: "2018-02-28"
             })
-            .send({"token" : auth_token})
+            .set('Authorization', 'Bearer' + ' ' + auth_token)
+            .send({})
             .end((err, res) => {
                 res.should.have.status(200);
                 done();

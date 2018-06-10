@@ -1,31 +1,29 @@
-let mongoose = require("mongoose");
-let Feedback = require('../src/models/feedback.model.js');
-
-let chai = require('chai');
-let chaiHttp = require('chai-http');
-let server = require('../src/server.js');
-let should = chai.should();
-
+const Feedback = require('../src/models/feedback.model.js');
+const exceptions = require('../src/constants/exceptions.js');
+const successResponses = require('../src/constants/success_responses.js');
+const chai = require('chai');
+const chaiHttp = require('chai-http');
+const server = require('../src/server.js');
+const should = chai.should();
 chai.use(chaiHttp);
-
-let User = require('../src/models/user.model.js');
-let userUtility = require('./utilities/user.utility.js');
+const userUtility = require('./utilities/user.utility.js');
 
 describe('Feedback', () => {
-    let auth_token, userPublicId, user;
+    let auth_token, user;
     let email = "feedbackuser@email.com";
     let username = "feedbackuser";
     let birthday = "03/21/2001";
 
     before(async() => {
       let userPassword = "Test123!";
-      await Feedback.remove({});
+      await Feedback.deleteAll();
       user = await userUtility.createVerifiedUser("Joe", "Smith", email, "Hogwarts", userPassword, username, birthday);
       auth_token = await userUtility.getUserAuthToken(user.email, userPassword);
     });
 
     after(async () => {
       await userUtility.deleteUserByEmail(email);
+      await Feedback.deleteAll();
     });
 
     /*
@@ -38,7 +36,7 @@ describe('Feedback', () => {
                 .send({})
                 .end((err, res) => {
                     res.should.have.status(403);
-                    res.body.should.have.property("message").eql("No token provided");
+                    res.body.should.have.property("message").eql(exceptions.user.MISSING_USER_TOKEN);
                     res.body.should.have.property("success").eql(false);
                     done();
                 });
@@ -47,10 +45,10 @@ describe('Feedback', () => {
         it('it should not POST a feedback with invalid token', (done) => {
             chai.request(server)
                 .post('/feedback/submit')
-                .set('Authorization', 'Bearer' + ' ' + 'random')
+                .set('Authorization', 'Bearer' + ' ' + 'invalid.token.here')
                 .end((err, res) => {
                     res.should.have.status(403);
-                    res.body.should.have.property("message").eql("Invalid token provided");
+                    res.body.should.have.property("message").eql(exceptions.user.INVALID_USER_TOKEN);
                     res.body.should.have.property("success").eql(false);
                     done();
                 });
@@ -63,7 +61,7 @@ describe('Feedback', () => {
                 .send({ "feedbackDescription" : "this is the feedback description" })
                 .end((err, res) => {
                     res.should.have.status(400);
-                    res.body.should.have.property("message").eql("Missing feedback type");
+                    res.body.should.have.property("message").eql(exceptions.feedback.MISSING_TYPE);
                     done();
                 });
         });
@@ -75,7 +73,7 @@ describe('Feedback', () => {
                 .send({ "feedbackType" : "bug" })
                 .end((err, res) => {
                     res.should.have.status(400);
-                    res.body.should.have.property("message").eql("Missing feedback description");
+                    res.body.should.have.property("message").eql(exceptions.feedback.MISSING_DESCRIPTION);
                     done();
                 });
         });
@@ -90,7 +88,7 @@ describe('Feedback', () => {
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
-                    res.body.should.have.property("message").eql("Feedback Submitted Successfully");
+                    res.body.should.have.property("message").eql(successResponses.feedback.FEEDBACK_SUBMITTED);
                     done();
                 });
         });

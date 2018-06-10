@@ -26,6 +26,10 @@ module.exports = class Feedback {
         return feedbacksDB.deleteFeedback(this);
     }
 
+    static async deleteAll() {
+        return feedbacksDB.deleteAll();
+    }
+
     /**
      * @param {object} req
      */

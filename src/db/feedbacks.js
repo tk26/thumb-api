@@ -33,6 +33,18 @@ exports.deleteFeedback = async function(feedback) {
     }
 }
 
+exports.deleteAll = async function () {
+    let query = 'MATCH(f:Feedback)' + endOfLine;
+    query += 'DETACH DELETE f';
+
+    try {
+        await neo4j.execute(query, {});
+    } catch (err) {
+        logger.error(err);
+        throw err;
+    }
+}
+
 exports.ActiveConstraints = [
     'CONSTRAINT ON ( feedback:Feedback ) ASSERT feedback.feedbackId IS UNIQUE'
 ];

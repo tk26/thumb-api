@@ -51,7 +51,7 @@ module.exports = class Drive{
   static async deleteDriveById(driveId) {
     return await drivesDB.deleteDrive({ driveId });
   }
-  
+
   /**
    *
    * @param {object} req
@@ -88,20 +88,10 @@ module.exports = class Drive{
   static async findDriveMatchesForTrip(startPoint, endPoint, travelDate){
     let drives = await drivesDB.getDriveMatchesForTrip(startPoint, endPoint, travelDate);
     drives.forEach(async (d) =>{
-      let user = await User2.findUserById(d.userId);
-      let userProfilePicture, userName, firstName, lastName;
-
-      if(user){
-        userProfilePicture = user.profilePicture;
-        userName = user.username;
-        firstName = user.firstName;
-        lastName = user.lastName;
-      }
-
-      d.userProfilePicture = userProfilePicture ? userProfilePicture : '';
-      d.userName = userName ? userName : '';
-      d.userFirstName = firstName ? firstName : '';
-      d.userLastName = lastName ? lastName : '';
+      d.userProfilePicture = d.profilePicture ? d.profilePicture : '';
+      d.userName = d.userName ? d.userName : '';
+      d.userFirstName = d.firstName ? d.firstName : '';
+      d.userLastName = d.lastName ? d.lastName : '';
     });
 
     return drives;

@@ -66,7 +66,7 @@ module.exports = class Ride{
 
     let travelTime = body.travelTime.join();
 
-    return new Ride(req.decoded.userId, startLocation, endLocation, new Date(body.travelDate),
+    return new Ride(req.decoder.userId, startLocation, endLocation, new Date(body.travelDate),
       travelTime, body.travelDescription);
   }
 
@@ -81,20 +81,10 @@ module.exports = class Ride{
     const tripBoundary = thumbUtil.TripBoundary.calculateBoundaryAroundPoints(startPoint, endPoint, config.APP_SETTINGS.TRIP_BOUNDARY_DISTANCE);
     let rides = await ridesDB.getRideMatchesForTripBoundary(tripBoundary, travelDate);
     rides.forEach(async (r) =>{
-      let user = await User2.findUserById(r.userId);
-      let userProfilePicture, userName, firstName, lastName;
-
-      if(user){
-        userProfilePicture = user.profilePicture;
-        userName = user.username;
-        firstName = user.firstName;
-        lastName = user.lastName;
-      }
-
-      r.userProfilePicture = userProfilePicture ? userProfilePicture : '';
-      r.userName = userName ? userName : '';
-      r.userFirstName = firstName ? firstName : '';
-      r.userLastName = lastName ? lastName : '';
+      r.userProfilePicture = r.profilePicture ? r.profilePicture : '';
+      r.userName = r.userName ? r.userName : '';
+      r.userFirstName = r.firstName ? r.firstName : '';
+      r.userLastName = r.lastName ? r.lastName : '';
     });
 
     return rides;

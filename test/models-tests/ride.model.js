@@ -14,7 +14,7 @@ describe('ride.model', () => {
       sinon.stub(ridesDB, 'getRideMatchesForTripBoundary').callsFake(async() =>{
         return [];
       });
-      
+
       const Ride = require('../../src/models/ride.model.js');
       let results = await Ride.findRideMatchesForTrip(startPoint, endPoint, "2018-03-31");
       results.length.should.equal(0);
@@ -22,7 +22,6 @@ describe('ride.model', () => {
     });
 
     it('should return ride with no user details if user does not exist', async() => {
-      const User2 = require('../../src/models/user2.model.js');
       const ridesDB = require('../../src/db/rides.js');
       sinon.stub(ridesDB, 'getRideMatchesForTripBoundary').callsFake(async() =>{
         return [{
@@ -33,12 +32,6 @@ describe('ride.model', () => {
           "userId": "5aef443fa52e0f5404a705f6"
         }];
       });
-      sinon.stub(User2, 'findUserById').callsFake(async() => {
-        // return {
-        //   "userId": ''
-        // };
-        return undefined;
-      });
 
       const Ride = require('../../src/models/ride.model.js');
 
@@ -48,7 +41,6 @@ describe('ride.model', () => {
       results[0].userName.should.equal('');
       results[0].userFirstName.should.equal('');
       results[0].userLastName.should.equal('');
-      User2.findUserById.restore();
       ridesDB.getRideMatchesForTripBoundary.restore();
     });
 
@@ -62,8 +54,11 @@ describe('ride.model', () => {
         availableSeats: 3,
         travelDescription: "Unit Testing Trip matches",
         userId: "5aef443fa52e0f5404a705f6",
-        userProfilePicture: "asdfsadf",
+        profilePicture: "asdfsadf",
         userName: "testuser",
+        firstName: "Test",
+        lastName: "User",
+        userProfilePicture: "asdfsadf",
         userFirstName: "Test",
         userLastName: "User"
       }
@@ -75,17 +70,12 @@ describe('ride.model', () => {
           "travelDate": ride.travelDate,
           "availableSeats": ride.availableSeats,
           "travelDescription": ride.travelDescription,
-          "userId": ride.userId
-        }];
-      });
-      sinon.stub(User, 'findUserById').callsFake(async() => {
-        return {
           "userId": ride.userId,
-          "profilePicture": ride.userProfilePicture,
-          "username": ride.userName,
-          "firstName": ride.userFirstName,
-          "lastName": ride.userLastName
-        };
+          "profilePicture": "asdfsadf",
+          "userName": "testuser",
+          "firstName": "Test",
+          "lastName": "User"
+        }];
       });
 
       const Ride = require('../../src/models/ride.model.js');
@@ -95,7 +85,6 @@ describe('ride.model', () => {
       let resultString = JSON.stringify(results[0]);
       let rideString = JSON.stringify(ride);
       chai.expect(resultString).to.equal(rideString);
-      User2.findUserById.restore();
       ridesDB.getRideMatchesForTripBoundary.restore();
     });
   });

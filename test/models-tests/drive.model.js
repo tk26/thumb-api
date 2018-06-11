@@ -30,15 +30,8 @@ describe('drive.model', () => {
           "driveId": "7bc6e920-515a-11e8-8707-81d858e4dc1f",
           "travelDate": "2018-03-31T00:00:00.000Z",
           "availableSeats": 3,
-          "travelDescription": "Testing trip boundary",
-          "userId": "5aef443fa52e0f5404a705f6"
+          "travelDescription": "Testing trip boundary"
         }];
-      });
-      sinon.stub(User2, 'findUserById').callsFake(async() => {
-        // return {
-        //   "userId": ''
-        // };
-        return undefined;
       });
 
       const Drive = require('../../src/models/drive.model.js');
@@ -49,12 +42,10 @@ describe('drive.model', () => {
       results[0].userName.should.equal('');
       results[0].userFirstName.should.equal('');
       results[0].userLastName.should.equal('');
-      User2.findUserById.restore();
       drivesDB.getDriveMatchesForTrip.restore();
     });
 
     it('should return drive match when drive exists for params', async() => {
-      const User2 = require('../../src/models/user2.model.js');
       const drivesDB = require('../../src/db/drives.js');
       const drive = {
         travelTime: "3,7",
@@ -63,8 +54,11 @@ describe('drive.model', () => {
         availableSeats: 3,
         travelDescription: "Unit Testing Trip matches",
         userId: "5aef443fa52e0f5404a705f6",
-        userProfilePicture: "asdfsadf",
+        profilePicture: "asdfsadf",
         userName: "testuser",
+        firstName: "Test",
+        lastName: "User",
+        userProfilePicture: "asdfsadf",
         userFirstName: "Test",
         userLastName: "User"
       }
@@ -76,17 +70,12 @@ describe('drive.model', () => {
           "travelDate": drive.travelDate,
           "availableSeats": drive.availableSeats,
           "travelDescription": drive.travelDescription,
-          "userId": drive.userId
-        }];
-      });
-      sinon.stub(User2, 'findUserById').callsFake(async() => {
-        return {
           "userId": drive.userId,
-          "profilePicture": drive.userProfilePicture,
-          "username": drive.userName,
-          "firstName": drive.userFirstName,
-          "lastName": drive.userLastName
-        };
+          "profilePicture": "asdfsadf",
+          "userName": "testuser",
+          "firstName": "Test",
+          "lastName": "User"
+        }];
       });
 
       const Drive = require('../../src/models/drive.model.js');
@@ -96,7 +85,6 @@ describe('drive.model', () => {
       let resultString = JSON.stringify(results[0]);
       let driveString = JSON.stringify(drive);
       chai.expect(resultString).to.equal(driveString);
-      User2.findUserById.restore();
       drivesDB.getDriveMatchesForTrip.restore();
     });
   });

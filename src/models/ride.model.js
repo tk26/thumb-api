@@ -66,7 +66,7 @@ module.exports = class Ride{
 
     let travelTime = body.travelTime.join();
 
-    return new Ride(req.decoder.userId, startLocation, endLocation, new Date(body.travelDate),
+    return new Ride(req.decoded.userId, startLocation, endLocation, new Date(body.travelDate),
       travelTime, body.travelDescription);
   }
 

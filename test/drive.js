@@ -288,7 +288,7 @@ describe('Drive', () => {
                 done();
             });
       });
-      it('it should return internal exception when internal server error is returned', () => {
+      it('it should return internal exception when internal server error is returned', (done) => {
         sinon.stub(Drive, 'inviteRider').callsFake(async() =>{
           throw Error('Database is down!');
         });
@@ -310,7 +310,7 @@ describe('Drive', () => {
                 done();
             });
       });
-      it('it should return descriptive error message when invitation already exists', () => {
+      it('it should return descriptive error message when invitation already exists', (done) => {
         sinon.stub(Drive, 'inviteRider').callsFake(async() =>{
           throw Error(exceptions.drive.INVITATION_ALREADY_SENT);
         });
@@ -353,7 +353,7 @@ describe('Drive', () => {
     });
 
     describe('/GET /drive/tripmatches', () => {
-      it('should not get drive matches with invalid token', () => {
+      it('should not get drive matches with invalid token', (done) => {
         chai.request(server)
             .get('/drive/tripmatches')
             .query({endPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
@@ -367,20 +367,20 @@ describe('Drive', () => {
           });
       });
 
-      it('should not get drive matches without auth token', () => {
+      it('should not get drive matches without auth token', (done) => {
         chai.request(server)
             .get('/drive/tripmatches')
             .query({endPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
             .send({})
             .end((err, res) => {
               res.should.have.status(403);
-              res.body.should.have.property("message").eql(exceptions.user.MISSING_EXPO_TOKEN);
+              res.body.should.have.property("message").eql(exceptions.user.MISSING_USER_TOKEN);
               res.body.should.have.property("success").eql(false);
               done();
           });
       });
 
-      it('should not get drive matches without trip start point', () => {
+      it('should not get drive matches without trip start point', (done) => {
         chai.request(server)
             .get('/drive/tripmatches')
             .query({endPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
@@ -388,12 +388,12 @@ describe('Drive', () => {
             .send({})
             .end((err, res) => {
                 res.should.have.status(400);
-                res.should.have.property("message").eql(exceptions.drive.MISSING_START_POINT);
+                res.body.should.have.property("message").eql(exceptions.drive.MISSING_START_POINT);
                 done();
             });
       });
 
-      it('should not get drive matches without trip end point', () => {
+      it('should not get drive matches without trip end point', (done) => {
         chai.request(server)
             .get('/drive/tripmatches')
             .query({startPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
@@ -401,12 +401,12 @@ describe('Drive', () => {
             .send({})
             .end((err, res) => {
                 res.should.have.status(400);
-                res.should.have.property("message").eql(exceptions.drive.MISSING_END_POINT);
+                res.body.should.have.property("message").eql(exceptions.drive.MISSING_END_POINT);
                 done();
             });
       });
 
-      it('should not get drive matches without travel date', () => {
+      it('should not get drive matches without travel date', (done) => {
         chai.request(server)
             .get('/drive/tripmatches')
             .query({
@@ -417,19 +417,18 @@ describe('Drive', () => {
             .send({})
             .end((err, res) => {
                 res.should.have.status(400);
-                res.should.have.property("error");
-                res.should.have.property("message").eql(exceptions.drive.MISSING_TRAVEL_DATE);
+                res.body.should.have.property("message").eql(exceptions.drive.MISSING_TRAVEL_DATE);
                 done();
             });
       });
 
-      it('should return 200 when provided proper request', () => {
+      it('should return 200 when provided proper request', (done) => {
         chai.request(server)
             .get('/drive/tripmatches')
             .query({
-              startPoint: {latitude :61.2, longitude :16.2},
-              endPoint: {latitude :61.2, longitude :16.2},
-              travelDate: "2018-02-28"
+              startPoint: '{"latitude":61.2, "longitude":16.2}',
+              endPoint: '{"latitude":61.2, "longitude":16.2}',
+              travelDate: '2018-02-28'
             })
             .set('Authorization', 'Bearer' + ' ' + auth_token)
             .send({})

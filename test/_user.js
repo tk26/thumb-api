@@ -38,7 +38,7 @@ describe('Users', () => {
     //Unverified User - for tests involving the unverified user scenario
     let unverifiedUser;
     const unverifiedUserPassword = "Test123!";
-    const unverifiedUserEmail = "unverifieduser@email.com";
+    const unverifiedUserEmail = "unverifieduser@email.edu";
     const unverifiedUserUsername = "unverifieduser";
     const unverifiedUserBirthday = "03/21/2001";
 
@@ -47,7 +47,7 @@ describe('Users', () => {
       dupeUser2 = await userUtility.createVerifiedUser("Jane", "Doe", dupeUser2Email1, "hogwarts", dupeUser2Password, dupeUser2Username, dupeUser2Birthday);
       testUser = await userUtility.createVerifiedUser("Test", "User", testUserEmail, "Hogwarts", testUserPassword, testUserUsername, testUserBirthday);
       testUserAuthToken = await userUtility.getUserAuthToken(testUserEmail, testUserPassword);
-      
+
       unverifiedUser = await userUtility.createUnverifiedUser("Unverified", "User", unverifiedUserEmail, "Hogwarts", unverifiedUserPassword, unverifiedUserUsername, unverifiedUserBirthday);
     });
 
@@ -283,7 +283,7 @@ describe('Users', () => {
         after(async () => {
             const verifiedUser = await User2.findUser("jdoe@email.edu");
             chai.assert.equal(0, verifiedUser.verificationId.length);
-            chai.assert.equal(true, verifiedUser.verified);         
+            chai.assert.equal(true, verifiedUser.verified);
         });
     });
 
@@ -426,22 +426,9 @@ describe('Users', () => {
         it('it should not POST a user forgot with unverified email', (done) => {
             // temporary user not destined to be verified
             chai.request(server)
-                .post('/user/create')
-                .send({
-                    "firstName": "John",
-                    "lastName": "Doe",
-                    "email": "jdoe_temp@email.edu",
-                    "school": "hogwarts",
-                    "password": "12121212",
-                    "username": "john_hogwarts",
-                    "birthday": "03/21/2001"
-                })
-                .end();
-
-            chai.request(server)
                 .post('/user/forgot')
                 .send({
-                    "email" : "jdoe_temp@email.edu"
+                    "email" : unverifiedUserEmail
                 })
                 .end((err, res) => {
                     res.should.have.status(403);
@@ -661,7 +648,7 @@ describe('Users', () => {
             chai.assert.equal("I am an early thumb adopter", updatedUser.bio);
         });
     });
-    
+
     // test the /PUT /user/bio route
     describe('/PUT /user/bio', () => {
         it('it should not PUT a user bio without token', (done) => {

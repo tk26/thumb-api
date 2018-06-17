@@ -67,7 +67,7 @@ exports.submitUser = function(req, res) {
     let user = User2.createUserFromRequest(req);
     user.verificationId = crypto.randomBytes(20).toString('hex');
     user.password = User2.generateHash(req.body.password);
-    
+
     user.save()
     .then(() => {
         sendVerificationEmail(req.body.email, user.verificationId);
@@ -100,7 +100,8 @@ exports.verifyUser = function(req, res, next) {
         res.redirect(config.BASE_URL_WEBAPP);
     })
     .catch((err) => {
-        return next(err);
+      logger.error('Error verifying user:' + err);
+      return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
     });
 };
 
@@ -130,7 +131,7 @@ exports.authenticateUser = function(req, res) {
             const _token = jwt.sign(payload, config.AUTH_SECRET, {
                 expiresIn: 18000
             });
-            res.json({ 
+            res.json({
                 message: successResponses.user.USER_AUTHENTICATED,
                 token: _token,
                 firstName: user.firstName,
@@ -160,7 +161,7 @@ exports.submitForgotPasswordUser = function(req, res) {
     if (!regex.test(email)) {
         return res.status(422).send({ message: exceptions.user.INVALID_EMAIL });
     }
-    
+
     // check if ends in .edu
     if (email.substr(email.length - 4) !== '.edu') {
         return res.status(422).send({ message: exceptions.user.NON_STUDENT_EMAIL });
@@ -184,7 +185,7 @@ exports.submitForgotPasswordUser = function(req, res) {
         if (!user.verified) {
             return res.status(403).send({ message: exceptions.user.UNVERIFIED_USER });
         } else {
-            const payload = { 
+            const payload = {
                 userId: user.userId,
                 email: user.email,
                 username: user.username,
@@ -213,11 +214,11 @@ exports.submitForgotPasswordUser = function(req, res) {
 
 exports.submitResetPasswordUser = function(req, res) {
     if(!req.decoded.userId) {
-        res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
+      return res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
     }
 
     if(!req.body.password) {
-        res.status(400).send({ message: exceptions.user.MISSING_PASSWORD });
+      return res.status(400).send({ message: exceptions.user.MISSING_PASSWORD });
     }
 
     const sendPasswordResetConfirmationEmail = (email) => {
@@ -247,13 +248,14 @@ exports.submitResetPasswordUser = function(req, res) {
         res.json({ message: successResponses.user.USER_PASSWORD_RESET });
     })
     .catch((err) => {
-        return next(err);
+      logger.error('Error resetting password:' + err);
+      return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
     });
 };
 
 exports.getUserProfile = function(req, res) {
     if(!req.decoded.userId) {
-        res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
+        return res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
     }
 
     if (!thumbUtil.User.validateUsername(req.params.username)) {
@@ -280,43 +282,46 @@ exports.getUserProfile = function(req, res) {
 
 exports.editUser = function(req, res) {
     if(!req.decoded.userId) {
-        res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
+      return res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
     }
 
     User2.updateUser(req.decoded.userId, req.body.profilePicture || '', req.body.bio || '')
     .then(() => {
-        res.json({ message: successResponses.user.USER_UPDATED });
+      return res.json({ message: successResponses.user.USER_UPDATED });
     })
     .catch((err) => {
-        return next(err);
+      logger.error('Error editing user:' + err);
+      return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
     });
 };
 
 exports.editBio = function(req, res) {
     if(!req.decoded.userId) {
-        res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
+      return res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
     }
 
     User2.updateUser(req.decoded.userId, '', req.body.bio || '')
     .then(() => {
-        res.json({ message: successResponses.user.USER_BIO_UPDATED });
+      return res.json({ message: successResponses.user.USER_BIO_UPDATED });
     })
     .catch((err) => {
-        return next(err);
+      logger.error('Error editing bio:' + err);
+      return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
     });
 }
 
 exports.editProfilePicture = function(req, res) {
     if(!req.decoded.userId) {
-        res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
+      return res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
     }
 
     User2.updateUser(req.decoded.userId, req.body.profilePicture || '', '')
     .then(() => {
-        res.json({ message: successResponses.user.USER_PROFILE_PICTURE_UPDATED });
+      return res.json({ message: successResponses.user.USER_PROFILE_PICTURE_UPDATED });
     })
     .catch((err) => {
-        return next(err);
+      logger.error('Error editing profile picture:' + err);
+      return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
     });
 }
 
@@ -359,18 +364,18 @@ exports.validateEmail = (req, res) => {
 
 exports.saveExpoToken = (req, res) => {
     if(!req.decoded.userId) {
-        res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
+        return res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
     }
 
     if(!req.body.expoToken) {
-        res.status(400).send({ message: exceptions.user.MISSING_EXPO_TOKEN });
+        return res.status(400).send({ message: exceptions.user.MISSING_EXPO_TOKEN });
     }
 
     User2.attachExpoToken(req.decoded.userId, req.body.expoToken)
     .then(() => {
-        res.json({ message: successResponses.user.USER_EXPO_TOKEN_ATTACHED });
+        return res.json({ message: successResponses.user.USER_EXPO_TOKEN_ATTACHED });
     })
     .catch((err) => {
-        return next(err);
+        return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
     });
 }

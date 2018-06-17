@@ -170,7 +170,7 @@ describe('Ride', () => {
     });
 
     describe('/GET /ride/tripmatches', () => {
-      it('should not get ride matches with invalid token', () => {
+      it('should not get ride matches with invalid token', (done) => {
         chai.request(server)
             .get('/ride/tripmatches')
             .query({endPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
@@ -184,7 +184,7 @@ describe('Ride', () => {
           });
       });
 
-      it('should not get ride matches without auth token', () => {
+      it('should not get ride matches without auth token', (done) => {
         chai.request(server)
             .get('/ride/tripmatches')
             .query({endPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
@@ -197,7 +197,7 @@ describe('Ride', () => {
           });
       });
 
-      it('should not get ride matches without trip start point', () => {
+      it('should not get ride matches without trip start point', (done) => {
         chai.request(server)
             .get('/ride/tripmatches')
             .query({endPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
@@ -205,12 +205,12 @@ describe('Ride', () => {
             .send({})
             .end((err, res) => {
                 res.should.have.status(400);
-                res.should.have.property("message").eql(exceptions.ride.MISSING_START_POINT);
+                res.body.should.have.property("message").eql(exceptions.ride.MISSING_START_POINT);
                 done();
             });
       });
 
-      it('should not get ride matches without trip end point', () => {
+      it('should not get ride matches without trip end point', (done) => {
         chai.request(server)
             .get('/ride/tripmatches')
             .query({startPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
@@ -218,12 +218,12 @@ describe('Ride', () => {
             .send({})
             .end((err, res) => {
                 res.should.have.status(400);
-                res.should.have.property("message").eql(exceptions.ride.MISSING_END_POINT);
+                res.body.should.have.property("message").eql(exceptions.ride.MISSING_END_POINT);
                 done();
             });
       });
 
-      it('should not get ride matches without travel date', () => {
+      it('should not get ride matches without travel date', (done) => {
         chai.request(server)
             .get('/ride/tripmatches')
             .query({
@@ -234,19 +234,18 @@ describe('Ride', () => {
             .send({})
             .end((err, res) => {
                 res.should.have.status(400);
-                res.should.have.property("error");
-                res.should.have.property("message").eql(exceptions.ride.MISSING_TRAVEL_DATE);
+                res.body.should.have.property("message").eql(exceptions.ride.MISSING_TRAVEL_DATE);
                 done();
             });
       });
 
-      it('should return 200 when provided proper request', () => {
+      it('should return 200 when provided proper request', (done) => {
         chai.request(server)
             .get('/ride/tripmatches')
             .query({
-              startPoint: {latitude :61.2, longitude :16.2},
-              endPoint: {latitude :61.2, longitude :16.2},
-              travelDate: "2018-02-28"
+              startPoint: '{"latitude":61.2, "longitude":16.2}',
+              endPoint: '{"latitude":61.2, "longitude":16.2}',
+              travelDate: '2018-02-28'
             })
             .set('Authorization', 'Bearer' + ' ' + auth_token)
             .send({})
@@ -349,7 +348,7 @@ describe('Ride', () => {
                 done();
             });
       });
-      it('it should return internal exception when internal server error is returned', () => {
+      it('it should return internal exception when internal server error is returned', (done) => {
         sinon.stub(Ride, 'inviteDriver').callsFake(async() =>{
           throw Error('Database is down!');
         });
@@ -371,7 +370,7 @@ describe('Ride', () => {
                 done();
             });
       });
-      it('it should return descriptive error message when invitation already exists', () => {
+      it('it should return descriptive error message when invitation already exists', (done) => {
         sinon.stub(Ride, 'inviteDriver').callsFake(async() =>{
           throw Error(exceptions.ride.INVITATION_ALREADY_SENT);
         });

@@ -306,7 +306,7 @@ describe('Ride', () => {
         chai.request(server)
             .post(inviteDriverRoute)
             .set('Authorization', 'Bearer' + ' ' + auth_token)
-            .send({  
+            .send({
                 "rideId": "1341354",
                 "requestedTimes": ["3pm"],
                 "driveId": "1242412",

@@ -1,4 +1,3 @@
-const mongoose = require("mongoose");
 const Ride = require('../src/models/ride.model.js');
 const Drive = require('../src/models/drive.model.js');
 const thumbUtil = require('thumb-utilities');
@@ -9,11 +8,10 @@ const chaiHttp = require('chai-http');
 const sinon = require('sinon');
 const server = require('../src/server.js');
 const should = chai.should();
+const uuid = require('uuid/v1');
 
 chai.use(chaiHttp);
-
-let User = require('../src/models/user.model.js');
-let userUtility = require('./utilities/user.utility.js');
+const userUtility = require('./utilities/user.utility.js');
 
 describe('Ride', () => {
     var auth_token, userPublicId, user;
@@ -25,13 +23,16 @@ describe('Ride', () => {
     let endLocation = {latitude:61.1,longitude:16.2,address:"123 Washington Street",city:"Bloomington"};
     let travelDescription = "Going for the Little 500";
 
+    let createdRideId;
+
     before(async () => {
       user = await userUtility.createVerifiedUser("Jon", "Smith", email, "Hogwarts", userPassword, username, birthday);
       auth_token = await userUtility.getUserAuthToken(user.email, userPassword);
     });
 
     after(async () => {
-      await user.delete();
+      await userUtility.deleteUserByEmail(email);
+      await Ride.deleteRideById(createdRideId);
     });
 
     /*
@@ -44,7 +45,7 @@ describe('Ride', () => {
                 .send({})
                 .end((err, res) => {
                     res.should.have.status(403);
-                    res.body.should.have.property("message").eql("No token provided");
+                    res.body.should.have.property("message").eql(exceptions.user.MISSING_USER_TOKEN);
                     res.body.should.have.property("success").eql(false);
                     done();
                 });
@@ -53,12 +54,11 @@ describe('Ride', () => {
         it('it should not POST a ride with invalid token', (done) => {
             chai.request(server)
                 .post('/ride/create')
-                .send({
-                    "token" : "random"
-                })
+                .set('Authorization', 'Bearer' + ' ' + 'invalid.token.here')
+                .send({})
                 .end((err, res) => {
                     res.should.have.status(403);
-                    res.body.should.have.property("message").eql("Invalid token provided");
+                    res.body.should.have.property("message").eql(exceptions.user.INVALID_USER_TOKEN);
                     res.body.should.have.property("success").eql(false);
                     done();
                 });
@@ -67,8 +67,8 @@ describe('Ride', () => {
         it('it should not POST a ride without ride start location', (done) => {
             chai.request(server)
                 .post('/ride/create')
+                .set('Authorization', 'Bearer' + ' ' + auth_token)
                 .send({
-                    "token" : auth_token,
                     "endLocation" : endLocation,
                     "travelDate": "02/28/2018",
                     "travelTime" : [3, 7],
@@ -84,8 +84,8 @@ describe('Ride', () => {
         it('it should not POST a ride without ride end location', (done) => {
             chai.request(server)
                 .post('/ride/create')
+                .set('Authorization', 'Bearer' + ' ' + auth_token)
                 .send({
-                    "token" : auth_token,
                     "startLocation" : startLocation,
                     "travelDate": "02/28/2018",
                     "travelTime" : [3, 7],
@@ -101,8 +101,8 @@ describe('Ride', () => {
         it('it should not POST a ride without ride travel date', (done) => {
             chai.request(server)
                 .post('/ride/create')
+                .set('Authorization', 'Bearer' + ' ' + auth_token)
                 .send({
-                  "token" : auth_token,
                   "startLocation" : startLocation,
                   "endLocation" : endLocation,
                   "travelTime" : [3, 7],
@@ -118,8 +118,8 @@ describe('Ride', () => {
         it('it should not POST a ride without ride travel times', (done) => {
             chai.request(server)
                 .post('/ride/create')
+                .set('Authorization', 'Bearer' + ' ' + auth_token)
                 .send({
-                  "token" : auth_token,
                   "startLocation" : startLocation,
                   "endLocation" : endLocation,
                   "travelDate": "02/28/2018",
@@ -135,8 +135,8 @@ describe('Ride', () => {
         it('it should not POST a ride without ride travel description', (done) => {
             chai.request(server)
                 .post('/ride/create')
+                .set('Authorization', 'Bearer' + ' ' + auth_token)
                 .send({
-                  "token" : auth_token,
                   "startLocation" : startLocation,
                   "endLocation" : endLocation,
                   "travelDate": "02/28/2018",
@@ -152,8 +152,8 @@ describe('Ride', () => {
         it('it should POST a ride with valid token and ride details', (done) => {
             chai.request(server)
                 .post('/ride/create')
+                .set('Authorization', 'Bearer' + ' ' + auth_token)
                 .send({
-                  "token" : auth_token,
                   "startLocation" : startLocation,
                   "endLocation" : endLocation,
                   "travelDate": "02/28/2018",
@@ -163,87 +163,92 @@ describe('Ride', () => {
                 .end((err, res) => {
                     res.should.have.status(200);
                     res.body.should.have.property("message").eql(successResponses.ride.RIDE_CREATED);
+                    createdRideId = res.body.ride.rideId;
                     done();
                 });
         });
     });
 
     describe('/GET /ride/tripmatches', () => {
-      it('should not get ride matches with invalid token', () => {
+      it('should not get ride matches with invalid token', (done) => {
         chai.request(server)
             .get('/ride/tripmatches')
             .query({endPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
-            .send({"token" : 'random'})
+            .set('Authorization', 'Bearer' + ' ' + 'invalid.token.here')
+            .send({})
             .end((err, res) => {
               res.should.have.status(403);
-              res.body.should.have.property("message").eql("Invalid token provided");
+              res.body.should.have.property("message").eql(exceptions.user.INVALID_USER_TOKEN);
               res.body.should.have.property("success").eql(false);
               done();
           });
       });
 
-      it('should not get ride matches without auth token', () => {
+      it('should not get ride matches without auth token', (done) => {
         chai.request(server)
             .get('/ride/tripmatches')
             .query({endPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
             .send({})
             .end((err, res) => {
               res.should.have.status(403);
-              res.body.should.have.property("message").eql("No token provided");
+              res.body.should.have.property("message").eql(exceptions.user.MISSING_USER_TOKEN);
               res.body.should.have.property("success").eql(false);
               done();
           });
       });
 
-      it('should not get ride matches without trip start point', () => {
+      it('should not get ride matches without trip start point', (done) => {
         chai.request(server)
             .get('/ride/tripmatches')
             .query({endPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
-            .send({"token" : auth_token})
+            .set('Authorization', 'Bearer' + ' ' + auth_token)
+            .send({})
             .end((err, res) => {
                 res.should.have.status(400);
-                res.should.have.property("message").eql(exceptions.ride.MISSING_START_POINT);
+                res.body.should.have.property("message").eql(exceptions.ride.MISSING_START_POINT);
                 done();
             });
       });
 
-      it('should not get ride matches without trip end point', () => {
+      it('should not get ride matches without trip end point', (done) => {
         chai.request(server)
             .get('/ride/tripmatches')
             .query({startPoint: {latitude :61.2, longitude :16.2}, travelDate: "2018-02-28"})
-            .send({"token" : auth_token})
+            .set('Authorization', 'Bearer' + ' ' + auth_token)
+            .send({})
             .end((err, res) => {
                 res.should.have.status(400);
-                res.should.have.property("message").eql(exceptions.ride.MISSING_END_POINT);
+                res.body.should.have.property("message").eql(exceptions.ride.MISSING_END_POINT);
                 done();
             });
       });
 
-      it('should not get ride matches without travel date', () => {
+      it('should not get ride matches without travel date', (done) => {
         chai.request(server)
             .get('/ride/tripmatches')
             .query({
               startPoint: {latitude :61.2, longitude :16.2},
               endPoint: {latitude :61.2, longitude :16.2}
             })
-            .send({"token" : auth_token})
+            .set('Authorization', 'Bearer' + ' ' + auth_token)
+            .send({})
             .end((err, res) => {
                 res.should.have.status(400);
-                res.should.have.property("error");
-                res.should.have.property("message").eql(exceptions.ride.MISSING_TRAVEL_DATE);
+                res.body.should.have.property("message").eql(exceptions.ride.MISSING_TRAVEL_DATE);
                 done();
             });
       });
 
-      it('should return 200 when provided proper request', () => {
+      it('should return 200 when provided proper request', (done) => {
         chai.request(server)
             .get('/ride/tripmatches')
             .query({
-              startPoint: {latitude :61.2, longitude :16.2},
-              endPoint: {latitude :61.2, longitude :16.2},
-              travelDate: "2018-02-28"
+              startPoint: '{"latitude":61.2, "longitude":16.2}',
+              endPoint: '{"latitude":61.2, "longitude":16.2}',
+              travelDate: '2018-02-28'
             })
-            .send({"token" : auth_token})
+            .set('Authorization', 'Bearer' + ' ' + auth_token)
+            .send({})
             .end((err, res) => {
                 res.should.have.status(200);
                 done();
@@ -251,8 +256,6 @@ describe('Ride', () => {
       });
     });
     describe('/POST /ride/invitedriver', () => {
-      const Drive = require('../src/models/drive.model.js');
-      const Ride = require('../src/models/ride.model.js');
       const inviteDriverRoute = '/ride/invitedriver';
       let invitedUser;
       const invitedUserEmail = 'inviteddriver@test.edu';
@@ -263,16 +266,16 @@ describe('Ride', () => {
 
       before(async() => {
         invitedUser = await userUtility.createVerifiedUser("Invited", "Driver", invitedUserEmail, "Hogwarts", userPassword, invitedUserName, birthday);
-        driveForInvite = new Drive(user._id.toString(),start,end,new Date("02/28/2018"),'3,7',3, travelDescription);
+        driveForInvite = new Drive(user.userId,start,end,new Date("02/28/2018"),'3,7',3, travelDescription);
         await driveForInvite.save();
-        rideForInvite = new Ride(invitedUser._id.toString(),start,end,new Date("02/28/2018"),'5,9',travelDescription);
+        rideForInvite = new Ride(invitedUser.userId,start,end,new Date("02/28/2018"),'5,9',travelDescription);
         await rideForInvite.save();
       });
 
       after(async() => {
         await driveForInvite.delete();
         await rideForInvite.delete();
-        await invitedUser.delete();
+        await userUtility.deleteUserByEmail(invitedUserEmail);
       });
 
       it('it should not POST a driver invite without auth token', (done) => {
@@ -281,7 +284,7 @@ describe('Ride', () => {
             .send({})
             .end((err, res) => {
                 res.should.have.status(403);
-                res.body.should.have.property("message").eql("No token provided");
+                res.body.should.have.property("message").eql(exceptions.user.MISSING_USER_TOKEN);
                 res.body.should.have.property("success").eql(false);
                 done();
             });
@@ -289,12 +292,11 @@ describe('Ride', () => {
       it('it should not POST a driver invite with invalid token', (done) => {
           chai.request(server)
               .post(inviteDriverRoute)
-              .send({
-                  "token" : "random"
-              })
+              .set('Authorization', 'Bearer' + ' ' + 'invalid.token.here')
+              .send({})
               .end((err, res) => {
                   res.should.have.status(403);
-                  res.body.should.have.property("message").eql("Invalid token provided");
+                  res.body.should.have.property("message").eql(exceptions.user.INVALID_USER_TOKEN);
                   res.body.should.have.property("success").eql(false);
                   done();
               });
@@ -302,8 +304,8 @@ describe('Ride', () => {
       it('it should not POST a driver invite without a toUserId value', (done) => {
         chai.request(server)
             .post(inviteDriverRoute)
+            .set('Authorization', 'Bearer' + ' ' + auth_token)
             .send({
-                "token" : auth_token,
                 "rideId": "1341354",
                 "requestedTimes": ["3pm"],
                 "driveId": "1242412",
@@ -318,8 +320,8 @@ describe('Ride', () => {
       it('it should not POST a rider invite without a driveId value', (done) => {
         chai.request(server)
             .post(inviteDriverRoute)
+            .set('Authorization', 'Bearer' + ' ' + auth_token)
             .send({
-                "token" : auth_token,
                 "toUserId": "1242412",
                 "requestedTimes": ["3pm"],
                 "comment": "Would you like to drive me?"
@@ -333,8 +335,8 @@ describe('Ride', () => {
       it('it should not POST a rider invite without requested times', (done) => {
         chai.request(server)
             .post(inviteDriverRoute)
+            .set('Authorization', 'Bearer' + ' ' + auth_token)
             .send({
-                "token" : auth_token,
                 "toUserId": "1242412",
                 "driveId": "11424123",
                 "rideId": "1341354",
@@ -346,14 +348,14 @@ describe('Ride', () => {
                 done();
             });
       });
-      it('it should return internal exception when internal server error is returned', () => {
+      it('it should return internal exception when internal server error is returned', (done) => {
         sinon.stub(Ride, 'inviteDriver').callsFake(async() =>{
           throw Error('Database is down!');
         });
         chai.request(server)
             .post(inviteDriverRoute)
+            .set('Authorization', 'Bearer' + ' ' + auth_token)
             .send({
-                "token" : auth_token,
                 "fromUserId": "1342133",
                 "toUserId": "1242412",
                 "driveId": "11424123",
@@ -368,14 +370,14 @@ describe('Ride', () => {
                 done();
             });
       });
-      it('it should return descriptive error message when invitation already exists', () => {
+      it('it should return descriptive error message when invitation already exists', (done) => {
         sinon.stub(Ride, 'inviteDriver').callsFake(async() =>{
           throw Error(exceptions.ride.INVITATION_ALREADY_SENT);
         });
         chai.request(server)
             .post(inviteDriverRoute)
+            .set('Authorization', 'Bearer' + ' ' + auth_token)
             .send({
-                "token" : auth_token,
                 "fromUserId": "1342133",
                 "toUserId": "1242412",
                 "driveId": "11424123",
@@ -393,9 +395,9 @@ describe('Ride', () => {
       it('it should successfully create invitation when provided valid request', (done) => {
         chai.request(server)
             .post(inviteDriverRoute)
+            .set('Authorization', 'Bearer' + ' ' + auth_token)
             .send({
-                "token" : auth_token,
-                "toUserId": invitedUser._id.toString(),
+                "toUserId": invitedUser.userId,
                 "rideId": rideForInvite.rideId,
                 "driveId": driveForInvite.driveId,
                 "requestedTimes": ["4pm"],

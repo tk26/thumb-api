@@ -2,7 +2,8 @@ module.exports = {
   common: {
     MISSING_INVITE_TOUSER: "Missing Invitation's To User",
     MISSING_INVITE_REQUESTEDTIME: "Missing Invitation's requested time",
-    INTERNAL_INVITE_ERROR: "Error sending invitation."
+    INTERNAL_INVITE_ERROR: "Error sending invitation.",
+    INTERNAL_ERROR: "Some error occured",
   },
   ride: {
     MISSING_START_LOCATION: "Missing Ride's Start Location",
@@ -30,5 +31,31 @@ module.exports = {
     INTERNAL_CREATE_ERROR: "Error creating drive.",
     INTERNAL_GETTRIPMATCHES_ERROR: "Error retrieving trip matches.",
     INVITATION_ALREADY_SENT: 'An invitation has already been sent to this rider to join this drive.'
+  },
+  user: {
+    MISSING_FIRST_NAME: "Missing User's First Name",
+    MISSING_LAST_NAME: "Missing User's Last Name",
+    MISSING_EMAIL: "Missing User's Email",
+    MISSING_SCHOOL: "Missing User's School",
+    MISSING_PASSWORD: "Missing User's Password",
+    INVALID_PASSWORD: "Invalid password",
+    MISSING_USERNAME: "Missing User's Username",
+    MISSING_BIRTHDAY: "Missing User's Birthday",
+    INTERNAL_ERROR: "Error creating user.",
+    INVALID_USERNAME: "Invalid username",
+    DUPLICATE_USERNAME: "Duplicate username",
+    INVALID_EMAIL: "Invalid email",
+    DUPLICATE_EMAIL: "Duplicate email",
+    NON_STUDENT_EMAIL: "Non-student email",
+    UNVERIFIED_USER: "Unverified user",
+    UNAUTHORIZED_USER: "Unauthorized user",
+    MISSING_USER_TOKEN: "No token provided",
+    INVALID_USER_TOKEN: "Invalid token provided",
+    MISSING_EXPO_TOKEN: "expoToken not sent",
+  },
+  feedback: {
+    MISSING_TYPE: "Missing feedback type",
+    MISSING_DESCRIPTION: "Missing feedback description",
+    INTERNAL_ERROR: "Error creating feedback",
   }
 }

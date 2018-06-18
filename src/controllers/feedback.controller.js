@@ -1,43 +1,27 @@
-var Feedback = require('models/feedback.model.js');
-var User = require('models/user.model.js');
+const Feedback = require('models/feedback.model.js');
+const exceptions = require('../constants/exceptions.js');
+const successResponses = require('../constants/success_responses.js');
 
 exports.submitFeedback = function(req, res) {
     if (!req.decoded.userId) {
-        return res.status(400).send({ message: "userId not decoded" });
+        res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
     }
 
     if (!req.body.feedbackType) {
-        return res.status(400).send({ message: "Missing feedback type" });
+        return res.status(400).send({ message: exceptions.feedback.MISSING_TYPE });
     }
 
     if (!req.body.feedbackDescription) {
-        return res.status(400).send({ message: "Missing feedback description" });
+        return res.status(400).send({ message: exceptions.feedback.MISSING_DESCRIPTION });
     }
 
-    User.findOne({
-        '_id' : req.decoded.userId,
-        'verified' : true
-    }, function(err, user) {
-        if(err || !user) {
-            return res.status(500).send({ message: "Incorrect userId" });
-        }
-    }).then( (user) => {
-        if (!user.email) {
-            return res.status(500).send({ message: "Incorrect user email" });
-        }
+    const feedback = Feedback.createFeedbackFromRequest(req);
 
-        let feedback = new Feedback();
-        feedback.type = req.body.feedbackType;
-        feedback.description = req.body.feedbackDescription;
-        feedback.userId = req.decoded.userId;
-        feedback.userEmail = user.email;
-
-        feedback.save((err, data) => {
-            if(err) {
-                return res.status(500).send(err);
-            } else {
-                res.json({ message: "Feedback Submitted Successfully" });
-            }
-        });
+    feedback.save()
+    .then(() => {
+        res.json({ message: successResponses.feedback.FEEDBACK_SUBMITTED });
+    })
+    .catch((err) => {
+        return res.status(500).send({ message: exceptions.feedback.INTERNAL_ERROR });
     });
 };

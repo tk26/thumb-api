@@ -10,24 +10,18 @@ describe('ride.model', () => {
     let endPoint = new GeoPoint(61.2,16.2);
 
     it('should return empty array when no rides exist', async() => {
-      const User = require('../../src/models/user.model.js');
       const ridesDB = require('../../src/db/rides.js');
       sinon.stub(ridesDB, 'getRideMatchesForTripBoundary').callsFake(async() =>{
-        return [];
-      });
-      sinon.stub(User, 'find').callsFake(async() => {
         return [];
       });
 
       const Ride = require('../../src/models/ride.model.js');
       let results = await Ride.findRideMatchesForTrip(startPoint, endPoint, "2018-03-31");
       results.length.should.equal(0);
-      User.find.restore();
       ridesDB.getRideMatchesForTripBoundary.restore();
     });
 
     it('should return ride with no user details if user does not exist', async() => {
-      const User = require('../../src/models/user.model.js');
       const ridesDB = require('../../src/db/rides.js');
       sinon.stub(ridesDB, 'getRideMatchesForTripBoundary').callsFake(async() =>{
         return [{
@@ -36,15 +30,6 @@ describe('ride.model', () => {
           "travelDate": "2018-03-31T00:00:00.000Z",
           "travelDescription": "Testing trip boundary",
           "userId": "5aef443fa52e0f5404a705f6"
-        }];
-      });
-      sinon.stub(User, 'find').callsFake(async() => {
-        return [{
-          "_id": {
-            toString: function(){
-              return '';
-            }
-          }
         }];
       });
 
@@ -56,12 +41,10 @@ describe('ride.model', () => {
       results[0].userName.should.equal('');
       results[0].userFirstName.should.equal('');
       results[0].userLastName.should.equal('');
-      User.find.restore();
       ridesDB.getRideMatchesForTripBoundary.restore();
     });
 
     it('should return ride match when ride exists for params', async() => {
-      const User = require('../../src/models/user.model.js');
       const ridesDB = require('../../src/db/rides.js');
       const ride = {
         travelTime: "3,7",
@@ -70,8 +53,11 @@ describe('ride.model', () => {
         availableSeats: 3,
         travelDescription: "Unit Testing Trip matches",
         userId: "5aef443fa52e0f5404a705f6",
-        userProfilePicture: "asdfsadf",
+        profilePicture: "asdfsadf",
         userName: "testuser",
+        firstName: "Test",
+        lastName: "User",
+        userProfilePicture: "asdfsadf",
         userFirstName: "Test",
         userLastName: "User"
       }
@@ -83,20 +69,11 @@ describe('ride.model', () => {
           "travelDate": ride.travelDate,
           "availableSeats": ride.availableSeats,
           "travelDescription": ride.travelDescription,
-          "userId": ride.userId
-        }];
-      });
-      sinon.stub(User, 'find').callsFake(async() => {
-        return [{
-          "_id": {
-            toString: function(){
-              return ride.userId;
-            }
-          },
-          "profile_picture": ride.userProfilePicture,
-          "username": ride.userName,
-          "firstName": ride.userFirstName,
-          "lastName": ride.userLastName
+          "userId": ride.userId,
+          "profilePicture": "asdfsadf",
+          "userName": "testuser",
+          "firstName": "Test",
+          "lastName": "User"
         }];
       });
 
@@ -107,7 +84,6 @@ describe('ride.model', () => {
       let resultString = JSON.stringify(results[0]);
       let rideString = JSON.stringify(ride);
       chai.expect(resultString).to.equal(rideString);
-      User.find.restore();
       ridesDB.getRideMatchesForTripBoundary.restore();
     });
   });

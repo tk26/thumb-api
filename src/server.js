@@ -32,9 +32,7 @@ if(process.env.NODE_ENV !== 'test') {
     app.use(morgan('combined')); //'combined' outputs the Apache style LOGs
 }
 
-require('extensions/mongo.js');
 require('routes/user.routes.js')(app);
-require('routes/potential_user.routes.js')(app);
 require('routes/drive.routes.js')(app);
 require('routes/ride.routes.js')(app);
 require('routes/feedback.routes.js')(app);

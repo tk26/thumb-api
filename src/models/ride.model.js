@@ -1,5 +1,4 @@
 const config = require('../config.js');
-const User2 = require('./user2.model.js');
 const thumbUtil = require('thumb-utilities');
 const ridesDB = require('../db/rides.js');
 const uuid = require('uuid/v1');

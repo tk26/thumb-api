@@ -1,6 +1,5 @@
 const thumbUtil = require('thumb-utilities');
 const config = require('../config.js');
-const User2 = require('./user2.model.js');
 const drivesDB = require('../db/drives.js');
 const uuid = require('uuid/v1');
 const exceptions = require('../constants/exceptions.js');

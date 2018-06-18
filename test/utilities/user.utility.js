@@ -1,5 +1,5 @@
 const neo4j = require('../../src/extensions/neo4j.js');
-const User2 = require('../../src/models/user2.model.js');
+const User = require('../../src/models/user.model.js');
 const server = require('../../src/server.js');
 const exceptions = require('../../src/constants/exceptions.js');
 const successResponses = require('../../src/constants/success_responses.js');
@@ -10,7 +10,7 @@ chai.use(chaiHttp);
 
 exports.createVerifiedUser = async function (firstName, lastName, email, school, password, username, birthday){
   let should = chai.should();
-  await User2.deleteUserByEmail(email);
+  await User.deleteUserByEmail(email);
 
   res = await chai.request(server)
     .post('/user/create')
@@ -27,7 +27,7 @@ exports.createVerifiedUser = async function (firstName, lastName, email, school,
   res.should.have.status(200);
   res.body.should.have.property("message").eql(successResponses.user.USER_CREATED);
 
-  let createdUser = await User2.findUser(email);
+  let createdUser = await User.findUser(email);
   try {
     let verifyResponse = await chai.request(server)
       .get('/user/verify/' + createdUser.verificationId)
@@ -35,7 +35,7 @@ exports.createVerifiedUser = async function (firstName, lastName, email, school,
   } catch(error) {
     console.log("UserUtility:  Ignored redirect after verifying user..."); // eslint-disable-line no-console
   }
-  createdUser = await User2.findUser(email);
+  createdUser = await User.findUser(email);
   chai.assert.equal(0, createdUser.verificationId.length);
   chai.assert.equal(true, createdUser.verified);
 
@@ -44,7 +44,7 @@ exports.createVerifiedUser = async function (firstName, lastName, email, school,
 
 exports.createUnverifiedUser = async function (firstName, lastName, email, school, password, username, birthday){
   let should = chai.should();
-  await User2.deleteUserByEmail(email);
+  await User.deleteUserByEmail(email);
 
   res = await chai.request(server)
     .post('/user/create')
@@ -61,7 +61,7 @@ exports.createUnverifiedUser = async function (firstName, lastName, email, schoo
   res.should.have.status(200);
   res.body.should.have.property("message").eql(successResponses.user.USER_CREATED);
 
-  let createdUser = await User2.findUser(email);
+  let createdUser = await User.findUser(email);
   return createdUser;
 }
 
@@ -77,7 +77,7 @@ exports.getUserAuthToken = async function(email, password){
 }
 
 exports.deleteUserByEmail = async function(email){
-  await User2.deleteUserByEmail(email);
+  await User.deleteUserByEmail(email);
 }
 
 exports.getFakeUser = function(){

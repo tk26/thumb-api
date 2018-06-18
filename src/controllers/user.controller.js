@@ -1,4 +1,4 @@
-const User2 = require('models/user2.model.js');
+const User = require('models/User.model.js');
 var jwt = require('jsonwebtoken');
 var config = require('config.js');
 var sgMailer = require('extensions/mailer.js');
@@ -64,9 +64,9 @@ exports.submitUser = function(req, res) {
         return res.status(400).send({ message: exceptions.user.MISSING_BIRTHDAY });
     }
 
-    let user = User2.createUserFromRequest(req);
+    let user = User.createUserFromRequest(req);
     user.verificationId = crypto.randomBytes(20).toString('hex');
-    user.password = User2.generateHash(req.body.password);
+    user.password = User.generateHash(req.body.password);
 
     user.save()
     .then(() => {
@@ -95,7 +95,7 @@ exports.submitUser = function(req, res) {
 };
 
 exports.verifyUser = function(req, res, next) {
-    User2.verifyUser(req.params.verificationId)
+    User.verifyUser(req.params.verificationId)
     .then(() => {
         res.redirect(config.BASE_URL_WEBAPP);
     })
@@ -114,9 +114,9 @@ exports.authenticateUser = function(req, res) {
         return res.status(400).send({ message: exceptions.user.MISSING_PASSWORD });
     }
 
-    User2.findUser(req.body.email)
+    User.findUser(req.body.email)
     .then(user => {
-        if (!User2.validatePassword(req.body.password, user.password)) {
+        if (!User.validatePassword(req.body.password, user.password)) {
             return res.status(400).send({ message: exceptions.user.INVALID_PASSWORD });
         } else if (!user.verified) {
             // resend user verification email
@@ -180,7 +180,7 @@ exports.submitForgotPasswordUser = function(req, res) {
         sgMailer.send(mailOptions);
     };
 
-    User2.findUser(email)
+    User.findUser(email)
     .then(user => {
         if (!user.verified) {
             return res.status(403).send({ message: exceptions.user.UNVERIFIED_USER });
@@ -194,7 +194,7 @@ exports.submitForgotPasswordUser = function(req, res) {
                 expiresIn: 300
             });
 
-            User2.updatePasswordResetToken(user.userId, resetToken)
+            User.updatePasswordResetToken(user.userId, resetToken)
             .then(() => {
                 if (process.env.NODE_ENV !== 'test') {
                     sendPasswordResetEmail(resetToken);
@@ -240,7 +240,7 @@ exports.submitResetPasswordUser = function(req, res) {
 
         sgMailer.send(mailOptions);
     };
-    User2.updatePassword(req.decoded.userId, User2.generateHash(req.body.password))
+    User.updatePassword(req.decoded.userId, User.generateHash(req.body.password))
     .then(() => {
         if (process.env.NODE_ENV !== 'test') {
             sendPasswordResetConfirmationEmail(req.decoded.email);
@@ -262,7 +262,7 @@ exports.getUserProfile = function(req, res) {
         return res.status(422).send({ message: exceptions.user.INVALID_USERNAME });
     }
 
-    User2.retrieveUser(req.params.username.toLowerCase())
+    User.retrieveUser(req.params.username.toLowerCase())
     .then(user => {
         return res.json({
             message: successResponses.user.USER_PROFILE_RETRIEVED,
@@ -285,7 +285,7 @@ exports.editUser = function(req, res) {
       return res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
     }
 
-    User2.updateUser(req.decoded.userId, req.body.profilePicture || '', req.body.bio || '')
+    User.updateUser(req.decoded.userId, req.body.profilePicture || '', req.body.bio || '')
     .then(() => {
       return res.json({ message: successResponses.user.USER_UPDATED });
     })
@@ -300,7 +300,7 @@ exports.editBio = function(req, res) {
       return res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
     }
 
-    User2.updateUser(req.decoded.userId, '', req.body.bio || '')
+    User.updateUser(req.decoded.userId, '', req.body.bio || '')
     .then(() => {
       return res.json({ message: successResponses.user.USER_BIO_UPDATED });
     })
@@ -315,7 +315,7 @@ exports.editProfilePicture = function(req, res) {
       return res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
     }
 
-    User2.updateUser(req.decoded.userId, req.body.profilePicture || '', '')
+    User.updateUser(req.decoded.userId, req.body.profilePicture || '', '')
     .then(() => {
       return res.json({ message: successResponses.user.USER_PROFILE_PICTURE_UPDATED });
     })
@@ -330,7 +330,7 @@ exports.validateUsername = (req, res) => {
         return res.status(422).send({ message: exceptions.user.INVALID_USERNAME });
     }
 
-    User2.validateUsername(req.params.username)
+    User.validateUsername(req.params.username)
     .then(isValid => {
         return isValid ? res.json({ message: successResponses.user.VALID_USERNAME })
             : res.status(409).send({ message: exceptions.user.DUPLICATE_USERNAME });
@@ -352,7 +352,7 @@ exports.validateEmail = (req, res) => {
         return res.status(422).send({ message: exceptions.user.NON_STUDENT_EMAIL });
     }
 
-    User2.validateEmail(email)
+    User.validateEmail(email)
     .then(isValid => {
         return isValid ? res.json({ message: successResponses.user.VALID_EMAIL })
             : res.status(409).send({ message: exceptions.user.DUPLICATE_EMAIL });
@@ -371,7 +371,7 @@ exports.saveExpoToken = (req, res) => {
         return res.status(400).send({ message: exceptions.user.MISSING_EXPO_TOKEN });
     }
 
-    User2.attachExpoToken(req.decoded.userId, req.body.expoToken)
+    User.attachExpoToken(req.decoded.userId, req.body.expoToken)
     .then(() => {
         return res.json({ message: successResponses.user.USER_EXPO_TOKEN_ATTACHED });
     })

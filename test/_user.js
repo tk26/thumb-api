@@ -1,4 +1,4 @@
-const User2 = require('../src/models/user2.model.js');
+const User = require('../src/models/user.model.js');
 const exceptions = require('../src/constants/exceptions.js');
 const successResponses = require('../src/constants/success_responses.js');
 const chai = require('chai');
@@ -250,7 +250,7 @@ describe('Users', () => {
         });
 
         after(async () => {
-            const createdUser = await User2.findUser("jdoe@email.edu");
+            const createdUser = await User.findUser("jdoe@email.edu");
             chai.assert.notEqual(0, createdUser.verificationId.length);
             chai.assert.equal(false, createdUser.verified);
             verificationId = createdUser.verificationId;
@@ -281,7 +281,7 @@ describe('Users', () => {
         });
 
         after(async () => {
-            const verifiedUser = await User2.findUser("jdoe@email.edu");
+            const verifiedUser = await User.findUser("jdoe@email.edu");
             chai.assert.equal(0, verifiedUser.verificationId.length);
             chai.assert.equal(true, verifiedUser.verified);
         });
@@ -451,7 +451,7 @@ describe('Users', () => {
         });
 
         after(async () => {
-            const forgottenPasswordUser = await User2.findUser("jdoe@email.edu");
+            const forgottenPasswordUser = await User.findUser("jdoe@email.edu");
             chai.assert.notEqual(0, forgottenPasswordUser.passwordResetToken.length);
             passwordResetToken = forgottenPasswordUser.passwordResetToken;
         });
@@ -643,7 +643,7 @@ describe('Users', () => {
         });
 
         after(async () => {
-            const updatedUser = await User2.findUser(testUserEmail);
+            const updatedUser = await User.findUser(testUserEmail);
             chai.assert.equal("pp", updatedUser.profilePicture);
             chai.assert.equal("I am an early thumb adopter", updatedUser.bio);
         });
@@ -691,7 +691,7 @@ describe('Users', () => {
         });
 
         after(async () => {
-            const bioUpdatedUser = await User2.findUser(testUserEmail);
+            const bioUpdatedUser = await User.findUser(testUserEmail);
             chai.assert.equal("I am an updated bio", bioUpdatedUser.bio);
         });
     });
@@ -738,7 +738,7 @@ describe('Users', () => {
         });
 
         after(async () => {
-            const profilePictureUpdatedUser = await User2.findUser(testUserEmail);
+            const profilePictureUpdatedUser = await User.findUser(testUserEmail);
             chai.assert.equal("updated pp", profilePictureUpdatedUser.profilePicture);
         });
     });
@@ -906,7 +906,7 @@ describe('Users', () => {
         });
 
         after(async () => {
-            const expodatedUser = await User2.findUser(testUserEmail);
+            const expodatedUser = await User.findUser(testUserEmail);
             chai.assert.equal("testExpoToken", expodatedUser.expoToken);
         });
     });

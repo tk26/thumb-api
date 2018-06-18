@@ -22,7 +22,6 @@ describe('drive.model', () => {
     });
 
     it('should return drive with no user details if user does not exist', async() => {
-      const User2 = require('../../src/models/user2.model.js');
       const drivesDB = require('../../src/db/drives.js');
       sinon.stub(drivesDB, 'getDriveMatchesForTrip').callsFake(async() =>{
         return [{

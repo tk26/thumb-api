@@ -11,7 +11,6 @@ const thumbUtil = require('thumb-utilities');
 
 chai.use(chaiHttp);
 
-const User2 = require('../src/models/user2.model.js');
 const userUtility = require('./utilities/user.utility.js');
 
 describe('Drive', () => {

@@ -1,6 +1,6 @@
 const neo4j = require('../../src/extensions/neo4j.js');
 const usersDB = require('../../src/db/users.js');
-const User2 = require('../../src/models/user2.model.js');
+const User = require('../../src/models/user.model.js');
 const uuid = require('uuid/v1');
 const endOfLine = require('os').EOL;
 const chai = require('chai');
@@ -15,7 +15,7 @@ describe('Users DB', () => {
     const password = "testPassword";
     const username = "testUsername";
     const birthday = "testBirthday";
-    let user = new User2(userId, firstName, lastName,
+    let user = new User(userId, firstName, lastName,
         email, school, password, username, birthday);
     user.verificationId = "testVerificationId";
     let createdTestUser;

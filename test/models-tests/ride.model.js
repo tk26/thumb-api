@@ -45,7 +45,6 @@ describe('ride.model', () => {
     });
 
     it('should return ride match when ride exists for params', async() => {
-      const User2 = require('../../src/models/user2.model.js');
       const ridesDB = require('../../src/db/rides.js');
       const ride = {
         travelTime: "3,7",

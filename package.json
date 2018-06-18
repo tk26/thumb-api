@@ -71,8 +71,6 @@
       "src/extensions/",
       "test/",
       "src/server.js",
-      "src/models/user2.model.js",
-      "src/models/feedback.model.js",
       "src/models/user.model.js",
       "src/constants/"
     ]

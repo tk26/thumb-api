@@ -25,4 +25,8 @@ module.exports = function(app) {
     app.get('/user/validate/email/:email', user.validateEmail);
 
     app.post('/user/expo/token/save', middleware('auth'), user.saveExpoToken);
+
+    app.post('/user/follow/', middleware('auth'), user.followUser);
+
+    app.post('/user/unfollow/', middleware('auth'), user.unfollowUser);
 }

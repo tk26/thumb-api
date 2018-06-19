@@ -20,6 +20,8 @@ module.exports = {
     USER_PROFILE_PICTURE_UPDATED: "User profile picture updated successfully",
     USER_BIO_UPDATED: "User bio updated successfully",
     USER_EXPO_TOKEN_ATTACHED: "User expo token attached successfully",
+    USER_FOLLOWED: "User followed successfully",
+    USER_UNFOLLOWED: "User unfollowed successfully",
   },
   feedback: {
     FEEDBACK_SUBMITTED: "Feedback Submitted Successfully",

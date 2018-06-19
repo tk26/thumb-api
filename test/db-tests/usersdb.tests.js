@@ -76,7 +76,7 @@ describe('Users DB', () => {
     describe('retrieveUser', () => {
         it('should return an existing user', async() => {
             const retrievedUser = await usersDB.retrieveUser(createdTestUser.username);
-            retrievedUser.userId.should.equal(createdTestUser.userId);
+            retrievedUser.user.userId.should.equal(createdTestUser.userId);
         });
     });
 

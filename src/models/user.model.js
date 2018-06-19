@@ -139,4 +139,20 @@ module.exports = class User {
   static async attachExpoToken(userId, expoToken) {
     return usersDB.attachExpoToken(userId, expoToken);
   }
+
+  /**
+   * @param {String} fromUsername
+   * @param {String} toUsername
+   */
+  static async followUser(fromUsername, toUsername) {
+    return usersDB.followUser(fromUsername, toUsername);
+  }
+
+  /**
+   * @param {String} fromUsername
+   * @param {String} toUsername
+   */
+  static async unfollowUser(fromUsername, toUsername) {
+    return usersDB.unfollowUser(fromUsername, toUsername);
+  }
 }

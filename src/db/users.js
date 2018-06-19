@@ -124,16 +124,49 @@ exports.findUserById = async function (userId) {
 }
 
 exports.retrieveUser = async function (username) {
-  let query = 'MATCH(u:User{username:{username}, verified:true})' + endOfLine;
+  let user, follows, followedBy, query;
+  // user
+  query = 'MATCH(u:User{username:{username}, verified:true})' + endOfLine;
   query += 'RETURN u';
-
   try{
     let neoResult = await neo4j.execute(query,{ username });
-    return neoResult.records[0]._fields[0].properties;
+    user = neoResult.records[0]._fields[0].properties;
   } catch (err){
     logger.error(err);
     throw err;
   }
+  // users followed
+  query = 'MATCH(u:User{username:{username}})-[:FOLLOWS]->(f1:User)' + endOfLine;
+  query += 'RETURN f1';
+
+  try{
+    let neoResult = await neo4j.execute(query,{ username });
+    follows = neoResult.records.length === 0 ? []
+      : neoResult.records.map(record => {
+        const { firstName, lastName, username } = record._fields[0].properties;
+        return { firstName, lastName, username };
+    });
+  } catch (err){
+    logger.error(err);
+    throw err;
+  }
+  // users following
+  query = 'MATCH(u:User{username:{username}})<-[:FOLLOWS]-(f2:User)' + endOfLine;
+  query += 'RETURN f2';
+
+  try{
+    let neoResult = await neo4j.execute(query,{ username });
+    followedBy = neoResult.records.length === 0 ? []
+      : neoResult.records.map(record => {
+        const { firstName, lastName, username } = record._fields[0].properties;
+        return { firstName, lastName, username };
+      });
+  } catch (err){
+    logger.error(err);
+    throw err;
+  }
+
+  return { user, follows, followedBy };
 }
 
 exports.updatePasswordResetToken = async function (userId, passwordResetToken) {
@@ -183,6 +216,34 @@ exports.attachExpoToken = async function (userId, expoToken) {
   } catch(err) {
     logger.error(err);
     throw err;
+  }
+}
+
+exports.followUser = async function (fromUsername, toUsername) {
+  let query = 'MATCH(fromUser:User{username:{fromUsername}})' + endOfLine;
+  query += 'MATCH(toUser:User{username:{toUsername}})' + endOfLine;
+  query += 'MERGE(fromUser)-[f:FOLLOWS]->(toUser) RETURN f';
+  
+  try {
+    let results = await neo4j.execute(query, { fromUsername, toUsername });
+    return results;
+  } catch (error) {
+    logger.error(error);
+    throw error;
+  }
+}
+
+exports.unfollowUser = async function (fromUsername, toUsername) {
+  let query = 'MATCH(fromUser:User{username:{fromUsername}})' + endOfLine;
+  query += 'MATCH(toUser:User{username:{toUsername}})' + endOfLine;
+  query += 'MERGE(fromUser)-[f:FOLLOWS]->(toUser) DELETE f';
+  
+  try {
+    let results = await neo4j.execute(query, { fromUsername, toUsername });
+    return results;
+  } catch (error) {
+    logger.error(error);
+    throw error;
   }
 }
 

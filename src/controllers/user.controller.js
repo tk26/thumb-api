@@ -263,15 +263,17 @@ exports.getUserProfile = function(req, res) {
     }
 
     User.retrieveUser(req.params.username.toLowerCase())
-    .then(user => {
+    .then((profile) => {
         return res.json({
             message: successResponses.user.USER_PROFILE_RETRIEVED,
-            editable: user.userId === req.decoded.userId,
-            firstName : user.firstName,
-            lastName : user.lastName,
-            school: user.school,
-            profilePicture: user.profilePicture || '',
-            bio: user.bio || '',
+            editable: profile.user.userId === req.decoded.userId,
+            firstName : profile.user.firstName,
+            lastName : profile.user.lastName,
+            school: profile.user.school,
+            profilePicture: profile.user.profilePicture || '',
+            bio: profile.user.bio || '',
+            follows: profile.follows,
+            followedBy: profile.followedBy,
         });
     })
     .catch((err) => {
@@ -377,5 +379,41 @@ exports.saveExpoToken = (req, res) => {
     })
     .catch((err) => {
         return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
+    });
+}
+
+exports.followUser = (req, res) => {
+    if(!req.decoded.userId) {
+        res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
+    }
+
+    if(!req.body.toUsername) {
+        res.status(400).send({ message: exceptions.user.MISSING_USERNAME });
+    }
+    
+    User.followUser(req.decoded.username, req.body.toUsername)
+    .then(() => {
+        res.json({ message: successResponses.user.USER_FOLLOWED });
+    })
+    .catch((err) => {
+        return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
+    });
+}
+
+exports.unfollowUser  = (req, res) => {
+    if(!req.decoded.userId) {
+        res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
+    }
+
+    if(!req.body.toUsername) {
+        res.status(400).send({ message: exceptions.user.MISSING_USERNAME });
+    }
+
+    User.unfollowUser(req.decoded.username, req.body.toUsername)
+    .then(() => {
+        res.json({ message: successResponses.user.USER_UNFOLLOWED });
+    })
+    .catch((err) => {
+        return next(err);
     });
 }

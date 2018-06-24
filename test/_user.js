@@ -42,11 +42,19 @@ describe('Users', () => {
     const unverifiedUserUsername = "unverifieduser";
     const unverifiedUserBirthday = "03/21/2001";
 
+    // User for tests involving the follow/unfollow scenarios
+    let followableUser;
+    const followableUserPassword = "Test123!";
+    const followableUserEmail = "followableuser@email.com";
+    const followableUserUsername = "followableuser";
+    const followableUserBirthday = "03/21/2001";
+
     before(async () => {
       dupeUser = await userUtility.createVerifiedUser("Jane", "Doe", dupeUserEmail, "hogwarts", dupeUserPassword, dupeUserUsername, dupeUserBirthday);
       dupeUser2 = await userUtility.createVerifiedUser("Jane", "Doe", dupeUser2Email1, "hogwarts", dupeUser2Password, dupeUser2Username, dupeUser2Birthday);
       testUser = await userUtility.createVerifiedUser("Test", "User", testUserEmail, "Hogwarts", testUserPassword, testUserUsername, testUserBirthday);
       testUserAuthToken = await userUtility.getUserAuthToken(testUserEmail, testUserPassword);
+      followableUser = await userUtility.createVerifiedUser("Followable", "User", followableUserEmail, "Hogwarts", followableUserPassword, followableUserUsername, followableUserBirthday);
 
       unverifiedUser = await userUtility.createUnverifiedUser("Unverified", "User", unverifiedUserEmail, "Hogwarts", unverifiedUserPassword, unverifiedUserUsername, unverifiedUserBirthday);
     });
@@ -56,6 +64,7 @@ describe('Users', () => {
       await userUtility.deleteUserByEmail(dupeUser2Email1);
       await userUtility.deleteUserByEmail(testUserEmail);
       await userUtility.deleteUserByEmail(unverifiedUserEmail);
+      await userUtility.deleteUserByEmail(followableUserEmail);
 
       // delete other users created through the tests
       await userUtility.deleteUserByEmail("jdoe@email.edu");
@@ -593,6 +602,8 @@ describe('Users', () => {
                     res.body.should.have.property("school").eql(testUser.school);
                     res.body.should.have.property("profilePicture").eql('');
                     res.body.should.have.property("bio").eql('');
+                    res.body.should.have.property("follows").eql([]);
+                    res.body.should.have.property("followedBy").eql([]);
                     done();
                 });
         });
@@ -908,6 +919,66 @@ describe('Users', () => {
         after(async () => {
             const expodatedUser = await User.findUser(testUserEmail);
             chai.assert.equal("testExpoToken", expodatedUser.expoToken);
+        });
+    });
+
+    /**
+     * Test the /POST /user/follow route
+     */
+    describe('/POST /user/follow', () => {
+        it('it should not POST follow without toUsername', (done) => {
+            chai.request(server)
+                .post('/user/follow')
+                .set('Authorization', 'Bearer' + ' ' + testUserAuthToken)
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property("message").eql(exceptions.user.MISSING_USERNAME);
+                    done();
+                });
+        });      
+
+        it('it should POST follow with valid auth token and toUsername', (done) => {
+            chai.request(server)
+                .post('/user/follow')
+                .set('Authorization', 'Bearer' + ' ' + testUserAuthToken)
+                .send({
+                    "toUsername" : followableUserUsername
+                })
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property("message").eql(successResponses.user.USER_FOLLOWED);
+                    done();
+                });
+        }); 
+    });
+
+    /**
+     * Test the /POST /user/unfollow route
+     */
+    describe('/POST /user/unfollow', () => {
+        it('it should not POST unfollow without toUsername', (done) => {
+            chai.request(server)
+                .post('/user/unfollow')
+                .set('Authorization', 'Bearer' + ' ' + testUserAuthToken)
+                .end((err, res) => {
+                    res.should.have.status(400);
+                    res.body.should.have.property("message").eql(exceptions.user.MISSING_USERNAME);
+                    done();
+                });
+        });      
+
+        it('it should POST unfollow with valid auth token and toUsername', (done) => {
+            chai.request(server)
+                .post('/user/unfollow')
+                .set('Authorization', 'Bearer' + ' ' + testUserAuthToken)
+                .send({
+                    "toUsername" : followableUserUsername
+                })
+                .end((err, res) => {
+                    res.should.have.status(200);
+                    res.body.should.have.property("message").eql(successResponses.user.USER_UNFOLLOWED);
+                    done();
+                });
         });
     });
 });

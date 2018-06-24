@@ -1,5 +1,6 @@
 var config = require('config.js');
 var jwt = require('jsonwebtoken');
+const exceptions = require('../constants/exceptions.js');
 
 const map = {
     'auth': config.AUTH_SECRET,
@@ -22,8 +23,7 @@ module.exports = function(type) {
             // verifies secret and checks exp
             jwt.verify(token, map[type], function(err, decoded) {
                 if (err) {
-                    //return res.json({ success: false, message: 'Failed to authenticate token' });
-                    return res.status(403).send({ success: false, message: 'Invalid token provided' });
+                    return res.status(403).send({ success: false, message: exceptions.user.INVALID_USER_TOKEN });
                 } else {
                     // if everything is good, save to request for use in other routes
                     req.decoded = decoded;
@@ -36,7 +36,7 @@ module.exports = function(type) {
             // return an error
             return res.status(403).send({
                 success: false,
-                message: 'No token provided'
+                message: exceptions.user.MISSING_USER_TOKEN
             });
         }
     }

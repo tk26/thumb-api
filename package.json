@@ -14,9 +14,9 @@
     "lint:watch": "npm run lint -- --watch",
     "security-check": "nsp check --filter 6",
     "pretest": "node buildScripts/test.js",
-    "test": "cross-env NODE_ENV=test npm run checkcoverage mocha --exit",
+    "test": "cross-env NODE_ENV=test npm run checkcoverage",
     "test:watch": "npm run test -- --watch",
-    "checkcoverage": "nyc --check-coverage --lines 80 --functions 75 --branches 70 --reporter=text",
+    "checkcoverage": "nyc --check-coverage --lines 80 --functions 75 --branches 70 --reporter=text mocha --exit",
     "build": "npm-run-all --parallel security-check lint",
     "dev-db-scripts": "cross-env NODE_ENV=dev node buildScripts/db_scripts/main.dev.js",
     "test-db-scripts": "cross-env NODE_ENV=test node buildScripts/db_scripts/main.test.js",
@@ -35,9 +35,6 @@
     "hoek": "^5.0.3",
     "jsonwebtoken": "^8.2.1",
     "moment": "^2.22.0",
-    "mongoose": "^4.13.6",
-    "mongoose-auto-increment": "^5.0.1",
-    "mongoose-unique-validator": "^2.0.0",
     "morgan": "^1.9.0",
     "neo4j-driver": "^1.5.3",
     "nodemon": "^1.17.4",
@@ -70,7 +67,9 @@
       "src/config.js",
       "src/extensions/",
       "test/",
-      "src/server.js"
+      "src/server.js",
+      "src/models/user.model.js",
+      "src/constants/"
     ]
   }
 }

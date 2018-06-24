@@ -1,6 +1,5 @@
 const thumbUtil = require('thumb-utilities');
 const config = require('../config.js');
-const User = require('./user.model.js');
 const drivesDB = require('../db/drives.js');
 const uuid = require('uuid/v1');
 const exceptions = require('../constants/exceptions.js');
@@ -46,6 +45,13 @@ module.exports = class Drive{
   }
 
   /**
+   * @param {String} driveId
+   */
+  static async deleteDriveById(driveId) {
+    return await drivesDB.deleteDrive({ driveId });
+  }
+
+  /**
    *
    * @param {object} req
    */
@@ -80,25 +86,11 @@ module.exports = class Drive{
    */
   static async findDriveMatchesForTrip(startPoint, endPoint, travelDate){
     let drives = await drivesDB.getDriveMatchesForTrip(startPoint, endPoint, travelDate);
-    let obj_ids = drives.map(d => d.userId);
-    let users = await User.find({_id: {$in: obj_ids}});
-    drives.forEach((d) =>{
-      let user = users.find((u) => {
-        return u._id.toString() === d.userId;
-      });
-      let userProfilePicture, userName, firstName, lastName;
-
-      if(user){
-        userProfilePicture = user.profile_picture;
-        userName = user.username;
-        firstName = user.firstName;
-        lastName = user.lastName;
-      }
-
-      d.userProfilePicture = userProfilePicture ? userProfilePicture : '';
-      d.userName = userName ? userName : '';
-      d.userFirstName = firstName ? firstName : '';
-      d.userLastName = lastName ? lastName : '';
+    drives.forEach(async (d) =>{
+      d.userProfilePicture = d.profilePicture ? d.profilePicture : '';
+      d.userName = d.userName ? d.userName : '';
+      d.userFirstName = d.firstName ? d.firstName : '';
+      d.userLastName = d.lastName ? d.lastName : '';
     });
 
     return drives;

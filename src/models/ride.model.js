@@ -1,5 +1,4 @@
 const config = require('../config.js');
-const User = require('./user.model.js');
 const thumbUtil = require('thumb-utilities');
 const ridesDB = require('../db/rides.js');
 const uuid = require('uuid/v1');
@@ -38,6 +37,13 @@ module.exports = class Ride{
   }
 
   /**
+   * @param {String} rideId
+   */
+  static async deleteRideById(rideId) {
+    return await ridesDB.deleteRide({ rideId });
+  }
+
+  /**
    *
    * @param {object} req
    */
@@ -73,25 +79,11 @@ module.exports = class Ride{
   static async findRideMatchesForTrip(startPoint, endPoint, travelDate){
     const tripBoundary = thumbUtil.TripBoundary.calculateBoundaryAroundPoints(startPoint, endPoint, config.APP_SETTINGS.TRIP_BOUNDARY_DISTANCE);
     let rides = await ridesDB.getRideMatchesForTripBoundary(tripBoundary, travelDate);
-    let obj_ids = rides.map(d => d.userId);
-    let users = await User.find({_id: {$in: obj_ids}});
-    rides.forEach((r) =>{
-      let user = users.find((u) => {
-        return u._id.toString() === r.userId;
-      });
-      let userProfilePicture, userName, firstName, lastName;
-
-      if(user){
-        userProfilePicture = user.profile_picture;
-        userName = user.username;
-        firstName = user.firstName;
-        lastName = user.lastName;
-      }
-
-      r.userProfilePicture = userProfilePicture ? userProfilePicture : '';
-      r.userName = userName ? userName : '';
-      r.userFirstName = firstName ? firstName : '';
-      r.userLastName = lastName ? lastName : '';
+    rides.forEach(async (r) =>{
+      r.userProfilePicture = r.profilePicture ? r.profilePicture : '';
+      r.userName = r.userName ? r.userName : '';
+      r.userFirstName = r.firstName ? r.firstName : '';
+      r.userLastName = r.lastName ? r.lastName : '';
     });
 
     return rides;

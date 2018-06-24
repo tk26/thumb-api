@@ -13,12 +13,11 @@ exports.saveDrive = async function(drive){
   query += 'MERGE(d:Date{date:{travelDate}})' + endOfLine;
   query += 'MERGE(sl:Location{latitude:{startLocationLatitude},longitude:{startLocationLongitude},address:{startLocationAddress},city:{startLocationCity}})' + endOfLine;
   query += 'MERGE(el:Location{latitude:{endLocationLatitude},longitude:{endLocationLongitude},address:{endLocationAddress},city:{endLocationCity}})' + endOfLine;
-  query += 'CREATE(user)-[:POSTS]->(dr:Drive{driveId:{driveId},travelDate:{travelDate},travelTime:{travelTime},availableSeats:{availableSeats},travelDescription:{travelDescription}, wkt:{tripBoundary}}),' + endOfLine;
-  query += '(dr)-[:SCHEDULED_ON]->(d),' + endOfLine;
-  query += '(dr)-[:STARTING_AT]->(sl),' + endOfLine;
-  query += '(dr)-[:ENDING_AT]->(el) WITH dr' + endOfLine;
+  query += 'MERGE(user)-[:POSTS]->(dr:Drive{driveId:{driveId},travelDate:{travelDate},travelTime:{travelTime},availableSeats:{availableSeats},travelDescription:{travelDescription}, wkt:{tripBoundary}})' + endOfLine;
+  query += 'MERGE(dr)-[:SCHEDULED_ON]->(d)' + endOfLine;
+  query += 'MERGE(dr)-[:STARTING_AT]->(sl)' + endOfLine;
+  query += 'MERGE(dr)-[:ENDING_AT]->(el) WITH dr' + endOfLine;
   query += 'CALL spatial.addNode(\'drives\', dr) YIELD node RETURN node';
-
   try {
     let results = await neo4j.execute(query,
       {

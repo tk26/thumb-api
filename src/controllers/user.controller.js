@@ -384,13 +384,13 @@ exports.saveExpoToken = (req, res) => {
 
 exports.followUser = (req, res) => {
     if(!req.decoded.userId) {
-        res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
+        return res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
     }
 
     if(!req.body.toUsername) {
-        res.status(400).send({ message: exceptions.user.MISSING_USERNAME });
+        return res.status(400).send({ message: exceptions.user.MISSING_USERNAME });
     }
-    
+
     User.followUser(req.decoded.username, req.body.toUsername)
     .then(() => {
         res.json({ message: successResponses.user.USER_FOLLOWED });
@@ -402,11 +402,11 @@ exports.followUser = (req, res) => {
 
 exports.unfollowUser  = (req, res) => {
     if(!req.decoded.userId) {
-        res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
+        return res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
     }
 
     if(!req.body.toUsername) {
-        res.status(400).send({ message: exceptions.user.MISSING_USERNAME });
+        return res.status(400).send({ message: exceptions.user.MISSING_USERNAME });
     }
 
     User.unfollowUser(req.decoded.username, req.body.toUsername)

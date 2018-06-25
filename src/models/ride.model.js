@@ -14,7 +14,7 @@ module.exports = class Ride{
    * @param {String} travelDescription
    * @param {Guid} rideId - If not provided, the constructor will set ride ID to a new UUID
    */
-  constructor(userId, startLocation, endLocation, travelDate, travelTime, travelDescription, rideId){
+  constructor(userId, startLocation, endLocation, travelDate, travelTime, travelDescription, rideId, createdDate){
     this.userId = userId;
     this.startLocation = startLocation;
     this.endLocation = endLocation;
@@ -22,6 +22,7 @@ module.exports = class Ride{
     this.travelTime = travelTime;
     this.travelDescription = travelDescription;
     this.rideId = rideId ? rideId : uuid();
+    this.createdDate = createdDate ? createdDate : new Date();
   }
 
   /**

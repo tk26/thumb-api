@@ -33,6 +33,10 @@ module.exports = class Ride{
     return ridesDB.saveRide(this);
   }
 
+  /**
+   *
+   * @returns {void}
+  */
   async delete(){
     return ridesDB.deleteRide(this);
   }

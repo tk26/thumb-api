@@ -10,6 +10,7 @@ module.exports = class Home{
         key: result.ride[0].rideId,
         postType: 'Ride',
         postId: result.ride[0].rideId,
+        userId: result.user[0].userId,
         username: result.user[0].username,
         firstName: result.user[0].firstName,
         lastName: result.user[0].lastName,

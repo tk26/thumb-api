@@ -7,7 +7,7 @@ module.exports = class User {
    * @param {Guid} userId // optional
    * @param {Location} firstName
    * @param {Location} lastName
-   * @param {String} email 
+   * @param {String} email
    * @param {String} school
    * @param {String} password
    * @param {String} username
@@ -31,6 +31,9 @@ module.exports = class User {
     return usersDB.saveUser(this);
   }
 
+  /**
+   * @returns {void}
+   */
   async delete() {
     return usersDB.deleteUser(this);
   }

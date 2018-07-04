@@ -15,7 +15,7 @@ module.exports = class Drive{
    * @param {String} travelDescription
    * @param {Guid} driveId - If not provided, the constructor will set drive ID to a new UUID
    */
-  constructor(userId, startLocation, endLocation, travelDate, travelTime, availableSeats, travelDescription, driveId){
+  constructor(userId, startLocation, endLocation, travelDate, travelTime, availableSeats, travelDescription, driveId, createdDate){
     this.userId = userId;
     this.startLocation = startLocation;
     this.endLocation = endLocation;
@@ -24,6 +24,7 @@ module.exports = class Drive{
     this.availableSeats = availableSeats;
     this.travelDescription = travelDescription;
     this.driveId = driveId ? driveId : uuid();
+    this.createdDate = createdDate ? createdDate : new Date();
     this.tripBoundary = thumbUtil.TripBoundary.calculateBoundaryAroundPoints(
       startLocation.coordinates, endLocation.coordinates, config.APP_SETTINGS.TRIP_BOUNDARY_DISTANCE);
   }

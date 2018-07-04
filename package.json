@@ -16,6 +16,7 @@
     "pretest": "node buildScripts/test.js",
     "test": "cross-env NODE_ENV=test npm run checkcoverage",
     "test:watch": "npm run test -- --watch",
+    "test-nocoverage": "cross-env NODE_ENV=test mocha --exit",
     "checkcoverage": "nyc --check-coverage --lines 80 --functions 75 --branches 70 --reporter=text mocha --exit",
     "build": "npm-run-all --parallel security-check lint",
     "dev-db-scripts": "cross-env NODE_ENV=dev node buildScripts/db_scripts/main.dev.js",

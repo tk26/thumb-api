@@ -2,27 +2,31 @@ const feedItemsDB = require('../db/feedItems.js');
 
 module.exports = class Home{
   static async refresh(userId, fromTimestamp) {
-    let results = await feedItemsDB.getRidePostsFromFollowedUsers(userId, fromTimestamp.toISOString());
-    let posts = [];
+    let rideResults = await feedItemsDB.getRidePostsFromFollowedUsers(userId, fromTimestamp.toISOString());
+    let driveResults = await feedItemsDB.getDrivePostsFromFollowedUsers(userId, fromTimestamp.toISOString());
+    return this.mergeFeedResults(rideResults, driveResults);
+  }
 
-    results.forEach(function(result){
-      let post = {
-        key: result.ride[0].rideId,
-        postType: 'Ride',
-        postId: result.ride[0].rideId,
-        userId: result.user[0].userId,
-        username: result.user[0].username,
-        firstName: result.user[0].firstName,
-        lastName: result.user[0].lastName,
-        profilePicture: result.user[0].profilePicture ? result.user[0].profilePicture : '',
-        date: result.date[0].date,
-        city: result.location[1].city,
-        caption: result.ride[0].travelDescription,
-        createdDate: result.ride[0].createdDate,
+  static mergeFeedResults(result1, result2){
+    let merged = [];
+    let index1 = 0;
+    let index2 = 0;
+    let current = 0;
+
+    while (current < (result1.length + result2.length)) {
+      let isArr1Depleted = index1 >= result1.length;
+      let isArr2Depleted = index2 >= result2.length;
+
+      if (!isArr1Depleted && (isArr2Depleted || (result1[index1].postedOn > result2[index2].postedOn))) {
+        merged[current] = result1[index1];
+        index1++;
+      } else {
+        merged[current] = result2[index2];
+        index2++;
       }
-      posts.push(post);
-    });
 
-    return posts;
+      current++;
+    }
+    return merged;
   }
 }

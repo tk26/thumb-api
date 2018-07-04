@@ -1,4 +1,4 @@
-const User = require('models/User.model.js');
+const User = require('../models/user.model.js');
 var jwt = require('jsonwebtoken');
 var config = require('config.js');
 var sgMailer = require('extensions/mailer.js');

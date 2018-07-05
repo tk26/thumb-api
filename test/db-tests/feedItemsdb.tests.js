@@ -2,13 +2,14 @@ const neo4j = require('../../src/extensions/neo4j.js');
 const feedItemsDB = require('../../src/db/feedItems.js');
 const User = require('../../src/models/user.model.js');
 const Ride = require('../../src/models/ride.model.js');
+const Drive = require('../../src/models/drive.model.js');
 const thumbUtil = require('thumb-utilities');
 
 const chai = require('chai');
 const should = chai.should();
 
 describe('FeedItemsDB', () => {
-  let followingUser, followedUser, followingRide, followedRide;
+  let followingUser, followedUser, followingRide, followedRide, followedDrive;
 
   before(async() => {
     followingUser = new User(undefined, 'Follow', 'User', 'feedtest@email.edu', 'Fake School', 'Test123!', 'follow_user', '1/1/2000');
@@ -26,9 +27,11 @@ describe('FeedItemsDB', () => {
 
     followingRide = new Ride(followingUser.userId, startLocation, endLocation, new Date('7/1/2018'), '8,12','Testing feed items');
     followedRide = new Ride(followedUser.userId, startLocation, endLocation, new Date('7/1/2018'), '8,12','Testing feed items');
+    followedDrive = new Drive(followedUser.userId,startLocation,endLocation, new Date('8/1/2018'),'3,7', 3, 'Feed Item Testing');
 
     await followedRide.save();
     await followingRide.save();
+    await followedDrive.save();
   });
 
   after(async() =>{
@@ -36,6 +39,7 @@ describe('FeedItemsDB', () => {
     await followingUser.delete();
     await followedRide.delete();
     await followingRide.delete();
+    await followedDrive.delete();
   });
 
   describe('getRidePostsFromFollowedUsers', () => {
@@ -43,12 +47,26 @@ describe('FeedItemsDB', () => {
       let results = await feedItemsDB.getRidePostsFromFollowedUsers(followedUser.userId, '1/1/2018');
       results.length.should.equal(0);
     });
-    it('should return posts for user following other users with Ride posts', async() => {
+    it('should return posts for user following other users with posts', async() => {
       let results = await feedItemsDB.getRidePostsFromFollowedUsers(followingUser.userId, '1/1/2018');
       results.length.should.equal(1);
     });
     it('should return no posts when provided timestamp after ride created date', async() => {
       let results = await feedItemsDB.getRidePostsFromFollowedUsers(followingUser.userId, new Date());
+      results.length.should.equal(0);
+    });
+  });
+  describe('getDrivePostsFromFollowedUsers', () => {
+    it('should return no posts for users not following other users', async() => {
+      let results = await feedItemsDB.getDrivePostsFromFollowedUsers(followedUser.userId, '1/1/2018');
+      results.length.should.equal(0);
+    });
+    it('should return posts for user following other users with posts', async() => {
+      let results = await feedItemsDB.getDrivePostsFromFollowedUsers(followingUser.userId, '1/1/2018');
+      results.length.should.equal(1);
+    });
+    it('should return no posts when provided timestamp after ride created date', async() => {
+      let results = await feedItemsDB.getDrivePostsFromFollowedUsers(followingUser.userId, new Date());
       results.length.should.equal(0);
     });
   });

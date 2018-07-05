@@ -17,6 +17,23 @@ driver.execute = async function(script, parameters){
   }
 }
 
+driver.mapKeysToFields = function(rawResults){
+  let results = [];
+  let records = rawResults.records;
+  for (let i=0; i<records.length; i++){
+    let record = {};
+    for (let j=0; j<records[i].keys.length; j++){
+      let key = records[i].keys[j];
+      if (key.indexOf('.')>0){
+        key = key.substr(key.indexOf('.')+1);
+      }
+      record[key] = records[i]._fields[j];
+    }
+    results.push(record);
+  }
+  return results;
+}
+
 driver.deserializeResults = function(rawResults){
   let results = [];
 

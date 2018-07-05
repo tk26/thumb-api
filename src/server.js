@@ -36,6 +36,7 @@ require('routes/user.routes.js')(app);
 require('routes/drive.routes.js')(app);
 require('routes/ride.routes.js')(app);
 require('routes/feedback.routes.js')(app);
+require('routes/home.routes.js')(app);
 var port = app.get('config').PORT;
 var project = app.get('config').APP;
 

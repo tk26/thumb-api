@@ -8,7 +8,7 @@ exports.saveRide = async function(ride){
   query += 'MERGE(d:Date{date:{travelDate}})' + endOfLine;
   query += 'MERGE(sl:Location{latitude:{startLocationLatitude},longitude:{startLocationLongitude},address:{startLocationAddress},city:{startLocationCity},wkt:{startLocationPoint}})' + endOfLine;
   query += 'MERGE(el:Location{latitude:{endLocationLatitude},longitude:{endLocationLongitude},address:{endLocationAddress},city:{endLocationCity},wkt:{endLocationPoint}})' + endOfLine;
-  query += 'MERGE(user)-[:POSTS]->(r:Ride{rideId:{rideId},travelDate:{travelDate},travelTime:{travelTime},pickupNotes:{pickupNotes},travelDescription:{travelDescription}})' + endOfLine;
+  query += 'MERGE(user)-[:POSTS{postedOn:{createdDate}}]->(r:Ride{rideId:{rideId},travelDate:{travelDate},travelTime:{travelTime},pickupNotes:{pickupNotes},travelDescription:{travelDescription}})' + endOfLine;
   query += 'MERGE(r)-[:SCHEDULED_ON]->(d)' + endOfLine;
   query += 'MERGE(r)-[:STARTING_AT]->(sl)' + endOfLine;
   query += 'MERGE(r)-[:ENDING_AT]->(el)' + endOfLine;
@@ -35,7 +35,8 @@ exports.saveRide = async function(ride){
         endLocationLongitude: ride.endLocation.coordinates.longitude,
         endLocationPoint: ride.endLocation.coordinates.ToPointString(),
         pickupNotes: ride.pickupNotes ? ride.pickupNotes : "",
-        travelDescription: ride.travelDescription
+        travelDescription: ride.travelDescription,
+        createdDate: ride.createdDate.toISOString()
       }
     );
 

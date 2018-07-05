@@ -69,6 +69,7 @@
       "test/",
       "src/server.js",
       "src/models/user.model.js",
+      "src/models/User.model.js",
       "src/constants/"
     ]
   }

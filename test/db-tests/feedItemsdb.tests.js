@@ -42,7 +42,7 @@ describe('FeedItemsDB', () => {
     await followedDrive.delete();
   });
 
-  describe('getPostsFromFollowedUsers', () => {
+  describe('getRidePostsFromFollowedUsers', () => {
     it('should return no posts for users not following other users', async() => {
       let results = await feedItemsDB.getRidePostsFromFollowedUsers(followedUser.userId, '1/1/2018');
       results.length.should.equal(0);
@@ -53,6 +53,20 @@ describe('FeedItemsDB', () => {
     });
     it('should return no posts when provided timestamp after ride created date', async() => {
       let results = await feedItemsDB.getRidePostsFromFollowedUsers(followingUser.userId, new Date());
+      results.length.should.equal(0);
+    });
+  });
+  describe('getDrivePostsFromFollowedUsers', () => {
+    it('should return no posts for users not following other users', async() => {
+      let results = await feedItemsDB.getDrivePostsFromFollowedUsers(followedUser.userId, '1/1/2018');
+      results.length.should.equal(0);
+    });
+    it('should return posts for user following other users with posts', async() => {
+      let results = await feedItemsDB.getDrivePostsFromFollowedUsers(followingUser.userId, '1/1/2018');
+      results.length.should.equal(1);
+    });
+    it('should return no posts when provided timestamp after ride created date', async() => {
+      let results = await feedItemsDB.getDrivePostsFromFollowedUsers(followingUser.userId, new Date());
       results.length.should.equal(0);
     });
   });

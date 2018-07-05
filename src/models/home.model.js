@@ -13,6 +13,14 @@ module.exports = class Home{
     let index2 = 0;
     let current = 0;
 
+    if (result1.length === 0){
+      return result2;
+    }
+
+    if(result2.length === 0){
+      return result1;
+    }
+
     while (current < (result1.length + result2.length)) {
       let isArr1Depleted = index1 >= result1.length;
       let isArr2Depleted = index2 >= result2.length;

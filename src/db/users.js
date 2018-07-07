@@ -2,6 +2,7 @@ const config = require('../config.js');
 const neo4j = require('../extensions/neo4j.js');
 const endOfLine = require('os').EOL;
 const logger = require('thumb-logger').getLogger(config.DB_LOGGER_NAME);
+const notifier = require('../extensions/notifier.js');
 
 exports.saveUser = async function(user){
   try {
@@ -226,6 +227,14 @@ exports.followUser = async function (fromUsername, toUsername) {
   
   try {
     let results = await neo4j.execute(query, { fromUsername, toUsername });
+    await notifier('ExponentPushToken[IzsEi3Cy9Gzi_ST6iqDpR7]', 
+      {
+        to: 'ExponentPushToken[IzsEi3Cy9Gzi_ST6iqDpR7]',
+        sound: 'default',
+        body: 'This is a test notification',
+        data: { withSome: 'data' }
+      }
+    );
     return results;
   } catch (error) {
     logger.error(error);

@@ -10,18 +10,20 @@ exports.saveUser = async function(user){
     query += 'SET u.firstName = {firstName}' + endOfLine
     query += 'SET u.lastName = {lastName}' + endOfLine
     query += 'SET u.email = {email}' + endOfLine
-    query += 'SET u.school = {school}' + endOfLine
+    query += 'SET u.school = {schoolName}' + endOfLine
     query += 'SET u.password = {password}' + endOfLine
     query += 'SET u.username = {username}' + endOfLine
     query += 'SET u.birthday = {birthday}' + endOfLine
     query += 'SET u.verified = {verified}' + endOfLine
-    query += 'SET u.verificationId = {verificationId} RETURN u';
+    query += 'SET u.verificationId = {verificationId}' + endOfLine
+    query += 'CREATE(u)-[:ATTENDS]->(school:School{schoolName:{schoolName}})' + endOfLine;
+    query += 'RETURN u';
     let neoResult = await neo4j.execute(query,{
       userId: user.userId,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
-      school: user.school,
+      schoolName: user.school,
       password: user.password,
       username: user.username,
       birthday: user.birthday,

@@ -4,32 +4,13 @@ var config = require('config.js');
 var sgMailer = require('extensions/mailer.js');
 const exceptions = require('../constants/exceptions.js');
 const successResponses = require('../constants/success_responses.js');
-const worker = require('thumb-worker');
 const logger = require('thumb-logger').getLogger(config.API_LOGGER_NAME);
 const thumbUtil = require('thumb-utilities');
-const moment = require('moment');
 
-const crypto = require('crypto');
+
 var stripe = require('stripe')(config.STRIPE_SECRET);
 
 const randomstring = require('randomstring');
-
-const sendVerificationEmail = (email, verificationId) => {
-    const mailOptions = {
-        from: 'confirmation@thumbtravel.com',
-        to: email,
-        subject: 'Verify your Thumb Account',
-        html: '<p> Welcome to thumb! In order to get started, you need to confirm your email address. ' +
-        'When you confirm your email, we know that we will be able to update you on your travel plans.</p><br/>' +
-        '<p>Please click <a href='+ config.BASE_URL_API +'/user/verify/'+ verificationId +'>HERE</a> ' +
-        'to confirm your email address.</p><br/>' +
-        '<p>Thanks,</p>' + '<p>The thumb Team</p>'
-    };
-
-    if (process.env.NODE_ENV !== 'test') {
-        sgMailer.send(mailOptions);
-    }
-};
 
 
 var Twilio = require('twilio');
@@ -65,33 +46,14 @@ exports.submitUser = function(req, res) {
     }
 
     let user = User.createUserFromRequest(req);
-    user.verificationId = crypto.randomBytes(20).toString('hex');
-    user.password = User.generateHash(req.body.password);
 
-    user.save()
-    .then(() => {
-        sendVerificationEmail(req.body.email, user.verificationId);
-        let emailTime = moment(new Date().getTime())
-            .add(config.APP_SETTINGS.WELCOME_EMAIL_MINUTE_DELAY, 'm')
-            .toDate();
-
-        worker.scheduleJob(emailTime, 'welcome email', {
-            'emailAddress': user.email,
-            'firstName': user.firstName
-        })
-        .then((job) => {
-            logger.info('Welcome email successfully scheduled for ' + user.email + '!')
-        })
-        .catch((err) => {
-            logger.error('Error creating welcome email for ' + user.email + ': ' + err);
-        })
-        .finally(() => {
-            return res.json({ message: successResponses.user.USER_CREATED });
-        });
-    })
-    .catch((err) => {
+    user.createNewUser(logger)
+      .then(() => {
+        return res.json({ message: successResponses.user.USER_CREATED });
+      })
+      .catch((err) => {
         return res.status(500).send({ message: exceptions.user.INTERNAL_ERROR });
-    });
+      });
 };
 
 exports.verifyUser = function(req, res, next) {
@@ -120,8 +82,14 @@ exports.authenticateUser = function(req, res) {
             return res.status(400).send({ message: exceptions.user.INVALID_PASSWORD });
         } else if (!user.verified) {
             // resend user verification email
-            sendVerificationEmail(req.body.email, user.verificationId);
-            return res.status(403).send({ message: exceptions.user.UNVERIFIED_USER });
+            User.sendVerificationEmail(user.userId, req.body.email, user.verificationId)
+              .then(() => {
+                return res.status(403).send({ message: exceptions.user.UNVERIFIED_USER });
+              })
+              .catch(() => {
+                return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
+              });
+
         } else {
             const payload = {
                 userId: user.userId,
@@ -393,7 +361,7 @@ exports.followUser = (req, res) => {
 
     User.followUser(req.decoded.username, req.body.toUsername)
     .then(() => {
-        res.json({ message: successResponses.user.USER_FOLLOWED });
+      return res.json({ message: successResponses.user.USER_FOLLOWED });
     })
     .catch((err) => {
         return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });

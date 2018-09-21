@@ -2,7 +2,6 @@ const config = require('../config.js');
 const neo4j = require('../extensions/neo4j.js');
 const endOfLine = require('os').EOL;
 const logger = require('thumb-logger').getLogger(config.DB_LOGGER_NAME);
-const notifier = require('../extensions/notifier.js');
 
 exports.saveUser = async function(user){
   try {
@@ -225,19 +224,11 @@ exports.attachExpoToken = async function (userId, expoToken) {
 exports.followUser = async function (fromUsername, toUsername) {
   let query = 'MATCH(fromUser:User{username:{fromUsername}})' + endOfLine;
   query += 'MATCH(toUser:User{username:{toUsername}})' + endOfLine;
-  query += 'MERGE(fromUser)-[f:FOLLOWS]->(toUser) RETURN f';
-  
+  query += 'MERGE(fromUser)-[f:FOLLOWS]->(toUser) RETURN toUser.userId, toUser.expoToken';
+
   try {
-    let results = await neo4j.execute(query, { fromUsername, toUsername });
-    await notifier('ExponentPushToken[IzsEi3Cy9Gzi_ST6iqDpR7]', 
-      {
-        to: 'ExponentPushToken[IzsEi3Cy9Gzi_ST6iqDpR7]',
-        sound: 'default',
-        body: 'This is a test notification',
-        data: { withSome: 'data' }
-      }
-    );
-    return results;
+    let rawResults = await neo4j.execute(query, { fromUsername, toUsername });
+    return neo4j.mapKeysToFields(rawResults);
   } catch (error) {
     logger.error(error);
     throw error;
@@ -248,7 +239,7 @@ exports.unfollowUser = async function (fromUsername, toUsername) {
   let query = 'MATCH(fromUser:User{username:{fromUsername}})' + endOfLine;
   query += 'MATCH(toUser:User{username:{toUsername}})' + endOfLine;
   query += 'MERGE(fromUser)-[f:FOLLOWS]->(toUser) DELETE f';
-  
+
   try {
     let results = await neo4j.execute(query, { fromUsername, toUsername });
     return results;

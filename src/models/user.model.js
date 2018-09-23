@@ -2,6 +2,7 @@ const uuid = require('uuid/v1');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 var config = require('../config.js');
+const logger = require('thumb-logger').getLogger(config.API_LOGGER_NAME);
 const usersDB = require('../db/users.js');
 const { Message, MessageTypes } = require('thumb-messaging');
 
@@ -34,10 +35,10 @@ module.exports = class User {
     await usersDB.saveUser(this);
   }
 
-  async createNewUser(logger) {
+  async createNewUser() {
     await this.save();
     await User.sendVerificationEmail(this.userId, this.email, this.verificationId);
-    await User.sendWelcomeEmail(this.userId, this.email, this.firstName, logger);
+    await User.sendWelcomeEmail(this.userId, this.email, this.firstName);
   }
 
   /**
@@ -127,16 +128,20 @@ module.exports = class User {
    * @param {String} userId
    * @param {String} passwordResetToken
    */
-  static async updatePasswordResetToken(userId, passwordResetToken) {
-    return usersDB.updatePasswordResetToken(userId, passwordResetToken);
+  static async updatePasswordResetToken(userId, passwordResetToken, email) {
+    await usersDB.updatePasswordResetToken(userId, passwordResetToken, email);
+    return await User.sendPasswordResetEmail(userId, email, passwordResetToken);
   }
 
   /**
    * @param {String} userId
    * @param {String} newPassword
+   * @param {String} email
+   * @returns {Promise<void>}
    */
-  static async updatePassword(userId, newPassword) {
-    return usersDB.updatePassword(userId, newPassword);
+  static async updatePassword(userId, newPassword, email) {
+    await usersDB.updatePassword(userId, newPassword, email);
+    return await User.sendPasswordResetConfirmationEmail(userId, email);
   }
 
   /**
@@ -169,7 +174,7 @@ module.exports = class User {
         messageType: MessageTypes.NEW_FOLLOWER,
         messageParameters: {
           pushToken: expoToken,
-          username: req.body.toUsername
+          username: fromUsername
         }
       });
       message.addPushNotificationDeliveryMethod();
@@ -185,6 +190,12 @@ module.exports = class User {
     return usersDB.unfollowUser(fromUsername, toUsername);
   }
 
+  /**
+   * @param {String} userId
+   * @param {String} email
+   * @param {String} verificationId
+   * @returns {Promise<void>}
+  */
   static async sendVerificationEmail(userId, email, verificationId){
     const message = new Message({
       messageType: MessageTypes.ACCOUNT_VERIFICATION,
@@ -199,7 +210,13 @@ module.exports = class User {
     return await message.save();
   }
 
-  static async sendWelcomeEmail(userId, email, firstName, logger){
+  /**
+   * @param {String} userId
+   * @param {String} email
+   * @param {String} firstName
+   * @returns {Promise<void>}
+  */
+  static async sendWelcomeEmail(userId, email, firstName){
     const messageParams = {toEmailAddress: email, firstName: firstName};
     let message = new Message({
       messageType: MessageTypes.WELCOME_EMAIL,
@@ -213,5 +230,38 @@ module.exports = class User {
     } catch(err) {
       logger.error('Error creating welcome email for ' + email + ': ' + err);
     }
+  }
+
+  /**
+   * @param {String} userId
+   * @param {String} email
+   * @param {String} resetToken
+   * @returns {Promise<void>}
+  */
+  static async sendPasswordResetEmail(userId, email, resetToken){
+    const messageParams = {toEmailAddress: email, resetToken: resetToken, resetBaseUrl: config.BASE_URL_WEBAPP};
+    let message = new Message({
+      messageType: MessageTypes.PASSWORD_RESET,
+      messageParameters: messageParams,
+      toUserId: userId});
+
+    message.addEmailDeliveryMethod();
+    await message.save();
+  }
+
+  /**
+   * @param {String} userId
+   * @param {String} email
+   * @returns {Promise<void>}
+  */
+  static async sendPasswordResetConfirmationEmail(userId, email){
+    const messageParams = {toEmailAddress: email, resetBaseUrl: config.BASE_URL_WEBAPP};
+    let message = new Message({
+      messageType: MessageTypes.PASSWORD_RESET_CONFIRMATION,
+      messageParameters: messageParams,
+      toUserId: userId});
+
+    message.addEmailDeliveryMethod();
+    await message.save();
   }
 }

@@ -1,15 +1,12 @@
 const User = require('../models/user.model.js');
 var jwt = require('jsonwebtoken');
 var config = require('config.js');
-var sgMailer = require('extensions/mailer.js');
 const exceptions = require('../constants/exceptions.js');
 const successResponses = require('../constants/success_responses.js');
 const logger = require('thumb-logger').getLogger(config.API_LOGGER_NAME);
 const thumbUtil = require('thumb-utilities');
 
-
 var stripe = require('stripe')(config.STRIPE_SECRET);
-
 const randomstring = require('randomstring');
 
 
@@ -47,11 +44,12 @@ exports.submitUser = function(req, res) {
 
     let user = User.createUserFromRequest(req);
 
-    user.createNewUser(logger)
+    user.createNewUser()
       .then(() => {
         return res.json({ message: successResponses.user.USER_CREATED });
       })
       .catch((err) => {
+        logger.error('Error creating user: ' + err);
         return res.status(500).send({ message: exceptions.user.INTERNAL_ERROR });
       });
 };
@@ -62,7 +60,7 @@ exports.verifyUser = function(req, res, next) {
         res.redirect(config.BASE_URL_WEBAPP);
     })
     .catch((err) => {
-      logger.error('Error verifying user:' + err);
+      logger.error('Error verifying user: ' + err);
       return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
     });
 };
@@ -113,7 +111,7 @@ exports.authenticateUser = function(req, res) {
         }
     })
     .catch((err) => {
-        logger.error('Error retrieving user:' + err);
+        logger.error('Error retrieving user: ' + err);
         return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
     });
 };
@@ -135,19 +133,6 @@ exports.submitForgotPasswordUser = function(req, res) {
         return res.status(422).send({ message: exceptions.user.NON_STUDENT_EMAIL });
     }
 
-    const sendPasswordResetEmail = (resetToken) => {
-        const mailOptions = {
-            from: 'accounts@thumbtravel.com',
-            to: email,
-            subject: 'Reset your Thumb Password',
-            // TODO draft a better email
-            html: '<p>Please click <a href="'+ config.BASE_URL_WEBAPP +'/#/reset/'+ resetToken +'">HERE</a> ' +
-            'to reset your account password </p>'
-        };
-
-        sgMailer.send(mailOptions);
-    };
-
     User.findUser(email)
     .then(user => {
         if (!user.verified) {
@@ -162,20 +147,17 @@ exports.submitForgotPasswordUser = function(req, res) {
                 expiresIn: 300
             });
 
-            User.updatePasswordResetToken(user.userId, resetToken)
-            .then(() => {
-                if (process.env.NODE_ENV !== 'test') {
-                    sendPasswordResetEmail(resetToken);
-                }
-                res.json({ message: successResponses.user.USER_PASSWORD_RESET_EMAIL_SENT });
-            })
-            .catch((err) => {
+            User.updatePasswordResetToken(user.userId, resetToken, user.email)
+              .then(() => {
+                return res.json({ message: successResponses.user.USER_PASSWORD_RESET_EMAIL_SENT });
+              })
+              .catch((err) => {
                 return next(err);
-            });
+              });
         }
     })
     .catch((err) => {
-        logger.error('Error retrieving user:' + err);
+        logger.error('Error retrieving user: ' + err);
         return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
     });
 };
@@ -188,35 +170,12 @@ exports.submitResetPasswordUser = function(req, res) {
     if(!req.body.password) {
       return res.status(400).send({ message: exceptions.user.MISSING_PASSWORD });
     }
-
-    const sendPasswordResetConfirmationEmail = (email) => {
-        const mailOptions = {
-            from: 'accounts@thumbtravel.com',
-            to: email,
-            subject: 'thumb is more than just a ride.',
-            html: '<p> Hello,</p><br/>' +
-            '<p>You have successfully changed your password.</p>' +
-            '<p>Please feel free to log in to thumb using the mobile app.</p><br/>' +
-            '<p>If this wasn\'t you or believe an unauthorized person has accessed your account,' +
-            ' please immediately reset your password. Then, contact us by emailing support@thumbtravel.com so we' +
-            ' can confirm your account is secure.</p><br/>' +
-            '<p>To reset your password tap "Forgot your password?" on the login screen in the mobile app or ' +
-            'click <a href="'+ config.BASE_URL_WEBAPP +'/#/forgot">HERE</a>.</p><br/>' +
-            '<p>We hope you enjoy traveling with thumb.</p><br/>' +
-            '<p>Thank you,</p>' + '<p>The thumb Team</p>'
-        };
-
-        sgMailer.send(mailOptions);
-    };
-    User.updatePassword(req.decoded.userId, User.generateHash(req.body.password))
+    User.updatePassword(req.decoded.userId, User.generateHash(req.body.password), req.decoded.email)
     .then(() => {
-        if (process.env.NODE_ENV !== 'test') {
-            sendPasswordResetConfirmationEmail(req.decoded.email);
-        }
-        res.json({ message: successResponses.user.USER_PASSWORD_RESET });
+      res.json({ message: successResponses.user.USER_PASSWORD_RESET });
     })
     .catch((err) => {
-      logger.error('Error resetting password:' + err);
+      logger.error('Error resetting password: ' + err);
       return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
     });
 };
@@ -245,7 +204,7 @@ exports.getUserProfile = function(req, res) {
         });
     })
     .catch((err) => {
-        logger.error('Error retrieving user:' + err);
+        logger.error('Error retrieving user: ' + err);
         return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
     });
 };
@@ -260,7 +219,7 @@ exports.editUser = function(req, res) {
       return res.json({ message: successResponses.user.USER_UPDATED });
     })
     .catch((err) => {
-      logger.error('Error editing user:' + err);
+      logger.error('Error editing user: ' + err);
       return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
     });
 };
@@ -275,38 +234,39 @@ exports.editBio = function(req, res) {
       return res.json({ message: successResponses.user.USER_BIO_UPDATED });
     })
     .catch((err) => {
-      logger.error('Error editing bio:' + err);
+      logger.error('Error editing bio: ' + err);
       return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
     });
 }
 
 exports.editProfilePicture = function(req, res) {
-    if(!req.decoded.userId) {
-      return res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
-    }
+  if(!req.decoded.userId) {
+    return res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
+  }
 
-    User.updateUser(req.decoded.userId, req.body.profilePicture || '', '')
+  User.updateUser(req.decoded.userId, req.body.profilePicture || '', '')
     .then(() => {
       return res.json({ message: successResponses.user.USER_PROFILE_PICTURE_UPDATED });
     })
     .catch((err) => {
-      logger.error('Error editing profile picture:' + err);
+      logger.error('Error editing profile picture: ' + err);
       return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
     });
 }
 
 exports.validateUsername = (req, res) => {
-    if (!thumbUtil.User.validateUsername(req.params.username)) {
-        return res.status(422).send({ message: exceptions.user.INVALID_USERNAME });
-    }
+  if (!thumbUtil.User.validateUsername(req.params.username)) {
+      return res.status(422).send({ message: exceptions.user.INVALID_USERNAME });
+  }
 
-    User.validateUsername(req.params.username)
+  User.validateUsername(req.params.username)
     .then(isValid => {
         return isValid ? res.json({ message: successResponses.user.VALID_USERNAME })
             : res.status(409).send({ message: exceptions.user.DUPLICATE_USERNAME });
     })
     .catch((err) => {
-        return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
+      logger.error('Error validating username: ' + err);
+      return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
     });
 }
 
@@ -323,13 +283,14 @@ exports.validateEmail = (req, res) => {
     }
 
     User.validateEmail(email)
-    .then(isValid => {
-        return isValid ? res.json({ message: successResponses.user.VALID_EMAIL })
-            : res.status(409).send({ message: exceptions.user.DUPLICATE_EMAIL });
-    })
-    .catch((err) => {
+      .then(isValid => {
+          return isValid ? res.json({ message: successResponses.user.VALID_EMAIL })
+              : res.status(409).send({ message: exceptions.user.DUPLICATE_EMAIL });
+      })
+      .catch((err) => {
+        logger.error('Error validating email: ' + err);
         return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
-    });
+      });
 }
 
 exports.saveExpoToken = (req, res) => {
@@ -342,12 +303,13 @@ exports.saveExpoToken = (req, res) => {
     }
 
     User.attachExpoToken(req.decoded.userId, req.body.expoToken)
-    .then(() => {
-        return res.json({ message: successResponses.user.USER_EXPO_TOKEN_ATTACHED });
-    })
-    .catch((err) => {
+      .then(() => {
+          return res.json({ message: successResponses.user.USER_EXPO_TOKEN_ATTACHED });
+      })
+      .catch((err) => {
+        logger.error('Error saving expo token: ' + err);
         return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
-    });
+      });
 }
 
 exports.followUser = (req, res) => {
@@ -360,12 +322,13 @@ exports.followUser = (req, res) => {
     }
 
     User.followUser(req.decoded.username, req.body.toUsername)
-    .then(() => {
-      return res.json({ message: successResponses.user.USER_FOLLOWED });
-    })
-    .catch((err) => {
+      .then(() => {
+        return res.json({ message: successResponses.user.USER_FOLLOWED });
+      })
+      .catch((err) => {
+        logger.error('Error following user: ' + err);
         return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
-    });
+      });
 }
 
 exports.unfollowUser  = (req, res) => {
@@ -382,6 +345,7 @@ exports.unfollowUser  = (req, res) => {
         res.json({ message: successResponses.user.USER_UNFOLLOWED });
     })
     .catch((err) => {
-        return next(err);
+      logger.error('Error unfollowing user: ' + err);
+      return next(err);
     });
 }

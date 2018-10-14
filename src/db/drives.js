@@ -13,7 +13,7 @@ exports.saveDrive = async function(drive){
   query += 'MERGE(d:Date{date:{travelDate}})' + endOfLine;
   query += 'MERGE(sl:Location{latitude:{startLocationLatitude},longitude:{startLocationLongitude},address:{startLocationAddress},city:{startLocationCity}})' + endOfLine;
   query += 'MERGE(el:Location{latitude:{endLocationLatitude},longitude:{endLocationLongitude},address:{endLocationAddress},city:{endLocationCity}})' + endOfLine;
-  query += 'MERGE(user)-[:POSTS]->(dr:Drive{driveId:{driveId},travelDate:{travelDate},travelTime:{travelTime},availableSeats:{availableSeats},travelDescription:{travelDescription}, wkt:{tripBoundary}})' + endOfLine;
+  query += 'MERGE(user)-[:POSTS{postedOn:{createdDate}}]->(dr:Drive{driveId:{driveId},travelDate:{travelDate},travelTime:{travelTime},availableSeats:{availableSeats},travelDescription:{travelDescription}, wkt:{tripBoundary}})' + endOfLine;
   query += 'MERGE(dr)-[:SCHEDULED_ON]->(d)' + endOfLine;
   query += 'MERGE(dr)-[:STARTING_AT]->(sl)' + endOfLine;
   query += 'MERGE(dr)-[:ENDING_AT]->(el) WITH dr' + endOfLine;
@@ -35,7 +35,8 @@ exports.saveDrive = async function(drive){
         endLocationLongitude: drive.endLocation.coordinates.longitude,
         availableSeats: parseInt(drive.availableSeats),
         travelDescription: drive.travelDescription,
-        tripBoundary: tripBoundary
+        tripBoundary: tripBoundary,
+        createdDate: drive.createdDate.toISOString()
       }
     );
     return results.records[0]._fields[0].properties;

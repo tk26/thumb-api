@@ -7,7 +7,7 @@ module.exports = class User {
    * @param {Guid} userId // optional
    * @param {Location} firstName
    * @param {Location} lastName
-   * @param {String} email 
+   * @param {String} email
    * @param {String} school
    * @param {String} password
    * @param {String} username
@@ -31,6 +31,9 @@ module.exports = class User {
     return usersDB.saveUser(this);
   }
 
+  /**
+   * @returns {void}
+   */
   async delete() {
     return usersDB.deleteUser(this);
   }
@@ -138,5 +141,21 @@ module.exports = class User {
    */
   static async attachExpoToken(userId, expoToken) {
     return usersDB.attachExpoToken(userId, expoToken);
+  }
+
+  /**
+   * @param {String} fromUsername
+   * @param {String} toUsername
+   */
+  static async followUser(fromUsername, toUsername) {
+    return usersDB.followUser(fromUsername, toUsername);
+  }
+
+  /**
+   * @param {String} fromUsername
+   * @param {String} toUsername
+   */
+  static async unfollowUser(fromUsername, toUsername) {
+    return usersDB.unfollowUser(fromUsername, toUsername);
   }
 }

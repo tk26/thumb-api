@@ -935,7 +935,7 @@ describe('Users', () => {
                     res.body.should.have.property("message").eql(exceptions.user.MISSING_USERNAME);
                     done();
                 });
-        });      
+        });
 
         it('it should POST follow with valid auth token and toUsername', (done) => {
             chai.request(server)
@@ -949,7 +949,7 @@ describe('Users', () => {
                     res.body.should.have.property("message").eql(successResponses.user.USER_FOLLOWED);
                     done();
                 });
-        }); 
+        });
     });
 
     /**
@@ -965,7 +965,7 @@ describe('Users', () => {
                     res.body.should.have.property("message").eql(exceptions.user.MISSING_USERNAME);
                     done();
                 });
-        });      
+        });
 
         it('it should POST unfollow with valid auth token and toUsername', (done) => {
             chai.request(server)

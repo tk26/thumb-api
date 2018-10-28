@@ -19,7 +19,7 @@ describe('Users DB', () => {
         email, school, password, username, birthday);
     user.verificationId = "testVerificationId";
     let createdTestUser;
-    
+
     before(async() => {
         const creationResults = await usersDB.saveUser(user);
         createdTestUser = creationResults[0]._fields[0].properties;
@@ -34,7 +34,7 @@ describe('Users DB', () => {
             createdTestUser.verificationId.length.should.not.equal(0);
             createdTestUser.verified.should.equal(false);
         });
-        
+
         it('should set verificationId to empty string and verified to true', async() => {
             const verificationResults = await usersDB.verifyUser(createdTestUser.verificationId);
             verificationResults.verificationId.length.should.equal(0);
@@ -131,4 +131,16 @@ describe('Users DB', () => {
             userWithExpoToken.expoToken.should.equal(expoToken);
         });
     });
+
+    describe.only('setProfilePicture', () => {
+      it('should return an asset for the user', async() => {
+        const pictureId = uuid();
+        const pictureId2 = uuid();
+        const url = "picture.com";
+        const url2 = "picture.gov";
+        const asset = await usersDB.setProfilePicture(userId, pictureId, url);
+        const asset2 = await usersDB.setProfilePicture(userId, pictureId2, url2);
+        asset2.url.should.equal(url2);
+      });
+  });
 });

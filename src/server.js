@@ -6,6 +6,7 @@ var config = require('config.js');
 var morgan = require('morgan');
 var logger = require('thumb-logger').getLogger(config.API_LOGGER_NAME);
 var expressWinston = require('express-winston');
+
 //removing headers so token isn't included in logs
 expressWinston.requestWhitelist = ['url', 'method', 'httpVersion', 'originalUrl', 'query', 'body'];
 expressWinston.bodyBlacklist.push('password', 'token');
@@ -23,7 +24,7 @@ app.use(expressWinston.errorLogger({
 }));
 
 app.use(cors());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 //don't show the log when it is test

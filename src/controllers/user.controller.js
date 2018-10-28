@@ -210,18 +210,18 @@ exports.getUserProfile = function(req, res) {
 };
 
 exports.editUser = function(req, res) {
-    if(!req.decoded.userId) {
-      return res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
-    }
+  if(!req.decoded.userId) {
+    return res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
+  }
 
-    User.updateUser(req.decoded.userId, req.body.profilePicture || '', req.body.bio || '')
-    .then(() => {
-      return res.json({ message: successResponses.user.USER_UPDATED });
-    })
-    .catch((err) => {
-      logger.error('Error editing user: ' + err);
-      return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
-    });
+  User.updateUser(req.decoded.userId, req.body.bio || '')
+  .then((result) => {
+    return res.json({ message: successResponses.user.USER_UPDATED, result });
+  })
+  .catch((err) => {
+    logger.error('Error editing user: ' + err);
+    return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
+  });
 };
 
 exports.editBio = function(req, res) {
@@ -243,10 +243,13 @@ exports.editProfilePicture = function(req, res) {
   if(!req.decoded.userId) {
     return res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
   }
+  if(!req.files || req.files.length === 0){
+    return res.status(400).send({ message: exceptions.user.MISSING_PROFILE_PICTURE });
+  }
 
-  User.updateUser(req.decoded.userId, req.body.profilePicture || '', '')
-    .then(() => {
-      return res.json({ message: successResponses.user.USER_PROFILE_PICTURE_UPDATED });
+  User.uploadProfilePicture(req.decoded.userId, req.files[0])
+    .then((result) => {
+      return res.json({ message: successResponses.user.USER_PROFILE_PICTURE_UPDATED,  location: result.location});
     })
     .catch((err) => {
       logger.error('Error editing profile picture: ' + err);

@@ -1,5 +1,6 @@
 var middleware = require('extensions/middleware.js');
 var user = require('controllers/user.controller.js');
+var fileUtility = require('utilities/FileUtility.js');
 
 module.exports = function(app) {
     app.post('/user/create', user.submitUser);
@@ -18,7 +19,7 @@ module.exports = function(app) {
 
     app.put('/user/bio', middleware('auth'), user.editBio);
 
-    app.put('/user/pic', middleware('auth'), user.editProfilePicture);
+    app.put('/user/profilepicture', middleware('auth'), fileUtility.profilePictureUpload.array('profilePicture', 1), user.editProfilePicture);
 
     app.get('/user/validate/username/:username', user.validateUsername);
 

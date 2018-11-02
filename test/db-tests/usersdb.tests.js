@@ -132,7 +132,7 @@ describe('Users DB', () => {
         });
     });
 
-    describe.only('setProfilePicture', () => {
+    describe('setProfilePicture', () => {
       it('should return an asset for the user', async() => {
         const pictureId = uuid();
         const pictureId2 = uuid();

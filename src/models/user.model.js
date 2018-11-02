@@ -272,7 +272,7 @@ module.exports = class User {
 
   /**
    * @param {String} userId
-   * @param {String} picture
+   * @param {String} file
    */
   static async uploadProfilePicture(userId, file){
     try {

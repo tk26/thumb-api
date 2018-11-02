@@ -195,13 +195,30 @@ exports.updatePassword = async function (userId, password) {
   }
 }
 
-exports.updateUser = async function (userId, profilePicture, bio) {
+exports.updateUser = async function (userId, bio) {
   let query = 'MATCH(u:User{userId:{userId}, verified:true})' + endOfLine;
-  query += profilePicture.length > 0 ? 'SET u.profilePicture = \''+ profilePicture + '\'' + endOfLine : '';
   query += bio.length > 0 ? 'SET u.bio = \'' + bio + '\'' + endOfLine : '';
   query += 'RETURN u';
   try {
     let neoResult = await neo4j.execute(query,{ userId });
+    return neoResult.records[0]._fields[0].properties;
+  } catch(err) {
+    logger.error(err);
+    throw err;
+  }
+}
+
+exports.setProfilePicture = async function(userId, pictureId, url) {
+  let query = 'MATCH(u:User{userId:{userId}})' + endOfLine;
+  query += 'SET u.profilePicture = {url}' + endOfLine;
+  query += 'WITH(u) CREATE (u)-[:PROFILE_PICTURE]->(a:Asset{assetId:{assetId}, url:{url}})' + endOfLine;
+  query += "RETURN a";
+  try {
+    let neoResult = await neo4j.execute(query,{
+      userId,
+      assetId: pictureId,
+      url
+    });
     return neoResult.records[0]._fields[0].properties;
   } catch(err) {
     logger.error(err);

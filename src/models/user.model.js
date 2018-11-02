@@ -5,6 +5,7 @@ var config = require('../config.js');
 const logger = require('thumb-logger').getLogger(config.API_LOGGER_NAME);
 const usersDB = require('../db/users.js');
 const { Message, MessageTypes } = require('thumb-messaging');
+const { FileClient } = require('thumb-utilities');
 
 module.exports = class User {
   /**
@@ -149,8 +150,12 @@ module.exports = class User {
    * @param {String} profilePicture
    * @param {String} bio
    */
-  static async updateUser(userId, profilePicture, bio) {
-    return usersDB.updateUser(userId, profilePicture, bio);
+  static async updateUser(userId, bio,) {
+    try {
+      await usersDB.updateUser(userId, bio);
+    } catch(err){
+      throw err;
+    }
   }
 
   /**
@@ -263,5 +268,21 @@ module.exports = class User {
 
     message.addEmailDeliveryMethod();
     await message.save();
+  }
+
+  /**
+   * @param {String} userId
+   * @param {String} file
+   */
+  static async uploadProfilePicture(userId, file){
+    try {
+      await usersDB.setProfilePicture(userId, file.fileId, file.location);
+      return {
+        location: file.location
+      }
+    } catch(error){
+      logger.error('Error saving profile picture: ' + err);
+      throw error;
+    }
   }
 }

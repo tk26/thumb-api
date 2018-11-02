@@ -98,29 +98,14 @@ describe('Users DB', () => {
 
     describe('updateUser', () => {
         it('should return an existing user without any updates', async() => {
-            const unupdatedUser = await usersDB.updateUser(createdTestUser.userId, '', '');
-            chai.expect(unupdatedUser.profilePicture).to.be.undefined;
+            const unupdatedUser = await usersDB.updateUser(createdTestUser.userId, '');
             chai.expect(unupdatedUser.bio).to.be.undefined;
-        });
-
-        it('should return an existing user with an updated profile picture', async() => {
-            const newProfilePicture = "testNewProfilePicture";
-            const updatedUser = await usersDB.updateUser(createdTestUser.userId, newProfilePicture, '');
-            updatedUser.profilePicture.should.equal(newProfilePicture);
         });
 
         it('should return an existing user with an updated bio', async() => {
             const newBio = "testNewBio";
-            const updatedUser = await usersDB.updateUser(createdTestUser.userId, '', newBio);
+            const updatedUser = await usersDB.updateUser(createdTestUser.userId, newBio);
             updatedUser.bio.should.equal(newBio);
-        });
-
-        it('should return an existing user with an updated profile picture and bio', async() => {
-            const newerProfilePicture = "testNewerProfilePicture";
-            const newerBio = "testNewerBio";
-            const updatedUser = await usersDB.updateUser(createdTestUser.userId, newerProfilePicture, newerBio);
-            updatedUser.profilePicture.should.equal(newerProfilePicture);
-            updatedUser.bio.should.equal(newerBio);
         });
     });
 

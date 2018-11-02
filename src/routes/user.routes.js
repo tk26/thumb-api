@@ -17,8 +17,6 @@ module.exports = function(app) {
 
     app.put('/user/edit', middleware('auth'), user.editUser);
 
-    app.put('/user/bio', middleware('auth'), user.editBio);
-
     app.put('/user/profilepicture', middleware('auth'), fileUtility.profilePictureUpload.array('profilePicture', 1), user.editProfilePicture);
 
     app.get('/user/validate/username/:username', user.validateUsername);

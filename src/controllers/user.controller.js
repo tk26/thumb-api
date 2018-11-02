@@ -224,21 +224,6 @@ exports.editUser = function(req, res) {
   });
 };
 
-exports.editBio = function(req, res) {
-    if(!req.decoded.userId) {
-      return res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
-    }
-
-    User.updateUser(req.decoded.userId, '', req.body.bio || '')
-    .then(() => {
-      return res.json({ message: successResponses.user.USER_BIO_UPDATED });
-    })
-    .catch((err) => {
-      logger.error('Error editing bio: ' + err);
-      return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
-    });
-}
-
 exports.editProfilePicture = function(req, res) {
   if(!req.decoded.userId) {
     return res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });

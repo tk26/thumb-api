@@ -1,4 +1,5 @@
 const User = require('../models/user.model.js');
+const Auth = require('../models/auth.model.js');
 var jwt = require('jsonwebtoken');
 var config = require('config.js');
 const exceptions = require('../constants/exceptions.js');
@@ -89,17 +90,12 @@ exports.authenticateUser = function(req, res) {
               });
 
         } else {
-            const payload = {
-                userId: user.userId,
-                email: user.email,
-                username: user.username,
-            };
-            const _token = jwt.sign(payload, config.AUTH_SECRET, {
-                expiresIn: 18000
-            });
+            const _token = Auth.createAuthToken(user.userId, user.email, user.username);
+            const _refreshToken = Auth.createRefreshToken(user.userId, user.email, user.username);
             res.json({
                 message: successResponses.user.USER_AUTHENTICATED,
                 token: _token,
+                refreshToken: _refreshToken,
                 firstName: user.firstName,
                 lastName: user.lastName,
                 username: user.username,

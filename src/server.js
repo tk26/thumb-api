@@ -9,7 +9,7 @@ var expressWinston = require('express-winston');
 
 //removing headers so token isn't included in logs
 expressWinston.requestWhitelist = ['url', 'method', 'httpVersion', 'originalUrl', 'query', 'body'];
-expressWinston.bodyBlacklist.push('password', 'token');
+expressWinston.bodyBlacklist.push('password', 'token', 'refreshToken');
 
 var app = express();
 
@@ -38,6 +38,7 @@ require('routes/drive.routes.js')(app);
 require('routes/ride.routes.js')(app);
 require('routes/feedback.routes.js')(app);
 require('routes/home.routes.js')(app);
+require('routes/auth.routes.js')(app);
 var port = app.get('config').PORT;
 var project = app.get('config').APP;
 

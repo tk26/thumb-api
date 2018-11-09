@@ -59,5 +59,9 @@ module.exports = {
     MISSING_TYPE: "Missing feedback type",
     MISSING_DESCRIPTION: "Missing feedback description",
     INTERNAL_ERROR: "Error creating feedback",
+  },
+  auth: {
+    MISSING_REFRESH_TOKEN: "Missing refresh token",
+    EXPIRED_TOKEN: "Expired token"
   }
 }

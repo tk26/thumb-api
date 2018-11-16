@@ -246,11 +246,6 @@ exports.followUser = async function (fromUsername, toUsername) {
   try {
     let rawResults = await neo4j.execute(query, { fromUsername, toUsername });
     return neo4j.mapKeysToFields(rawResults);
-  query += 'MERGE(fromUser)-[f:FOLLOWS]->(toUser) RETURN f';
-  
-  try {
-    let results = await neo4j.execute(query, { fromUsername, toUsername });
-    return results;
   } catch (error) {
     logger.error(error);
     throw error;

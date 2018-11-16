@@ -19,7 +19,7 @@ describe('Users DB', () => {
         email, school, password, username, birthday);
     user.verificationId = "testVerificationId";
     let createdTestUser;
-    
+
     before(async() => {
         const creationResults = await usersDB.saveUser(user);
         createdTestUser = creationResults[0]._fields[0].properties;
@@ -34,7 +34,7 @@ describe('Users DB', () => {
             createdTestUser.verificationId.length.should.not.equal(0);
             createdTestUser.verified.should.equal(false);
         });
-        
+
         it('should set verificationId to empty string and verified to true', async() => {
             const verificationResults = await usersDB.verifyUser(createdTestUser.verificationId);
             verificationResults.verificationId.length.should.equal(0);
@@ -98,29 +98,14 @@ describe('Users DB', () => {
 
     describe('updateUser', () => {
         it('should return an existing user without any updates', async() => {
-            const unupdatedUser = await usersDB.updateUser(createdTestUser.userId, '', '');
-            chai.expect(unupdatedUser.profilePicture).to.be.undefined;
+            const unupdatedUser = await usersDB.updateUser(createdTestUser.userId, '');
             chai.expect(unupdatedUser.bio).to.be.undefined;
-        });
-
-        it('should return an existing user with an updated profile picture', async() => {
-            const newProfilePicture = "testNewProfilePicture";
-            const updatedUser = await usersDB.updateUser(createdTestUser.userId, newProfilePicture, '');
-            updatedUser.profilePicture.should.equal(newProfilePicture);
         });
 
         it('should return an existing user with an updated bio', async() => {
             const newBio = "testNewBio";
-            const updatedUser = await usersDB.updateUser(createdTestUser.userId, '', newBio);
+            const updatedUser = await usersDB.updateUser(createdTestUser.userId, newBio);
             updatedUser.bio.should.equal(newBio);
-        });
-
-        it('should return an existing user with an updated profile picture and bio', async() => {
-            const newerProfilePicture = "testNewerProfilePicture";
-            const newerBio = "testNewerBio";
-            const updatedUser = await usersDB.updateUser(createdTestUser.userId, newerProfilePicture, newerBio);
-            updatedUser.profilePicture.should.equal(newerProfilePicture);
-            updatedUser.bio.should.equal(newerBio);
         });
     });
 
@@ -131,4 +116,16 @@ describe('Users DB', () => {
             userWithExpoToken.expoToken.should.equal(expoToken);
         });
     });
+
+    describe('setProfilePicture', () => {
+      it('should return an asset for the user', async() => {
+        const pictureId = uuid();
+        const pictureId2 = uuid();
+        const url = "picture.com";
+        const url2 = "picture.gov";
+        const asset = await usersDB.setProfilePicture(userId, pictureId, url);
+        const asset2 = await usersDB.setProfilePicture(userId, pictureId2, url2);
+        asset2.url.should.equal(url2);
+      });
+  });
 });

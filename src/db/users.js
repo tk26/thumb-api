@@ -9,18 +9,20 @@ exports.saveUser = async function(user){
     query += 'SET u.firstName = {firstName}' + endOfLine
     query += 'SET u.lastName = {lastName}' + endOfLine
     query += 'SET u.email = {email}' + endOfLine
-    query += 'SET u.school = {school}' + endOfLine
+    query += 'SET u.school = {schoolName}' + endOfLine
     query += 'SET u.password = {password}' + endOfLine
     query += 'SET u.username = {username}' + endOfLine
     query += 'SET u.birthday = {birthday}' + endOfLine
     query += 'SET u.verified = {verified}' + endOfLine
-    query += 'SET u.verificationId = {verificationId} RETURN u';
+    query += 'SET u.verificationId = {verificationId}' + endOfLine
+    query += 'CREATE(u)-[:ATTENDS]->(school:School{schoolName:{schoolName}})' + endOfLine;
+    query += 'RETURN u';
     let neoResult = await neo4j.execute(query,{
       userId: user.userId,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
-      school: user.school,
+      schoolName: user.school,
       password: user.password,
       username: user.username,
       birthday: user.birthday,
@@ -193,13 +195,30 @@ exports.updatePassword = async function (userId, password) {
   }
 }
 
-exports.updateUser = async function (userId, profilePicture, bio) {
+exports.updateUser = async function (userId, bio) {
   let query = 'MATCH(u:User{userId:{userId}, verified:true})' + endOfLine;
-  query += profilePicture.length > 0 ? 'SET u.profilePicture = \''+ profilePicture + '\'' + endOfLine : '';
   query += bio.length > 0 ? 'SET u.bio = \'' + bio + '\'' + endOfLine : '';
   query += 'RETURN u';
   try {
     let neoResult = await neo4j.execute(query,{ userId });
+    return neoResult.records[0]._fields[0].properties;
+  } catch(err) {
+    logger.error(err);
+    throw err;
+  }
+}
+
+exports.setProfilePicture = async function(userId, pictureId, url) {
+  let query = 'MATCH(u:User{userId:{userId}})' + endOfLine;
+  query += 'SET u.profilePicture = {url}' + endOfLine;
+  query += 'WITH(u) CREATE (u)-[:PROFILE_PICTURE]->(a:Asset{assetId:{assetId}, url:{url}})' + endOfLine;
+  query += "RETURN a";
+  try {
+    let neoResult = await neo4j.execute(query,{
+      userId,
+      assetId: pictureId,
+      url
+    });
     return neoResult.records[0]._fields[0].properties;
   } catch(err) {
     logger.error(err);
@@ -222,6 +241,11 @@ exports.attachExpoToken = async function (userId, expoToken) {
 exports.followUser = async function (fromUsername, toUsername) {
   let query = 'MATCH(fromUser:User{username:{fromUsername}})' + endOfLine;
   query += 'MATCH(toUser:User{username:{toUsername}})' + endOfLine;
+  query += 'MERGE(fromUser)-[f:FOLLOWS]->(toUser) RETURN toUser.userId, toUser.expoToken';
+
+  try {
+    let rawResults = await neo4j.execute(query, { fromUsername, toUsername });
+    return neo4j.mapKeysToFields(rawResults);
   query += 'MERGE(fromUser)-[f:FOLLOWS]->(toUser) RETURN f';
   
   try {
@@ -237,7 +261,7 @@ exports.unfollowUser = async function (fromUsername, toUsername) {
   let query = 'MATCH(fromUser:User{username:{fromUsername}})' + endOfLine;
   query += 'MATCH(toUser:User{username:{toUsername}})' + endOfLine;
   query += 'MERGE(fromUser)-[f:FOLLOWS]->(toUser) DELETE f';
-  
+
   try {
     let results = await neo4j.execute(query, { fromUsername, toUsername });
     return results;

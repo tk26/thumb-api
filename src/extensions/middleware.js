@@ -23,7 +23,10 @@ module.exports = function(type) {
             // verifies secret and checks exp
             jwt.verify(token, map[type], function(err, decoded) {
                 if (err) {
-                    return res.status(403).send({ success: false, message: exceptions.user.INVALID_USER_TOKEN });
+                  if(err.name === 'TokenExpiredError'){
+                    return res.status(401).send({ success: false, message: exceptions.auth.EXPIRED_TOKEN });
+                  }
+                  return res.status(403).send({ success: false, message: exceptions.user.INVALID_USER_TOKEN });
                 } else {
                     // if everything is good, save to request for use in other routes
                     req.decoded = decoded;

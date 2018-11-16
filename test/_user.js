@@ -643,7 +643,6 @@ describe('Users', () => {
                 .put('/user/edit')
                 .set('Authorization', 'Bearer' + ' ' + testUserAuthToken)
                 .send({
-                    "profilePicture" : "pp",
                     "bio" : "I am an early thumb adopter"
                 })
                 .end((err, res) => {
@@ -655,104 +654,36 @@ describe('Users', () => {
 
         after(async () => {
             const updatedUser = await User.findUser(testUserEmail);
-            chai.assert.equal("pp", updatedUser.profilePicture);
             chai.assert.equal("I am an early thumb adopter", updatedUser.bio);
         });
     });
 
-    // test the /PUT /user/bio route
-    describe('/PUT /user/bio', () => {
-        it('it should not PUT a user bio without token', (done) => {
-            chai.request(server)
-                .put('/user/bio')
-                .send({})
-                .end((err, res) => {
-                    res.should.have.status(403);
-                    res.body.should.have.property("message").eql(exceptions.user.MISSING_USER_TOKEN);
-                    res.body.should.have.property("success").eql(false);
-                    done();
-                });
-        });
+    describe('/PUT /user/profilepicture', () => {
+      it('it should not PUT a user edit without token', (done) => {
+          chai.request(server)
+              .put('/user/profilepicture')
+              .send({})
+              .end((err, res) => {
+                  res.should.have.status(403);
+                  res.body.should.have.property("message").eql(exceptions.user.MISSING_USER_TOKEN);
+                  res.body.should.have.property("success").eql(false);
+                  done();
+              });
+      });
 
-        it('it should not PUT a user bio with invalid token', (done) => {
-            chai.request(server)
-                .put('/user/bio')
-                .set('Authorization', 'Bearer' + ' ' + 'invalid.token.here')
-                .send({})
-                .end((err, res) => {
-                    res.should.have.status(403);
-                    res.body.should.have.property("message").eql(exceptions.user.INVALID_USER_TOKEN);
-                    res.body.should.have.property("success").eql(false);
-                    done();
-                });
-        });
-
-        it('it should PUT a user bio with valid token', (done) => {
-            chai.request(server)
-                .put('/user/bio')
-                .set('Authorization', 'Bearer' + ' ' + testUserAuthToken)
-                .send({
-                    "bio" : "I am an updated bio"
-                })
-                .end((err, res) => {
-                    res.should.have.status(200);
-                    res.body.should.have.property("message").eql(successResponses.user.USER_BIO_UPDATED);
-                    done();
-                });
-        });
-
-        after(async () => {
-            const bioUpdatedUser = await User.findUser(testUserEmail);
-            chai.assert.equal("I am an updated bio", bioUpdatedUser.bio);
-        });
-    });
-
-    // test the /PUT /user/pic route
-    describe('/PUT /user/pic', () => {
-        it('it should not PUT a user profile picture without token', (done) => {
-            chai.request(server)
-                .put('/user/pic')
-                .send({})
-                .end((err, res) => {
-                    res.should.have.status(403);
-                    res.body.should.have.property("message").eql(exceptions.user.MISSING_USER_TOKEN);
-                    res.body.should.have.property("success").eql(false);
-                    done();
-                });
-        });
-
-        it('it should not PUT a user profile picture with invalid token', (done) => {
-            chai.request(server)
-                .put('/user/pic')
-                .set('Authorization', 'Bearer' + ' ' + 'invalid.token.here')
-                .send({})
-                .end((err, res) => {
-                    res.should.have.status(403);
-                    res.body.should.have.property("message").eql(exceptions.user.INVALID_USER_TOKEN);
-                    res.body.should.have.property("success").eql(false);
-                    done();
-                });
-        });
-
-        it('it should PUT a user profile picture with valid token', (done) => {
-            chai.request(server)
-                .put('/user/pic')
-                .set('Authorization', 'Bearer' + ' ' + testUserAuthToken)
-                .send({
-                    "profilePicture" : "updated pp"
-                })
-                .end((err, res) => {
-                    res.should.have.status(200);
-                    res.body.should.have.property("message").eql(successResponses.user.USER_PROFILE_PICTURE_UPDATED);
-                    done();
-                });
-        });
-
-        after(async () => {
-            const profilePictureUpdatedUser = await User.findUser(testUserEmail);
-            chai.assert.equal("updated pp", profilePictureUpdatedUser.profilePicture);
-        });
-    });
+      it('it should not PUT a user edit with invalid token', (done) => {
+          chai.request(server)
+              .put('/user/profilepicture')
+              .set('Authorization', 'Bearer' + ' ' + 'invalid.token.here')
+              .send({})
+              .end((err, res) => {
+                  res.should.have.status(403);
+                  res.body.should.have.property("message").eql(exceptions.user.INVALID_USER_TOKEN);
+                  res.body.should.have.property("success").eql(false);
+                  done();
+              });
+      });
+  });
 
     /**
      * Test GET /user/validate/username/:username route
@@ -935,7 +866,7 @@ describe('Users', () => {
                     res.body.should.have.property("message").eql(exceptions.user.MISSING_USERNAME);
                     done();
                 });
-        });      
+        });
 
         it('it should POST follow with valid auth token and toUsername', (done) => {
             chai.request(server)
@@ -949,7 +880,7 @@ describe('Users', () => {
                     res.body.should.have.property("message").eql(successResponses.user.USER_FOLLOWED);
                     done();
                 });
-        }); 
+        });
     });
 
     /**
@@ -965,7 +896,7 @@ describe('Users', () => {
                     res.body.should.have.property("message").eql(exceptions.user.MISSING_USERNAME);
                     done();
                 });
-        });      
+        });
 
         it('it should POST unfollow with valid auth token and toUsername', (done) => {
             chai.request(server)

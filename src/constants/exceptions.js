@@ -28,6 +28,7 @@ module.exports = {
     MISSING_AVAILABLE_SEATS: "Missing Drive's Available Seats",
     MISSING_TRAVEL_DESCRIPTION: "Missing Drive's Travel Description",
     MISSING_INVITE_DRIVE: "Missing Invitation's Drive",
+    MISSING_PROFILE_PICTURE: "Missing profile picture",
     INTERNAL_CREATE_ERROR: "Error creating drive.",
     INTERNAL_GETTRIPMATCHES_ERROR: "Error retrieving trip matches.",
     INVITATION_ALREADY_SENT: 'An invitation has already been sent to this rider to join this drive.'
@@ -41,6 +42,7 @@ module.exports = {
     INVALID_PASSWORD: "Invalid password",
     MISSING_USERNAME: "Missing User's Username",
     MISSING_BIRTHDAY: "Missing User's Birthday",
+    MISSING_PROFILE_PICTURE: "Missing User's profile picture",
     INTERNAL_ERROR: "Error creating user.",
     INVALID_USERNAME: "Invalid username",
     DUPLICATE_USERNAME: "Duplicate username",
@@ -57,5 +59,9 @@ module.exports = {
     MISSING_TYPE: "Missing feedback type",
     MISSING_DESCRIPTION: "Missing feedback description",
     INTERNAL_ERROR: "Error creating feedback",
+  },
+  auth: {
+    MISSING_REFRESH_TOKEN: "Missing refresh token",
+    EXPIRED_TOKEN: "Expired token"
   }
 }

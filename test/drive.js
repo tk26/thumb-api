@@ -172,7 +172,7 @@ describe('Drive', () => {
                 });
         });
 
-        it('it should POST a drive with valid token and drive details', (done) => {
+        it('it should not POST a drive without drive travel description', (done) => {
             chai.request(server)
                 .post('/drive/create')
                 .set('Authorization', 'Bearer' + ' ' + auth_token)

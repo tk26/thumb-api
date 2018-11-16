@@ -95,3 +95,4 @@ exports.getTripMatches = function(req, res) {
       res.status(500).send({message: exceptions.ride.INTERNAL_GETTRIPMATCHES_ERROR});
     });
 }
+

@@ -1,5 +1,6 @@
 const User = require('../models/user.model.js');
 const Auth = require('../models/auth.model.js');
+
 var jwt = require('jsonwebtoken');
 var config = require('config.js');
 const exceptions = require('../constants/exceptions.js');
@@ -331,5 +332,41 @@ exports.unfollowUser  = (req, res) => {
     .catch((err) => {
       logger.error('Error unfollowing user: ' + err);
       return next(err);
+    });
+}
+
+exports.followUser = (req, res) => {
+    if(!req.decoded.userId) {
+        return res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
+    }
+
+    if(!req.body.toUsername) {
+        return res.status(400).send({ message: exceptions.user.MISSING_USERNAME });
+    }
+
+    User.followUser(req.decoded.username, req.body.toUsername)
+    .then(() => {
+        res.json({ message: successResponses.user.USER_FOLLOWED });
+    })
+    .catch((err) => {
+        return res.status(500).send({ message: exceptions.common.INTERNAL_ERROR });
+    });
+}
+
+exports.unfollowUser  = (req, res) => {
+    if(!req.decoded.userId) {
+        return res.status(400).send({ message: exceptions.user.UNAUTHORIZED_USER });
+    }
+
+    if(!req.body.toUsername) {
+        return res.status(400).send({ message: exceptions.user.MISSING_USERNAME });
+    }
+
+    User.unfollowUser(req.decoded.username, req.body.toUsername)
+    .then(() => {
+        res.json({ message: successResponses.user.USER_UNFOLLOWED });
+    })
+    .catch((err) => {
+        return next(err);
     });
 }

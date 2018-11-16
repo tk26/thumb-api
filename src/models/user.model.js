@@ -185,6 +185,7 @@ module.exports = class User {
       message.addPushNotificationDeliveryMethod();
       await message.save();
     }
+    return usersDB.followUser(fromUsername, toUsername);
   }
 
   /**

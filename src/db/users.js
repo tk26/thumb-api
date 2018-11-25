@@ -6,31 +6,40 @@ const logger = require('thumb-logger').getLogger(config.DB_LOGGER_NAME);
 exports.saveUser = async function(user){
   try {
     let query = 'MERGE(u:User{userId:{userId}})' + endOfLine;
-    query += 'SET u.firstName = {firstName}' + endOfLine
-    query += 'SET u.lastName = {lastName}' + endOfLine
-    query += 'SET u.email = {email}' + endOfLine
-    query += 'SET u.school = {schoolName}' + endOfLine
-    query += 'SET u.password = {password}' + endOfLine
-    query += 'SET u.username = {username}' + endOfLine
-    query += 'SET u.birthday = {birthday}' + endOfLine
-    query += 'SET u.verified = {verified}' + endOfLine
-    query += 'SET u.verificationId = {verificationId}' + endOfLine
-    query += 'CREATE(u)-[:ATTENDS]->(school:School{schoolName:{schoolName}})' + endOfLine;
+    query += 'SET u.firstName = {firstName}' + endOfLine;
+    query += 'SET u.lastName = {lastName}' + endOfLine;
+    query += 'SET u.email = {email}' + endOfLine;
+    query += 'SET u.password = {password}' + endOfLine;
+    query += 'SET u.username = {username}' + endOfLine;
+    query += 'SET u.birthday = {birthday}' + endOfLine;
+    query += 'SET u.verified = {verified}' + endOfLine;
+    query += 'SET u.verificationId = {verificationId}' + endOfLine;
     query += 'RETURN u';
     let neoResult = await neo4j.execute(query,{
       userId: user.userId,
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
-      schoolName: user.school,
       password: user.password,
       username: user.username,
       birthday: user.birthday,
-      verified: false,
+      verified: user.verified,
       verificationId: user.verificationId,
     });
     return neoResult.records;
   } catch(err){
+    logger.error(err);
+    throw err;
+  }
+}
+
+exports.addUniverisity = async function(userId, officialName){
+  let query = 'MATCH(u:User{userId:{userId}})' + endOfLine;
+  query += 'MATCH(un:University{officialName:{officialName}})' + endOfLine;
+  query += 'MERGE(u)-[:ATTENDS]->(un)';
+  try{
+    await neo4j.execute(query, {userId: userId, officialName: officialName});
+  } catch (err){
     logger.error(err);
     throw err;
   }
@@ -99,26 +108,36 @@ exports.validateEmail = async function (email) {
   }
 }
 
-exports.findUser = async function (email) {
-  let query = 'MATCH(u:User{email:{email}})' + endOfLine;
-  query += 'RETURN u';
+exports.findUser = async function ({ userId, email }) {
+  let queryFilter = email ? '{email:{email}}' : '';
+  queryFilter = userId ? '{userId:{userId}}' : queryFilter;
+  let query = 'MATCH(u:User' + queryFilter + ') WITH(u) OPTIONAL MATCH(u)-[:ATTENDS]->(un:University)' + endOfLine;
+  query += 'RETURN u.userId AS userId, u.email AS email, u.password AS password, u.firstName AS firstName, u.lastName AS lastName, ';
+  query += 'u.username AS username, u.birthday as birthday, u.bio AS bio, u.profilePicture AS profilePicture, un.officialName AS school,';
+  query += 'u.verificationId AS verificationId, u.verified AS verified, u.passwordResetToken AS passwordResetToken, u.expoToken AS expoToken';
 
   try{
-    let neoResult = await neo4j.execute(query,{ email });
-    return neoResult.records[0]._fields[0].properties;
-  } catch (err){
-    logger.error(err);
-    throw err;
-  }
-}
-
-exports.findUserById = async function (userId) {
-  let query = 'MATCH(u:User{userId:{userId}})' + endOfLine;
-  query += 'RETURN u';
-
-  try{
-    let neoResult = await neo4j.execute(query,{ userId });
-    return neoResult.records[0]._fields[0].properties;
+    let rawResults = await neo4j.execute(query, {userId, email});
+    if(rawResults.records.length === 0){
+      return {};
+    }
+    let record = rawResults.records[0];
+    return {
+      userId: record.get('userId'),
+      email: record.get('email'),
+      password: record.get('password'),
+      firstName: record.get('firstName'),
+      lastName: record.get('lastName'),
+      username: record.get('username'),
+      birthday: record.get('birthday'),
+      bio: record.get('bio'),
+      profilePicture: record.get('profilePicture'),
+      school: record.get('school'),
+      verificationId: record.get('verificationId'),
+      verified: record.get('verified'),
+      passwordResetToken: record.get('passwordResetToken'),
+      expoToken: record.get('expoToken')
+    };
   } catch (err){
     logger.error(err);
     throw err;
@@ -128,11 +147,25 @@ exports.findUserById = async function (userId) {
 exports.retrieveUser = async function (username) {
   let user, follows, followedBy, query;
   // user
-  query = 'MATCH(u:User{username:{username}, verified:true})' + endOfLine;
-  query += 'RETURN u';
+  query = 'MATCH(u:User{username:{username}, verified:true}) WITH(u) OPTIONAL MATCH(u)-[:ATTENDS]->(un:University)' + endOfLine;
+  query += 'RETURN u.userId, u.email, u.firstName, u.lastName, u.username, u.birthday, u.bio, u.profilePicture, un.officialName';
   try{
     let neoResult = await neo4j.execute(query,{ username });
-    user = neoResult.records[0]._fields[0].properties;
+    if(neoResult.records.length === 0){
+      return {};
+    }
+    let record = neoResult.records[0];
+    user = {
+      userId: record.get('u.userId'),
+      email: record.get('u.email'),
+      firstName: record.get('u.firstName'),
+      lastName: record.get('u.lastName'),
+      username: record.get('u.username'),
+      birthday: record.get('u.birthday'),
+      bio: record.get('u.bio'),
+      profilePicture: record.get('u.profilePicture'),
+      school: record.get('un.officialName')
+    };
   } catch (err){
     logger.error(err);
     throw err;

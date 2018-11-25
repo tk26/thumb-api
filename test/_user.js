@@ -1,4 +1,5 @@
 const User = require('../src/models/user.model.js');
+const staticDataDB = require('../src/db/staticData.db.js');
 const exceptions = require('../src/constants/exceptions.js');
 const successResponses = require('../src/constants/success_responses.js');
 const chai = require('chai');
@@ -50,8 +51,9 @@ describe('Users', () => {
     const followableUserBirthday = "03/21/2001";
 
     before(async () => {
-      dupeUser = await userUtility.createVerifiedUser("Jane", "Doe", dupeUserEmail, "hogwarts", dupeUserPassword, dupeUserUsername, dupeUserBirthday);
-      dupeUser2 = await userUtility.createVerifiedUser("Jane", "Doe", dupeUser2Email1, "hogwarts", dupeUser2Password, dupeUser2Username, dupeUser2Birthday);
+      await staticDataDB.saveUniversity('Hogwarts', 'HU');
+      dupeUser = await userUtility.createVerifiedUser("Jane", "Doe", dupeUserEmail, "Hogwarts", dupeUserPassword, dupeUserUsername, dupeUserBirthday);
+      dupeUser2 = await userUtility.createVerifiedUser("Jane", "Doe", dupeUser2Email1, "Hogwarts", dupeUser2Password, dupeUser2Username, dupeUser2Birthday);
       testUser = await userUtility.createVerifiedUser("Test", "User", testUserEmail, "Hogwarts", testUserPassword, testUserUsername, testUserBirthday);
       testUserAuthToken = await userUtility.getUserAuthToken(testUserEmail, testUserPassword);
       followableUser = await userUtility.createVerifiedUser("Followable", "User", followableUserEmail, "Hogwarts", followableUserPassword, followableUserUsername, followableUserBirthday);
@@ -69,6 +71,7 @@ describe('Users', () => {
       // delete other users created through the tests
       await userUtility.deleteUserByEmail("jdoe@email.edu");
       await userUtility.deleteUserByEmail("jdoe_temp@email.edu");
+      await staticDataDB.deleteUniversity('Hogwarts');
     });
 
     /*
@@ -81,7 +84,7 @@ describe('Users', () => {
                 .send({
                     "lastName": "Doe",
                     "email": "jdoe@email.edu",
-                    "school": "hogwarts",
+                    "school": "Hogwarts",
                     "password": "12121212",
                     "username": "jdoe",
                     "birthday": "03/21/2001"
@@ -99,7 +102,7 @@ describe('Users', () => {
                 .send({
                     "firstName": "John",
                     "email": "jdoe@email.edu",
-                    "school": "hogwarts",
+                    "school": "Hogwarts",
                     "password": "12121212",
                     "username": "jdoe",
                     "birthday": "03/21/2001"
@@ -117,7 +120,7 @@ describe('Users', () => {
                 .send({
                     "firstName": "John",
                     "lastName": "Doe",
-                    "school": "hogwarts",
+                    "school": "Hogwarts",
                     "password": "12121212",
                     "username": "jdoe",
                     "birthday": "03/21/2001"
@@ -154,7 +157,7 @@ describe('Users', () => {
                     "firstName": "John",
                     "lastName": "Doe",
                     "email": "jdoe@email.edu",
-                    "school": "hogwarts",
+                    "school": "Hogwarts",
                     "username": "jdoe",
                     "birthday": "03/21/2001"
                 })
@@ -172,7 +175,7 @@ describe('Users', () => {
                     "firstName": "John",
                     "lastName": "Doe",
                     "email": "jdoe@email.edu",
-                    "school": "hogwarts",
+                    "school": "Hogwarts",
                     "password": "12121212",
                     "birthday": "03/21/2001"
                 })
@@ -190,7 +193,7 @@ describe('Users', () => {
                     "firstName": "John",
                     "lastName": "Doe",
                     "email": "jdoe@email.edu",
-                    "school": "hogwarts",
+                    "school": "Hogwarts",
                     "password": "12121212",
                     "username": "jdoe"
                 })
@@ -208,7 +211,7 @@ describe('Users', () => {
                     "firstName": "John",
                     "lastName": "Doe",
                     "email": "jdoe@email.edu",
-                    "school": "hogwarts",
+                    "school": "Hogwarts",
                     "password": "12121212",
                     "username": "jdoe",
                     "birthday": "03/21/2001"

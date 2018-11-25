@@ -7,5 +7,6 @@ exports.ActiveConstraints = [
 
 exports.ActiveIndexes = [
   'INDEX ON :Date(date)',
-  'INDEX ON :Invitation(invitationId)'
+  'INDEX ON :Invitation(invitationId)',
+  'INDEX ON :ObsoleteToken(token)'
 ];

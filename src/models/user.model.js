@@ -27,6 +27,8 @@ module.exports = class User {
     this.password = password;
     this.username = username;
     this.birthday = birthday;
+    this.verified = false;
+    this.verificationId = '';
   }
 
   /**
@@ -34,6 +36,7 @@ module.exports = class User {
    */
   async save() {
     await usersDB.saveUser(this);
+    await usersDB.addUniverisity(this.userId, this.school);
   }
 
   async createNewUser() {
@@ -100,14 +103,7 @@ module.exports = class User {
    * @param {String} email
    */
   static async findUser(email) {
-    return usersDB.findUser(email);
-  }
-
-  /**
-   * @param {String} userId
-   */
-  static async findUserById(userId) {
-    return usersDB.findUserById(userId);
+    return usersDB.findUser({email});
   }
 
   /**

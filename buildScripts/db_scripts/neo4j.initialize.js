@@ -8,6 +8,7 @@ const drives = require('../../src/db/drives.js');
 const feedbacks = require('../../src/db/feedbacks.js');
 const users = require('../../src/db/users.js');
 const shared = require('../../src/db/shared.js');
+const staticDB = require('../../src/db/staticData.db.js');
 let admin = require('../../src/db/neo4jAdmin.js');
 
 exports.setUpDB = async function(){
@@ -18,6 +19,8 @@ exports.setUpDB = async function(){
     await createIndexes();
     console.log(chalk.green('Creating spatial layers...')); // eslint-disable-line no-console
     await createSpatialLayers();
+    console.log(chalk.green('Adding universities...')); // eslint-disable-line no-console
+    await addUniversities();
     console.log(chalk.green('DB setup complete!')); // eslint-disable-line no-console
   } catch(err){
     console.log(chalk.red('Error setting up database: ' + err)); // eslint-disable-line no-console
@@ -52,4 +55,11 @@ const createSpatialLayers = async function(){
   await admin.createLayer('drives');
   await admin.createLayer('rides');
   await admin.createLayer('locations');
+}
+
+const addUniversities = async function(){
+  await staticDB.saveUniversity('Indiana University Bloomington', 'IU');
+  await staticDB.saveUniversity('Purdue University', 'Purdue');
+  await staticDB.saveUniversity('Butler University', 'Butler');
+  await staticDB.saveUniversity('Ball State University', 'BSU');
 }

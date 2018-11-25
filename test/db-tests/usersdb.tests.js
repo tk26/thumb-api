@@ -1,5 +1,6 @@
 const neo4j = require('../../src/extensions/neo4j.js');
 const usersDB = require('../../src/db/users.js');
+const staticDataDB = require('../../src/db/staticData.db.js');
 const User = require('../../src/models/user.model.js');
 const uuid = require('uuid/v1');
 const endOfLine = require('os').EOL;
@@ -21,12 +22,14 @@ describe('Users DB', () => {
     let createdTestUser;
 
     before(async() => {
+        await staticDataDB.saveUniversity(school, 'TU');
         const creationResults = await usersDB.saveUser(user);
         createdTestUser = creationResults[0]._fields[0].properties;
     });
 
     after(async() => {
         await usersDB.deleteUser(user);
+        await staticDataDB.deleteUniversity(school);
     });
 
     describe('verifyUser', () => {
@@ -68,8 +71,9 @@ describe('Users DB', () => {
 
     describe('findUser', () => {
         it('should return an existing user', async() => {
-            const foundUser = await usersDB.findUser(createdTestUser.email);
-            foundUser.userId.should.equal(createdTestUser.userId);
+            const email = createdTestUser.email;
+            const foundUser = await usersDB.findUser({email});
+            chai.expect(foundUser.userId).to.equal(createdTestUser.userId);
         });
     });
 

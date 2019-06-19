@@ -334,8 +334,8 @@ describe('Drive', () => {
       it('it should successfully create invitation when provided valid request', (done) => {
         chai.request(server)
             .post(inviteRiderRoute)
+            .set('Authorization', 'Bearer' + ' ' + auth_token)
             .send({
-                "token" : auth_token,
                 "toUserId": invitedUser.userId,
                 "driveId": driveForInvite.driveId,
                 "rideId": rideForInvite.rideId,
